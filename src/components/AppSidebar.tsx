@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,9 +12,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { isAdmin } = useAuth();
+  const { isAdmin, perms } = useAuth();
   const isActive = (p: string) => path === p;
   const outreachOpen = path.startsWith("/outreach");
+  const can = (k: keyof typeof perms) => isAdmin || perms[k];
 
   return (
     <Sidebar collapsible="icon">
@@ -36,60 +37,87 @@ export function AppSidebar() {
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/")}>
-                  <Link to="/"><LayoutDashboard /><span>Dashboard</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <Collapsible defaultOpen={outreachOpen} className="group/collapsible">
+              {can("can_dashboard") && (
                 <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                      <GraduationCap />
-                      <span>Outreach</span>
-                      <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/outreach/colleges")}>
-                          <Link to="/outreach/colleges"><GraduationCap className="h-4 w-4" /><span>Colleges</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/outreach/coaching")}>
-                          <Link to="/outreach/coaching"><BookOpen className="h-4 w-4" /><span>Coaching</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Admin</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/settings/users")}>
-                    <Link to="/settings/users"><Users /><span>Users</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/")}>
+                    <Link to="/"><LayoutDashboard /><span>Dashboard</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/settings/stages")}>
-                  <Link to="/settings/stages"><Settings /><span>Stage Settings</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+
+              {(can("can_colleges") || can("can_coaching")) && (
+                <Collapsible defaultOpen={outreachOpen} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        <GraduationCap />
+                        <span>Outreach</span>
+                        <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {can("can_colleges") && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton asChild isActive={isActive("/outreach/colleges")}>
+                              <Link to="/outreach/colleges"><GraduationCap className="h-4 w-4" /><span>Colleges</span></Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )}
+                        {can("can_coaching") && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton asChild isActive={isActive("/outreach/coaching")}>
+                              <Link to="/outreach/coaching"><BookOpen className="h-4 w-4" /><span>Coaching</span></Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
+
+              {can("can_meetings") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/meetings")}>
+                    <Link to="/meetings"><Calendar /><span>Meetings</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {(can("can_users") || can("can_stages") || can("can_logs")) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {can("can_users") && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/settings/users")}>
+                      <Link to="/settings/users"><Users /><span>Users</span></Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {can("can_stages") && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/settings/stages")}>
+                      <Link to="/settings/stages"><Settings /><span>Stage Settings</span></Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {can("can_logs") && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/settings/logs")}>
+                      <Link to="/settings/logs"><ScrollText /><span>Activity Logs</span></Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border" />
     </Sidebar>
