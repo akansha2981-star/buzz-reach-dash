@@ -15,6 +15,7 @@ import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
+import { Route as ApiBootstrapAdminRouteImport } from './routes/api/bootstrap-admin'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -47,6 +48,11 @@ const OutreachTypeRoute = OutreachTypeRouteImport.update({
   path: '/outreach/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBootstrapAdminRoute = ApiBootstrapAdminRouteImport.update({
+  id: '/api/bootstrap-admin',
+  path: '/api/bootstrap-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -56,6 +62,7 @@ const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ApiBootstrapAdminRoute: typeof ApiBootstrapAdminRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
   OutreachCoachingRoute: typeof OutreachCoachingRoute
   OutreachCollegesRoute: typeof OutreachCollegesRoute
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutreachTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/bootstrap-admin': {
+      id: '/api/bootstrap-admin'
+      path: '/api/bootstrap-admin'
+      fullPath: '/api/bootstrap-admin'
+      preLoaderRoute: typeof ApiBootstrapAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
@@ -189,6 +209,7 @@ const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ApiBootstrapAdminRoute: ApiBootstrapAdminRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
   OutreachCoachingRoute: OutreachCoachingRoute,
   OutreachCollegesRoute: OutreachCollegesRoute,
@@ -197,3 +218,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
