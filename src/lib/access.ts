@@ -39,7 +39,7 @@ export async function logAction(params: {
     entity_type: params.entity_type,
     entity_id: params.entity_id ?? null,
     entity_label: params.entity_label ?? null,
-    details: params.details ?? null,
+    details: (params.details ?? null) as any,
   });
 }
 
