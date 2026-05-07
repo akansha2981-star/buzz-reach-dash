@@ -15,8 +15,8 @@ import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
-import { Route as ApiBootstrapAdminRouteImport } from './routes/api/bootstrap-admin'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
+import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -48,46 +48,46 @@ const OutreachTypeRoute = OutreachTypeRouteImport.update({
   path: '/outreach/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiBootstrapAdminRoute = ApiBootstrapAdminRouteImport.update({
-  id: '/api/bootstrap-admin',
-  path: '/api/bootstrap-admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => OutreachTypeRoute,
 } as any)
+const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
+  id: '/api/public/bootstrap-admin',
+  path: '/api/public/bootstrap-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRouteTypes {
@@ -95,42 +95,42 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
-    | '/api/bootstrap-admin'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  ApiBootstrapAdminRoute: typeof ApiBootstrapAdminRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
   OutreachCoachingRoute: typeof OutreachCoachingRoute
   OutreachCollegesRoute: typeof OutreachCollegesRoute
   SettingsStagesRoute: typeof SettingsStagesRoute
+  ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -177,19 +177,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutreachTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/bootstrap-admin': {
-      id: '/api/bootstrap-admin'
-      path: '/api/bootstrap-admin'
-      fullPath: '/api/bootstrap-admin'
-      preLoaderRoute: typeof ApiBootstrapAdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
       fullPath: '/outreach/$type/$id'
       preLoaderRoute: typeof OutreachTypeIdRouteImport
       parentRoute: typeof OutreachTypeRoute
+    }
+    '/api/public/bootstrap-admin': {
+      id: '/api/public/bootstrap-admin'
+      path: '/api/public/bootstrap-admin'
+      fullPath: '/api/public/bootstrap-admin'
+      preLoaderRoute: typeof ApiPublicBootstrapAdminRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -209,12 +209,22 @@ const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  ApiBootstrapAdminRoute: ApiBootstrapAdminRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
   OutreachCoachingRoute: OutreachCoachingRoute,
   OutreachCollegesRoute: OutreachCollegesRoute,
   SettingsStagesRoute: SettingsStagesRoute,
+  ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
