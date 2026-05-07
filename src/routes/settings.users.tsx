@@ -78,7 +78,6 @@ function UsersPage() {
 
 function UserRow({ user }: { user: any }) {
   const qc = useQueryClient();
-  const upd = useServerFn(updateUser);
   const del = useServerFn(deleteUser);
   const isAdminUser = user.roles.includes("admin");
 
