@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
@@ -26,6 +27,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsUsersRoute = SettingsUsersRouteImport.update({
+  id: '/settings/users',
+  path: '/settings/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsStagesRoute = SettingsStagesRouteImport.update({
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/settings/stages': typeof SettingsStagesRoute
+  '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/settings/users'
     | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/settings/users'
     | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/settings/stages'
+    | '/settings/users'
     | '/api/public/bootstrap-admin'
     | '/outreach/$type/$id'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   OutreachCoachingRoute: typeof OutreachCoachingRoute
   OutreachCollegesRoute: typeof OutreachCollegesRoute
   SettingsStagesRoute: typeof SettingsStagesRoute
+  SettingsUsersRoute: typeof SettingsUsersRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
 }
 
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/users': {
+      id: '/settings/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof SettingsUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/stages': {
@@ -213,6 +233,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutreachCoachingRoute: OutreachCoachingRoute,
   OutreachCollegesRoute: OutreachCollegesRoute,
   SettingsStagesRoute: SettingsStagesRoute,
+  SettingsUsersRoute: SettingsUsersRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
 }
 export const routeTree = rootRouteImport
