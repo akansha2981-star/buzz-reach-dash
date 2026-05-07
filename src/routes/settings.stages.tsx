@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings/stages")({
-  component: () => <RequireAuth><AppShell title="Outreach Stages"><StagesSettings /></AppShell></RequireAuth>,
+  component: () => <RequireAuth perm="can_stages"><AppShell title="Outreach Stages"><StagesSettings /></AppShell></RequireAuth>,
 });
 
 function StagesSettings() {

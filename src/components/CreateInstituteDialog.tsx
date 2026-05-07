@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fetchStages, type InstituteType } from "@/lib/data";
+import { logAction } from "@/lib/access";
 import { toast } from "sonner";
 
 export function CreateInstituteDialog({ type }: { type: InstituteType }) {
@@ -44,6 +45,7 @@ export function CreateInstituteDialog({ type }: { type: InstituteType }) {
           note: "Profile created", created_by: user?.id ?? null,
         });
       }
+      await logAction({ action: "institute.created", entity_type: "institute", entity_id: inst.id, entity_label: inst.name, details: { type } });
     },
     onSuccess: () => {
       toast.success(`${type === "college" ? "College" : "Coaching institute"} added`);

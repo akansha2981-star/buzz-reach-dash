@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       institute_emails: {
         Row: {
           email: string
@@ -131,6 +167,68 @@ export type Database = {
           },
         ]
       }
+      meetings: {
+        Row: {
+          attendees: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          institute_id: string | null
+          meeting_at: string
+          meeting_link: string | null
+          notes: string | null
+          platform: string | null
+          reminder_minutes: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendees?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          institute_id?: string | null
+          meeting_at: string
+          meeting_link?: string | null
+          notes?: string | null
+          platform?: string | null
+          reminder_minutes?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendees?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          institute_id?: string | null
+          meeting_at?: string
+          meeting_link?: string | null
+          notes?: string | null
+          platform?: string | null
+          reminder_minutes?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_activities: {
         Row: {
           created_at: string
@@ -218,6 +316,42 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      user_permissions: {
+        Row: {
+          can_coaching: boolean
+          can_colleges: boolean
+          can_dashboard: boolean
+          can_logs: boolean
+          can_meetings: boolean
+          can_stages: boolean
+          can_users: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_coaching?: boolean
+          can_colleges?: boolean
+          can_dashboard?: boolean
+          can_logs?: boolean
+          can_meetings?: boolean
+          can_stages?: boolean
+          can_users?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_coaching?: boolean
+          can_colleges?: boolean
+          can_dashboard?: boolean
+          can_logs?: boolean
+          can_meetings?: boolean
+          can_stages?: boolean
+          can_users?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

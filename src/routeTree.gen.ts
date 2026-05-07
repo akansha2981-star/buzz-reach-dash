@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
+import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
+const MeetingsRoute = MeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -37,6 +44,11 @@ const SettingsUsersRoute = SettingsUsersRouteImport.update({
 const SettingsStagesRoute = SettingsStagesRouteImport.update({
   id: '/settings/stages',
   path: '/settings/stages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsLogsRoute = SettingsLogsRouteImport.update({
+  id: '/settings/logs',
+  path: '/settings/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OutreachCollegesRoute = OutreachCollegesRouteImport.update({
@@ -68,9 +80,11 @@ const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/meetings': typeof MeetingsRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -79,9 +93,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/meetings': typeof MeetingsRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -91,9 +107,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/meetings': typeof MeetingsRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -104,9 +122,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/meetings'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
     | '/api/public/bootstrap-admin'
@@ -115,9 +135,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/meetings'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
     | '/api/public/bootstrap-admin'
@@ -126,9 +148,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/meetings'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
     | '/api/public/bootstrap-admin'
@@ -138,9 +162,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  MeetingsRoute: typeof MeetingsRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
   OutreachCoachingRoute: typeof OutreachCoachingRoute
   OutreachCollegesRoute: typeof OutreachCollegesRoute
+  SettingsLogsRoute: typeof SettingsLogsRoute
   SettingsStagesRoute: typeof SettingsStagesRoute
   SettingsUsersRoute: typeof SettingsUsersRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
@@ -148,6 +174,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meetings': {
+      id: '/meetings'
+      path: '/meetings'
+      fullPath: '/meetings'
+      preLoaderRoute: typeof MeetingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -174,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/stages'
       fullPath: '/settings/stages'
       preLoaderRoute: typeof SettingsStagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/logs': {
+      id: '/settings/logs'
+      path: '/settings/logs'
+      fullPath: '/settings/logs'
+      preLoaderRoute: typeof SettingsLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/outreach/colleges': {
@@ -229,9 +269,11 @@ const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  MeetingsRoute: MeetingsRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
   OutreachCoachingRoute: OutreachCoachingRoute,
   OutreachCollegesRoute: OutreachCollegesRoute,
+  SettingsLogsRoute: SettingsLogsRoute,
   SettingsStagesRoute: SettingsStagesRoute,
   SettingsUsersRoute: SettingsUsersRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,

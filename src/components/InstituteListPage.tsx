@@ -26,7 +26,7 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   }), [list, q, stageFilter]);
 
   return (
-    <RequireAuth>
+    <RequireAuth perm={type === "college" ? "can_colleges" : "can_coaching"}>
       <AppShell title={title}>
         <div className="space-y-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
