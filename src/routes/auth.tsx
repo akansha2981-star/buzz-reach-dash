@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -17,7 +16,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -33,18 +31,6 @@ function AuthPage() {
     navigate({ to: "/" });
   }
 
-  async function signUp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/` },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Check your email to confirm your account.");
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "var(--gradient-subtle)" }}>
       <div className="w-full max-w-md">
@@ -57,31 +43,18 @@ function AuthPage() {
         </div>
         <Card className="shadow-xl">
           <CardHeader>
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>Sign in to manage your outreach pipeline.</CardDescription>
+            <CardTitle>Sign in</CardTitle>
+            <CardDescription>Use the credentials provided by your admin.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              <TabsContent value="signin">
-                <form onSubmit={signIn} className="space-y-4 pt-4">
-                  <div><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-                  <div><Label>Password</Label><Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-                  <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign In"}</Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="signup">
-                <form onSubmit={signUp} className="space-y-4 pt-4">
-                  <div><Label>Full name</Label><Input required value={name} onChange={(e) => setName(e.target.value)} /></div>
-                  <div><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-                  <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-                  <Button type="submit" className="w-full" disabled={busy}>{busy ? "Creating…" : "Create Account"}</Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={signIn} className="space-y-4">
+              <div><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div><Label>Password</Label><Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+              <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign In"}</Button>
+            </form>
+            <p className="mt-6 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+              Accounts are created by an admin. Contact your administrator if you don't have access.
+            </p>
           </CardContent>
         </Card>
       </div>
