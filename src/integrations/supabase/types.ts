@@ -14,7 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      institute_emails: {
+        Row: {
+          email: string
+          id: string
+          institute_id: string
+          label: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          institute_id: string
+          label?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          institute_id?: string
+          label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institute_emails_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institute_phones: {
+        Row: {
+          id: string
+          institute_id: string
+          label: string | null
+          phone: string
+        }
+        Insert: {
+          id?: string
+          institute_id: string
+          label?: string | null
+          phone: string
+        }
+        Update: {
+          id?: string
+          institute_id?: string
+          label?: string | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institute_phones_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutes: {
+        Row: {
+          city: string | null
+          contact_designation: string | null
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          current_stage_id: string | null
+          id: string
+          name: string
+          next_meeting_at: string | null
+          notes: string | null
+          state: string | null
+          type: Database["public"]["Enums"]["institute_type"]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact_designation?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_stage_id?: string | null
+          id?: string
+          name: string
+          next_meeting_at?: string | null
+          notes?: string | null
+          state?: string | null
+          type: Database["public"]["Enums"]["institute_type"]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact_designation?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_stage_id?: string | null
+          id?: string
+          name?: string
+          next_meeting_at?: string | null
+          notes?: string | null
+          state?: string | null
+          type?: Database["public"]["Enums"]["institute_type"]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institutes_current_stage_id_fkey"
+            columns: ["current_stage_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_activities: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          institute_id: string
+          note: string | null
+          stage_id: string | null
+          stage_name_snapshot: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institute_id: string
+          note?: string | null
+          stage_id?: string | null
+          stage_name_snapshot?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institute_id?: string
+          note?: string | null
+          stage_id?: string | null
+          stage_name_snapshot?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_activities_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_activities_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_stages: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +229,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      institute_type: "college" | "coaching"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +356,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      institute_type: ["college", "coaching"],
+    },
   },
 } as const
