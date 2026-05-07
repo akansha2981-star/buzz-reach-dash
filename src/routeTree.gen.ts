@@ -9,38 +9,126 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
+import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
+import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
+import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
+import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsStagesRoute = SettingsStagesRouteImport.update({
+  id: '/settings/stages',
+  path: '/settings/stages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachCollegesRoute = OutreachCollegesRouteImport.update({
+  id: '/outreach/colleges',
+  path: '/outreach/colleges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachCoachingRoute = OutreachCoachingRouteImport.update({
+  id: '/outreach/coaching',
+  path: '/outreach/coaching',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachTypeRoute = OutreachTypeRouteImport.update({
+  id: '/outreach/$type',
+  path: '/outreach/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OutreachTypeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/outreach/$type': typeof OutreachTypeRouteWithChildren
+  '/outreach/coaching': typeof OutreachCoachingRoute
+  '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/stages': typeof SettingsStagesRoute
+  '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/outreach/$type': typeof OutreachTypeRouteWithChildren
+  '/outreach/coaching': typeof OutreachCoachingRoute
+  '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/stages': typeof SettingsStagesRoute
+  '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/outreach/$type': typeof OutreachTypeRouteWithChildren
+  '/outreach/coaching': typeof OutreachCoachingRoute
+  '/outreach/colleges': typeof OutreachCollegesRoute
+  '/settings/stages': typeof SettingsStagesRoute
+  '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/outreach/$type'
+    | '/outreach/coaching'
+    | '/outreach/colleges'
+    | '/settings/stages'
+    | '/outreach/$type/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/outreach/$type'
+    | '/outreach/coaching'
+    | '/outreach/colleges'
+    | '/settings/stages'
+    | '/outreach/$type/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/outreach/$type'
+    | '/outreach/coaching'
+    | '/outreach/colleges'
+    | '/settings/stages'
+    | '/outreach/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
+  OutreachCoachingRoute: typeof OutreachCoachingRoute
+  OutreachCollegesRoute: typeof OutreachCollegesRoute
+  SettingsStagesRoute: typeof SettingsStagesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +136,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/stages': {
+      id: '/settings/stages'
+      path: '/settings/stages'
+      fullPath: '/settings/stages'
+      preLoaderRoute: typeof SettingsStagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/colleges': {
+      id: '/outreach/colleges'
+      path: '/outreach/colleges'
+      fullPath: '/outreach/colleges'
+      preLoaderRoute: typeof OutreachCollegesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/coaching': {
+      id: '/outreach/coaching'
+      path: '/outreach/coaching'
+      fullPath: '/outreach/coaching'
+      preLoaderRoute: typeof OutreachCoachingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/$type': {
+      id: '/outreach/$type'
+      path: '/outreach/$type'
+      fullPath: '/outreach/$type'
+      preLoaderRoute: typeof OutreachTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/$type/$id': {
+      id: '/outreach/$type/$id'
+      path: '/$id'
+      fullPath: '/outreach/$type/$id'
+      preLoaderRoute: typeof OutreachTypeIdRouteImport
+      parentRoute: typeof OutreachTypeRoute
+    }
   }
 }
 
+interface OutreachTypeRouteChildren {
+  OutreachTypeIdRoute: typeof OutreachTypeIdRoute
+}
+
+const OutreachTypeRouteChildren: OutreachTypeRouteChildren = {
+  OutreachTypeIdRoute: OutreachTypeIdRoute,
+}
+
+const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
+  OutreachTypeRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  OutreachTypeRoute: OutreachTypeRouteWithChildren,
+  OutreachCoachingRoute: OutreachCoachingRoute,
+  OutreachCollegesRoute: OutreachCollegesRoute,
+  SettingsStagesRoute: SettingsStagesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
