@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -19,13 +20,26 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings/users")({
   component: () => (
-    <RequireAuth>
-      <AppShell title="User Management">
-        <UsersPage />
-      </AppShell>
+    <RequireAuth perm="can_users">
+      <AppShell title="User Management"><UsersPage /></AppShell>
     </RequireAuth>
   ),
 });
+
+const PERM_OPTIONS: { key: string; label: string; desc: string }[] = [
+  { key: "can_dashboard", label: "Dashboard", desc: "View main dashboard with stats" },
+  { key: "can_colleges", label: "Colleges", desc: "Manage college outreach profiles" },
+  { key: "can_coaching", label: "Coaching", desc: "Manage coaching outreach profiles" },
+  { key: "can_meetings", label: "Meetings", desc: "Schedule and manage meetings" },
+  { key: "can_stages", label: "Stage Settings", desc: "Configure outreach pipeline stages" },
+  { key: "can_users", label: "User Management", desc: "Create and edit team accounts" },
+  { key: "can_logs", label: "Activity Logs", desc: "View full audit trail" },
+];
+
+const DEFAULT_PERMS = {
+  can_dashboard: true, can_colleges: true, can_coaching: true,
+  can_meetings: true, can_stages: false, can_users: false, can_logs: false,
+};
 
 function UsersPage() {
   const { isAdmin, loading } = useAuth();
@@ -42,7 +56,6 @@ function UsersPage() {
       <Card><CardContent className="flex flex-col items-center gap-3 py-16 text-center">
         <Shield className="h-10 w-10 text-muted-foreground" />
         <p className="font-medium">Admin access required</p>
-        <p className="text-sm text-muted-foreground">You need admin privileges to manage users.</p>
         <Button asChild variant="outline"><Link to="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to dashboard</Link></Button>
       </CardContent></Card>
     );
@@ -53,7 +66,7 @@ function UsersPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="font-display text-2xl font-bold">Team & Access</h2>
-          <p className="text-sm text-muted-foreground">Create accounts and manage credentials for your team.</p>
+          <p className="text-sm text-muted-foreground">Create accounts and choose exactly which sections each member can use.</p>
         </div>
         <CreateUserDialog />
       </div>
@@ -80,6 +93,7 @@ function UserRow({ user }: { user: any }) {
   const qc = useQueryClient();
   const del = useServerFn(deleteUser);
   const isAdminUser = user.roles.includes("admin");
+  const grantedCount = PERM_OPTIONS.filter((p) => user.permissions[p.key]).length;
 
   const remove = useMutation({
     mutationFn: () => del({ data: { user_id: user.id } }),
@@ -98,7 +112,9 @@ function UserRow({ user }: { user: any }) {
             <p className="font-medium">{user.full_name ?? "—"}</p>
             {isAdminUser ? (
               <Badge className="gap-1"><ShieldCheck className="h-3 w-3" /> Admin</Badge>
-            ) : <Badge variant="secondary">User</Badge>}
+            ) : (
+              <Badge variant="secondary">User · {grantedCount}/{PERM_OPTIONS.length} sections</Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">{user.email}</p>
         </div>
@@ -112,7 +128,7 @@ function UserRow({ user }: { user: any }) {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this user?</AlertDialogTitle>
-              <AlertDialogDescription>This permanently removes {user.email} and revokes their access.</AlertDialogDescription>
+              <AlertDialogDescription>Permanently removes {user.email} and revokes their access.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -125,18 +141,40 @@ function UserRow({ user }: { user: any }) {
   );
 }
 
+function PermsGrid({ value, onChange, disabled }: { value: any; onChange: (v: any) => void; disabled?: boolean }) {
+  return (
+    <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
+      {PERM_OPTIONS.map((p) => (
+        <label key={p.key} className="flex items-start gap-3 rounded-md p-2 hover:bg-accent">
+          <Checkbox
+            checked={!!value[p.key]} disabled={disabled}
+            onCheckedChange={(c) => onChange({ ...value, [p.key]: !!c })}
+            className="mt-0.5"
+          />
+          <div>
+            <p className="text-sm font-medium">{p.label}</p>
+            <p className="text-xs text-muted-foreground">{p.desc}</p>
+          </div>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 function CreateUserDialog() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "user" as "admin" | "user" });
+  const [perms, setPerms] = useState<any>(DEFAULT_PERMS);
   const create = useServerFn(createUser);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: () => create({ data: form }),
+    mutationFn: () => create({ data: { ...form, permissions: perms } }),
     onSuccess: () => {
       toast.success("Account created");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);
       setForm({ email: "", password: "", full_name: "", role: "user" });
+      setPerms(DEFAULT_PERMS);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -144,24 +182,30 @@ function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> New account</Button></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create user account</DialogTitle>
-          <DialogDescription>Set the credentials this person will use to sign in.</DialogDescription>
+          <DialogDescription>Set credentials and choose which sections they can access.</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
-          <div><Label>Full name</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
-          <div><Label>Email</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-          <div><Label>Password</Label><Input type="text" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 6 characters" /></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label>Full name</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Email</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><Label>Password</Label><Input type="text" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 6 characters" /></div>
+            <div>
+              <Label>Role</Label>
+              <Select value={form.role} onValueChange={(v: any) => setForm({ ...form, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User (custom access)</SelectItem>
+                  <SelectItem value="admin">Admin (full access)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div>
-            <Label>Role</Label>
-            <Select value={form.role} onValueChange={(v: any) => setForm({ ...form, role: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="mb-2 block">Section access {form.role === "admin" && <span className="text-xs text-muted-foreground">(admins always have full access)</span>}</Label>
+            <PermsGrid value={form.role === "admin" ? Object.fromEntries(PERM_OPTIONS.map((p) => [p.key, true])) : perms} onChange={setPerms} disabled={form.role === "admin"} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
@@ -178,9 +222,10 @@ function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
   const [full_name, setFullName] = useState(user.full_name ?? "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "user">(user.roles.includes("admin") ? "admin" : "user");
+  const [perms, setPerms] = useState<any>(user.permissions);
   const upd = useServerFn(updateUser);
   const m = useMutation({
-    mutationFn: () => upd({ data: { user_id: user.id, full_name, role, ...(password ? { password } : {}) } }),
+    mutationFn: () => upd({ data: { user_id: user.id, full_name, role, permissions: perms, ...(password ? { password } : {}) } }),
     onSuccess: () => { toast.success("Updated"); onSaved(); setOpen(false); setPassword(""); },
     onError: (e: any) => toast.error(e.message),
   });
@@ -188,23 +233,29 @@ function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit user</DialogTitle>
           <DialogDescription>{user.email}</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
-          <div><Label>Full name</Label><Input value={full_name} onChange={(e) => setFullName(e.target.value)} /></div>
-          <div><Label>New password (leave blank to keep)</Label><Input type="text" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label>Full name</Label><Input value={full_name} onChange={(e) => setFullName(e.target.value)} /></div>
+            <div><Label>New password (leave blank to keep)</Label><Input type="text" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+            <div>
+              <Label>Role</Label>
+              <Select value={role} onValueChange={(v: any) => setRole(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User (custom access)</SelectItem>
+                  <SelectItem value="admin">Admin (full access)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div>
-            <Label>Role</Label>
-            <Select value={role} onValueChange={(v: any) => setRole(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="mb-2 block">Section access</Label>
+            <PermsGrid value={role === "admin" ? Object.fromEntries(PERM_OPTIONS.map((p) => [p.key, true])) : perms} onChange={setPerms} disabled={role === "admin"} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
