@@ -175,9 +175,10 @@ function InstituteDetailPage() {
             </div>
 
             <Tabs defaultValue="tasks" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="meetings">Meetings</TabsTrigger>
+                <TabsTrigger value="resources">Links & Docs</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
               </TabsList>
               <TabsContent value="tasks" className="mt-4">
