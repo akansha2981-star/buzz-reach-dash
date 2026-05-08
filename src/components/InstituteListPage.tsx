@@ -248,6 +248,10 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                           </div>
                         </Link>
                         {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline" className="shrink-0">{stage.name}</Badge>}
+                        <div className="flex shrink-0 items-center">
+                          <EditInstituteDialog institute={i} type={type} />
+                          <DeleteInstituteButton institute={i} type={type} />
+                        </div>
                       </div>
 
                       <div className="space-y-1.5">
