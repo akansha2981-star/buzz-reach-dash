@@ -211,7 +211,6 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
               </div>
             )}
           </div>
-          </div>
 
           {filtered.length === 0 ? (
             <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
