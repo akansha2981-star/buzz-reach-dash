@@ -18,6 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { cn } from "@/lib/utils";
+import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
 
 export const Route = createFileRoute("/ceo-desk")({
   component: () => (
