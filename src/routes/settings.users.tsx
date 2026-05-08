@@ -221,12 +221,13 @@ function CreateUserDialog() {
 function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [full_name, setFullName] = useState(user.full_name ?? "");
+  const [designation, setDesignation] = useState(user.designation ?? "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "user">(user.roles.includes("admin") ? "admin" : "user");
   const [perms, setPerms] = useState<any>(user.permissions);
   const upd = useServerFn(updateUser);
   const m = useMutation({
-    mutationFn: () => upd({ data: { user_id: user.id, full_name, role, permissions: perms, ...(password ? { password } : {}) } }),
+    mutationFn: () => upd({ data: { user_id: user.id, full_name, designation: designation || null, role, permissions: perms, ...(password ? { password } : {}) } }),
     onSuccess: () => { toast.success("Updated"); onSaved(); setOpen(false); setPassword(""); },
     onError: (e: any) => toast.error(e.message),
   });
