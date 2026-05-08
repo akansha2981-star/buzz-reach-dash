@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { MobileBottomNav } from "./MobileBottomNav";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   return (
@@ -10,8 +11,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader title={title} />
-          <main className="min-w-0 flex-1 p-3 sm:p-4 md:p-6 lg:p-8">{children}</main>
+          <main
+            className="min-w-0 flex-1 p-3 pb-20 sm:p-4 md:p-6 md:pb-6 lg:p-8"
+          >
+            {children}
+          </main>
         </div>
+        <MobileBottomNav />
       </div>
     </SidebarProvider>
   );
