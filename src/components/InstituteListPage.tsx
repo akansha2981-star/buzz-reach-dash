@@ -25,6 +25,29 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
 
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [noteFor, setNoteFor] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
+
+  const addNote = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (!noteText.trim()) return;
+      const { error } = await supabase.from("outreach_activities").insert({
+        institute_id: id, note: noteText.trim(), created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      await logAction({ action: "note.added", entity_type: "institute", entity_id: id, entity_label: name });
+    },
+    onSuccess: () => {
+      toast.success("Note added");
+      setNoteFor(null); setNoteText("");
+      qc.invalidateQueries({ queryKey: ["activities-all"] });
+      qc.invalidateQueries({ queryKey: ["institute"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const filtered = useMemo(() => list.filter((i) => {
     const m = q.trim().toLowerCase();
     if (stageFilter !== "all" && i.current_stage_id !== stageFilter) return false;
