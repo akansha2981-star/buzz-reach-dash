@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { fetchStages } from "@/lib/data";
 import { logAction } from "@/lib/access";
 import { toast } from "sonner";
+import { useRealtime } from "@/hooks/useRealtime";
 
 export const Route = createFileRoute("/outreach/timeline")({ component: TimelinePage });
 
