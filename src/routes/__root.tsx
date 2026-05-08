@@ -6,6 +6,7 @@ import appCss from "../styles.css?url";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { NotificationsBootstrap } from "@/components/NotificationsBootstrap";
 
 function NotFoundComponent() {
   return (
@@ -77,6 +78,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
+          <NotificationsBootstrap />
           <Outlet />
           <Toaster />
         </AuthProvider>
