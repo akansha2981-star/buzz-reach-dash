@@ -215,6 +215,12 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 </Button>
               )}
               <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} of {list.length}</span>
+              <ToggleGroup type="single" size="sm" value={view} onValueChange={(v) => v && setViewPersist(v as any)} className="ml-2">
+                <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view" className="h-8 px-2"><List className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="table" aria-label="Table view" className="h-8 px-2"><TableIcon className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="compact" aria-label="Compact view" className="h-8 px-2 text-[10px] font-bold">XS</ToggleGroupItem>
+              </ToggleGroup>
             </div>
             {staleCount > 0 && (
               <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
