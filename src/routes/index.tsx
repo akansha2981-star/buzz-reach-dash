@@ -152,9 +152,20 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl p-5 text-primary-foreground sm:p-6" style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-elegant)" }}>
-        <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="h-4 w-4" /> Welcome back</div>
-        <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Your outreach, organized.</h2>
-        <p className="mt-1 max-w-xl text-sm opacity-90">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="h-4 w-4" /> Welcome back</div>
+            <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Your outreach, organized.</h2>
+            <p className="mt-1 max-w-xl text-sm opacity-90">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
+          </div>
+          <NewCEORequestDialog
+            trigger={
+              <Button size="sm" variant="secondary" className="shrink-0">
+                <Crown className="mr-1 h-4 w-4 text-amber-600" /> Request to CEO
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       {/* Daily Report — auto-updated from live activity */}
