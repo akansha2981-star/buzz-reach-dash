@@ -102,11 +102,19 @@ function MeetingsPage() {
         </Select>
       </div>
 
-      <Tabs defaultValue="upcoming">
+      <Tabs defaultValue="calendar">
         <TabsList>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="calendar"><CalendarDays className="mr-1.5 h-4 w-4" /> Calendar</TabsTrigger>
+          <TabsTrigger value="agenda"><LayoutGrid className="mr-1.5 h-4 w-4" /> Agenda</TabsTrigger>
+          <TabsTrigger value="upcoming"><ListIcon className="mr-1.5 h-4 w-4" /> Upcoming ({upcoming.length})</TabsTrigger>
           <TabsTrigger value="past">Past & Closed ({past.length})</TabsTrigger>
         </TabsList>
+        <TabsContent value="calendar" className="pt-4">
+          <CalendarView meetings={filtered} />
+        </TabsContent>
+        <TabsContent value="agenda" className="pt-4">
+          <AgendaView meetings={filtered} />
+        </TabsContent>
         <TabsContent value="upcoming" className="space-y-3 pt-4">
           {upcoming.length === 0 ? <EmptyState text="No upcoming meetings. Schedule one to get started." /> : upcoming.map((m) => <MeetingCard key={m.id} m={m} />)}
         </TabsContent>
