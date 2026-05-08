@@ -668,17 +668,39 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="flex items-start justify-between gap-4 rounded-lg border bg-muted/30 p-3">
-            <div className="space-y-0.5">
-              <Label className="text-sm">Sync to Google Calendar</Label>
-              <p className="text-xs text-muted-foreground">
-                Creates a real Google Calendar event{form.platform === "google_meet" ? " with a Google Meet link" : ""} and emails invites to attendees.
-                {meeting?.google_html_link && (
-                  <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
-                )}
-              </p>
+          <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label className="text-sm">Sync to Google Calendar</Label>
+                <p className="text-xs text-muted-foreground">
+                  Creates a real Google Calendar event and emails invites to attendees.
+                  {meeting?.google_html_link && (
+                    <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
+                  )}
+                </p>
+              </div>
+              <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
             </div>
-            <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
+            {syncGoogle && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Send from Google account</Label>
+                {accounts.length === 0 ? (
+                  <p className="text-xs text-amber-600">No Google account is connected. Open the dashboard to set one up.</p>
+                ) : (
+                  <Select value={accountKey || accounts[0]?.key} onValueChange={setAccountKey}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((a) => (
+                        <SelectItem key={a.key} value={a.key}>{a.email ?? a.key}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {accounts.length > 1 && (
+                  <p className="text-[11px] text-muted-foreground">Pick which connected Google account this meeting goes on.</p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
