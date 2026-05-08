@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
@@ -44,9 +45,8 @@ function AuthPage() {
       {/* Left: brand panel */}
       <div className="relative hidden w-[46%] flex-col justify-between border-r border-border/60 bg-card/40 p-12 lg:flex">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-md"
-            style={{ background: "var(--gradient-primary)" }}>
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden bg-white shadow-md">
+            <img src={logo} alt="Works by B School Buzz" className="h-full w-full object-contain" />
           </div>
           <div className="leading-tight">
             <p className="font-display text-xl font-semibold tracking-tight">Works</p>
@@ -89,9 +89,8 @@ function AuthPage() {
         <div className="w-full max-w-md">
           {/* Mobile brand */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-md"
-              style={{ background: "var(--gradient-primary)" }}>
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl overflow-hidden bg-white shadow-md">
+              <img src={logo} alt="Works by B School Buzz" className="h-full w-full object-contain" />
             </div>
             <div className="leading-tight">
               <p className="font-display text-xl font-semibold tracking-tight">Works</p>

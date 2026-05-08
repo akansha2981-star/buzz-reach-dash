@@ -12,6 +12,7 @@ import {
   SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import logo from "@/assets/logo.png";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -37,8 +38,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: "var(--gradient-primary)" }}>
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-white">
+            <img src={logo} alt="Works by B School Buzz" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
