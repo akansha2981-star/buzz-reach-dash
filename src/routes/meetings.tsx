@@ -477,10 +477,20 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
     Array.isArray(meeting?.attendees) ? meeting.attendees.join(", ") : ""
   );
   const [syncGoogle, setSyncGoogle] = useState<boolean>(!!meeting?.google_event_id || !editing);
+  const [accountKey, setAccountKey] = useState<string>(meeting?.google_account_key ?? "");
+  const [useCustomLink, setUseCustomLink] = useState<boolean>(!!meeting?.meeting_link && meeting?.platform !== "google_meet");
 
   const createGCal = useServerFn(createGoogleCalendarEvent);
   const updateGCal = useServerFn(updateGoogleCalendarEvent);
   const deleteGCal = useServerFn(deleteGoogleCalendarEvent);
+  const fetchAccounts = useServerFn(listGoogleCalendarAccounts);
+
+  const { data: accountsData } = useQuery({
+    queryKey: ["google-calendar-accounts"],
+    queryFn: () => fetchAccounts(),
+    staleTime: 60_000,
+  });
+  const accounts = accountsData?.accounts ?? [];
 
   const { data: institutes = [] } = useQuery({
     queryKey: ["institutes-all"],
