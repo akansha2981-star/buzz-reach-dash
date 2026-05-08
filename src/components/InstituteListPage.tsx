@@ -22,6 +22,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/access";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
+import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
@@ -229,9 +230,15 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
-                          <Activity className="h-3 w-3" /> Timeline
-                        </Link>
+                          <InstituteTimelineDialog
+                            instituteId={i.id}
+                            instituteName={i.name}
+                            trigger={
+                              <button className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                                <Activity className="h-3 w-3" /> Timeline
+                              </button>
+                            }
+                          />
                         <div className="flex flex-wrap items-center gap-1">
                           <MeetingDialog
                             defaultInstituteId={i.id}

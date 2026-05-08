@@ -20,6 +20,8 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { TasksSection } from "@/components/TasksSection";
+import { InstituteMeetingsSection } from "@/components/InstituteMeetingsSection";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/outreach/$type/$id")({
   component: InstituteDetailPage,
@@ -171,30 +173,43 @@ function InstituteDetailPage() {
               </Card>
             </div>
 
-            <TasksSection instituteId={id} instituteName={data.institute.name} />
-
-            <Card>
-              <CardHeader><CardTitle>Timeline</CardTitle></CardHeader>
-              <CardContent>
-                {data.activities.length === 0 ? <p className="text-sm text-muted-foreground">No activity yet.</p> : (
-                  <ol className="relative space-y-4 border-l border-border pl-6">
-                    {data.activities.map((a: any) => {
-                      const stage = stages.find((s) => s.id === a.stage_id);
-                      return (
-                        <li key={a.id} className="relative">
-                          <span className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-background" style={{ background: stage?.color ?? "var(--primary)" }} />
-                          <div className="flex flex-wrap items-center gap-2">
-                            {a.stage_name_snapshot && <Badge variant="secondary">{a.stage_name_snapshot}</Badge>}
-                            <span className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
-                          </div>
-                          {a.note && <p className="mt-1 text-sm">{a.note}</p>}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-              </CardContent>
-            </Card>
+            <Tabs defaultValue="tasks" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                <TabsTrigger value="meetings">Meetings</TabsTrigger>
+                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              </TabsList>
+              <TabsContent value="tasks" className="mt-4">
+                <TasksSection instituteId={id} instituteName={data.institute.name} />
+              </TabsContent>
+              <TabsContent value="meetings" className="mt-4">
+                <InstituteMeetingsSection instituteId={id} instituteName={data.institute.name} />
+              </TabsContent>
+              <TabsContent value="timeline" className="mt-4">
+                <Card>
+                  <CardHeader><CardTitle>Activity Timeline</CardTitle></CardHeader>
+                  <CardContent>
+                    {data.activities.length === 0 ? <p className="text-sm text-muted-foreground">No activity yet.</p> : (
+                      <ol className="relative space-y-4 border-l border-border pl-6">
+                        {data.activities.map((a: any) => {
+                          const stage = stages.find((s) => s.id === a.stage_id);
+                          return (
+                            <li key={a.id} className="relative">
+                              <span className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-background" style={{ background: stage?.color ?? "var(--primary)" }} />
+                              <div className="flex flex-wrap items-center gap-2">
+                                {a.stage_name_snapshot && <Badge variant="secondary">{a.stage_name_snapshot}</Badge>}
+                                <span className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
+                              </div>
+                              {a.note && <p className="mt-1 text-sm whitespace-pre-wrap">{a.note}</p>}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
