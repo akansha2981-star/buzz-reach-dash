@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as MeetingsRouteImport } from './routes/meetings'
+import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
@@ -31,6 +32,11 @@ const TasksRoute = TasksRouteImport.update({
 const MeetingsRoute = MeetingsRouteImport.update({
   id: '/meetings',
   path: '/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CeoDeskRoute = CeoDeskRouteImport.update({
+  id: '/ceo-desk',
+  path: '/ceo-desk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -92,6 +98,7 @@ const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ceo-desk': typeof CeoDeskRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ceo-desk': typeof CeoDeskRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ceo-desk': typeof CeoDeskRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/ceo-desk'
     | '/meetings'
     | '/tasks'
     | '/outreach/$type'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/ceo-desk'
     | '/meetings'
     | '/tasks'
     | '/outreach/$type'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/ceo-desk'
     | '/meetings'
     | '/tasks'
     | '/outreach/$type'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  CeoDeskRoute: typeof CeoDeskRoute
   MeetingsRoute: typeof MeetingsRoute
   TasksRoute: typeof TasksRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/meetings'
       fullPath: '/meetings'
       preLoaderRoute: typeof MeetingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ceo-desk': {
+      id: '/ceo-desk'
+      path: '/ceo-desk'
+      fullPath: '/ceo-desk'
+      preLoaderRoute: typeof CeoDeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -309,6 +329,7 @@ const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  CeoDeskRoute: CeoDeskRoute,
   MeetingsRoute: MeetingsRoute,
   TasksRoute: TasksRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
