@@ -31,6 +31,17 @@ function Dashboard() {
   const [typeFilter, setTypeFilter] = useState<TypeKey>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
 
+  const { data: me } = useQuery({
+    queryKey: ["me-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data: p } = await supabase.from("profiles").select("full_name, email, designation").eq("id", u.user.id).maybeSingle();
+      const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      return { ...p, email: p?.email ?? u.user.email, roles: (r ?? []).map((x: any) => x.role) };
+    },
+  });
+
   const { data } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
