@@ -190,6 +190,7 @@ function CreateUserDialog() {
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Designation</Label><Input placeholder="e.g. Outreach Manager" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></div>
             <div><Label>Email</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><Label>Password</Label><Input type="text" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 6 characters" /></div>
             <div>
