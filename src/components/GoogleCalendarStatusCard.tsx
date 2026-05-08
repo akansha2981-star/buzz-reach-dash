@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { listGoogleCalendarAccounts } from "@/lib/google-calendar.functions";
 
 export function GoogleCalendarStatusCard() {
+  const { isAdmin } = useAuth();
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const fetchAccounts = useServerFn(listGoogleCalendarAccounts);
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["google-calendar-accounts"],
