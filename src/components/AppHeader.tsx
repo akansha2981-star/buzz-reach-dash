@@ -5,6 +5,7 @@ import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 export function AppHeader({ title }: { title?: string }) {
   const { theme, toggle } = useTheme();
@@ -15,6 +16,7 @@ export function AppHeader({ title }: { title?: string }) {
       <SidebarTrigger />
       <h1 className="font-display text-lg font-semibold tracking-tight">{title ?? "Dashboard"}</h1>
       <div className="ml-auto flex items-center gap-2">
+        <InstallAppButton />
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
