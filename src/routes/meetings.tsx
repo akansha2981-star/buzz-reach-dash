@@ -23,6 +23,7 @@ import { logAction, type Meeting } from "@/lib/access";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
+import { PushToCEODesk } from "@/components/PushToCEODesk";
 
 export const Route = createFileRoute("/meetings")({
   component: () => (
