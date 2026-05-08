@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ListPlus, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
-export function AddTaskPopover({ instituteId, instituteName }: { instituteId: string; instituteName: string }) {
+export function AddTaskPopover({ instituteId, instituteName, trigger }: { instituteId: string; instituteName: string; trigger?: ReactNode }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -64,9 +64,11 @@ export function AddTaskPopover({ instituteId, instituteName }: { instituteId: st
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
-          <ListPlus className="mr-1 h-3 w-3" /> Task
-        </Button>
+        {trigger ?? (
+          <Button size="sm" variant="outline" className="h-8 min-w-0 flex-1 gap-1 px-2 text-xs sm:flex-none">
+            <ListPlus className="h-3 w-3" /> Task
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
         <div className="space-y-2">
