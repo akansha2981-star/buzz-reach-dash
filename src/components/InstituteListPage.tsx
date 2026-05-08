@@ -30,6 +30,20 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   useRealtime("outreach_stages", [["stages"]]);
   const { data: list = [] } = useQuery({ queryKey: ["institutes", type], queryFn: () => fetchInstitutes(type) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
+  const { data: lastActivityMap = {} } = useQuery({
+    queryKey: ["last-activity-map", type],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("outreach_activities")
+        .select("institute_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((a: any) => { if (!map[a.institute_id]) map[a.institute_id] = a.created_at; });
+      return map;
+    },
+  });
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
