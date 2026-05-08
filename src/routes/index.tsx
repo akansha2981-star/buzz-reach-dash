@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, BookOpen, Activity, CheckCircle2, Calendar, Sparkles, ListChecks, AlertTriangle, TrendingUp, Filter, X, Clock } from "lucide-react";
-import { format, isAfter, isBefore, isToday, isPast, startOfDay, subDays, isWithinInterval } from "date-fns";
+import { format, isAfter, isBefore, isToday, isPast, startOfDay, endOfDay, subDays, addDays, isWithinInterval } from "date-fns";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -99,6 +99,50 @@ function Dashboard() {
 
   const recentlyAddedThisWeek = filt.insts.filter((i: any) => isWithinInterval(new Date(i.created_at), { start: subDays(new Date(), 7), end: new Date() })).length;
 
+  // ===== Daily Report (today vs yesterday) — uses unfiltered data =====
+  const today0 = startOfDay(new Date());
+  const today1 = endOfDay(new Date());
+  const y0 = startOfDay(subDays(new Date(), 1));
+  const y1 = endOfDay(subDays(new Date(), 1));
+  const next7End = endOfDay(addDays(new Date(), 7));
+  const prev7Start = startOfDay(subDays(new Date(), 7));
+  const prev7End = startOfDay(new Date());
+
+  const allInsts = data?.institutes ?? [];
+  const allActs = data?.activities ?? [];
+  const allMeetings = data?.meetings ?? [];
+
+  const inRange = (d: any, a: Date, b: Date) => { const x = new Date(d); return x >= a && x <= b; };
+
+  const newCollegesToday = allInsts.filter((i: any) => i.type === "college" && inRange(i.created_at, today0, today1)).length;
+  const newCollegesYday = allInsts.filter((i: any) => i.type === "college" && inRange(i.created_at, y0, y1)).length;
+
+  const newCoachingToday = allInsts.filter((i: any) => i.type === "coaching" && inRange(i.created_at, today0, today1)).length;
+  const newCoachingYday = allInsts.filter((i: any) => i.type === "coaching" && inRange(i.created_at, y0, y1)).length;
+
+  // Activities on previously existing institutes (created before today)
+  const actsOnPrevToday = allActs.filter((a: any) => inRange(a.created_at, today0, today1) && a.institutes && new Date((allInsts.find((i: any) => i.id === a.institute_id)?.created_at) ?? a.created_at) < today0).length;
+  const actsOnPrevYday = allActs.filter((a: any) => inRange(a.created_at, y0, y1) && a.institutes && new Date((allInsts.find((i: any) => i.id === a.institute_id)?.created_at) ?? a.created_at) < y0).length;
+
+  const meetingsNext7 = allMeetings.filter((m: any) => { const d = new Date(m.meeting_at); return d >= today0 && d <= next7End && m.status === "scheduled"; }).length;
+  const meetingsPrev7 = allMeetings.filter((m: any) => { const d = new Date(m.meeting_at); return d >= prev7Start && d < prev7End; }).length;
+
+  const totalActsToday = allActs.filter((a: any) => inRange(a.created_at, today0, today1)).length;
+  const totalActsYday = allActs.filter((a: any) => inRange(a.created_at, y0, y1)).length;
+
+  const pctChange = (today: number, yday: number) => {
+    if (yday === 0) return today === 0 ? 0 : 100;
+    return Math.round(((today - yday) / yday) * 100);
+  };
+
+  const dailyReport = [
+    { label: "New Colleges Today", value: newCollegesToday, prev: newCollegesYday, icon: GraduationCap, hint: "vs yesterday" },
+    { label: "New Coaching Today", value: newCoachingToday, prev: newCoachingYday, icon: BookOpen, hint: "vs yesterday" },
+    { label: "Activities on Existing", value: actsOnPrevToday, prev: actsOnPrevYday, icon: Activity, hint: "follow-ups today" },
+    { label: "Total Activities Today", value: totalActsToday, prev: totalActsYday, icon: Sparkles, hint: "vs yesterday" },
+    { label: "Meetings · Next 7 days", value: meetingsNext7, prev: meetingsPrev7, icon: Calendar, hint: "vs previous 7 days" },
+  ];
+
   const clear = () => { setRange("30"); setTypeFilter("all"); setStageFilter("all"); };
   const activeFilters = (range !== "30" ? 1 : 0) + (typeFilter !== "all" ? 1 : 0) + (stageFilter !== "all" ? 1 : 0);
 
@@ -110,7 +154,39 @@ function Dashboard() {
         <p className="mt-1 max-w-xl text-sm opacity-90">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
       </div>
 
-      {/* Filters */}
+      {/* Daily Report — auto-updated from live activity */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+            <span className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Daily Report — {format(new Date(), "EEEE, MMM d")}</span>
+            <Badge variant="outline" className="text-[10px]">Live · vs yesterday</Badge>
+          </CardTitle>
+          <CardDescription>Auto-updated as colleges, activities and meetings change.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {dailyReport.map((r) => {
+            const delta = pctChange(r.value, r.prev);
+            const up = delta > 0;
+            const down = delta < 0;
+            const tone = up ? "text-emerald-600 bg-emerald-500/10" : down ? "text-rose-600 bg-rose-500/10" : "text-muted-foreground bg-muted";
+            return (
+              <div key={r.label} className="rounded-xl border bg-card p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <r.icon className="h-3.5 w-3.5" /> {r.label}
+                </div>
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <p className="font-display text-3xl font-bold tabular-nums">{r.value}</p>
+                  <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium ${tone}`}>
+                    {up ? "▲" : down ? "▼" : "•"} {Math.abs(delta)}%
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">Yesterday: <span className="tabular-nums">{r.prev}</span> · {r.hint}</p>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><Filter className="h-4 w-4" /> Filters</div>
