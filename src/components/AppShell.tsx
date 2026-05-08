@@ -6,11 +6,11 @@ import { AppHeader } from "./AppHeader";
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full overflow-x-hidden">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader title={title} />
-          <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+          <main className="min-w-0 flex-1 p-3 sm:p-4 md:p-6 lg:p-8">{children}</main>
         </div>
       </div>
     </SidebarProvider>
