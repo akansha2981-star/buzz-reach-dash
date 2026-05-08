@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { TasksSection } from "@/components/TasksSection";
+import { InstituteResources } from "@/components/InstituteResources";
 import { InstituteMeetingsSection } from "@/components/InstituteMeetingsSection";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
