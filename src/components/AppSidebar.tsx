@@ -121,6 +121,20 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
+                  <Link to="/ceo-desk">
+                    <Crown />
+                    <span>{isAdmin ? "CEO Desk" : "My CEO Requests"}</span>
+                    {ceoOpen > 0 && !collapsed && (
+                      <Badge variant="default" className="ml-auto h-5 bg-amber-500 px-1.5 text-[10px] hover:bg-amber-500">
+                        {ceoOpen}
+                      </Badge>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
