@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
+import { PushToCEODesk } from "@/components/PushToCEODesk";
 
 export function TasksSection({ instituteId, instituteName }: { instituteId: string; instituteName: string }) {
   useRealtime("tasks", [["tasks", instituteId], ["tasks-all"]]);
