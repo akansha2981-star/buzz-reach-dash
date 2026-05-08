@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
 import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
+import { GoogleCalendarStatusCard } from "@/components/GoogleCalendarStatusCard";
 import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: () => <RequireAuth><AppShell title="Dashboard"><Dashboard /></AppShell></RequireAuth> });
@@ -265,6 +266,8 @@ function Dashboard() {
         <Stat icon={ListChecks} label="Pending tasks" value={pendingTasks.length} accent="bg-indigo-500/15 text-indigo-600" />
         <Stat icon={AlertTriangle} label="Overdue tasks" value={overdueTasks.length} accent={overdueTasks.length > 0 ? "bg-destructive/15 text-destructive" : ""} />
       </div>
+
+      <GoogleCalendarStatusCard />
 
       {/* Pipeline + Conversion */}
       <div className="grid gap-6 lg:grid-cols-3">
