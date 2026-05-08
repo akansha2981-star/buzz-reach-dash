@@ -109,7 +109,7 @@ function UserRow({ user }: { user: any }) {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-medium">{user.full_name ?? "—"}</p>
+            <p className="font-medium">{user.full_name ?? "—"}{user.designation ? <span className="ml-2 text-xs font-normal text-muted-foreground">· {user.designation}</span> : null}</p>
             {isAdminUser ? (
               <Badge className="gap-1"><ShieldCheck className="h-3 w-3" /> Admin</Badge>
             ) : (
