@@ -496,6 +496,45 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
       const [hh, mm] = time.split(":").map(Number);
       const dt = new Date(date); dt.setHours(hh ?? 9, mm ?? 0, 0, 0);
       const attendees = attendeesText.split(",").map((s) => s.trim()).filter(Boolean);
+      const attendeeEmails = attendees.filter((a) => /.+@.+\..+/.test(a));
+
+      let google_event_id = meeting?.google_event_id ?? null;
+      let google_calendar_id = meeting?.google_calendar_id ?? null;
+      let google_html_link = meeting?.google_html_link ?? null;
+      let meeting_link = form.meeting_link || null;
+
+      // Sync to Google Calendar (cancellations remove the event)
+      try {
+        if (syncGoogle && form.status !== "cancelled") {
+          const gcalInput = {
+            title: form.title,
+            description: form.description || null,
+            startISO: dt.toISOString(),
+            durationMinutes: Number(form.duration_minutes) || 30,
+            attendees: attendeeEmails,
+            reminderMinutes: Number(form.reminder_minutes) || 0,
+            createMeetLink: form.platform === "google_meet",
+            calendarId: google_calendar_id || "primary",
+          };
+          if (google_event_id) {
+            const r = await updateGCal({ data: { ...gcalInput, eventId: google_event_id } });
+            google_html_link = r.htmlLink ?? google_html_link;
+            if (r.meetLink) meeting_link = r.meetLink;
+          } else {
+            const r = await createGCal({ data: gcalInput });
+            google_event_id = r.eventId;
+            google_calendar_id = r.calendarId;
+            google_html_link = r.htmlLink;
+            if (r.meetLink) meeting_link = r.meetLink;
+          }
+        } else if (google_event_id && (form.status === "cancelled" || !syncGoogle)) {
+          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary" } });
+          google_event_id = null; google_calendar_id = null; google_html_link = null;
+        }
+      } catch (e: any) {
+        toast.error(`Google Calendar sync failed: ${e.message}`);
+      }
+
       const payload = {
         title: form.title,
         description: form.description || null,
@@ -503,10 +542,13 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
         meeting_at: dt.toISOString(),
         duration_minutes: Number(form.duration_minutes) || 30,
         platform: form.platform,
-        meeting_link: form.meeting_link || null,
+        meeting_link,
         attendees,
         reminder_minutes: Number(form.reminder_minutes) || 0,
         status: form.status,
+        google_event_id,
+        google_calendar_id,
+        google_html_link,
       };
       if (editing) {
         const { error } = await supabase.from("meetings").update(payload).eq("id", meeting.id);
