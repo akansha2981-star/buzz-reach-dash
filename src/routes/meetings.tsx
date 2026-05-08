@@ -49,6 +49,7 @@ const STATUSES = [
 ];
 
 function MeetingsPage() {
+  useRealtime("meetings", [["meetings"], ["dashboard"]]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
