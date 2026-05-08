@@ -234,7 +234,7 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <p className="text-sm text-muted-foreground">No profiles yet.</p>
             </CardContent></Card>
-          ) : (
+          ) : view === "grid" ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((i) => {
                 const stage = stages.find((s) => s.id === i.current_stage_id);
