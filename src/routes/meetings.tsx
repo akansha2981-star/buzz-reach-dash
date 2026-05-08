@@ -387,8 +387,8 @@ function MeetingCard({ m }: { m: any }) {
   );
 }
 
-function MeetingDialog({ meeting, trigger }: { meeting?: any; trigger?: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTitle, defaultOpen }: { meeting?: any; trigger?: React.ReactNode; defaultInstituteId?: string; defaultTitle?: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(!!defaultOpen);
   const { user } = useAuth();
   const qc = useQueryClient();
   const editing = !!meeting;
@@ -397,9 +397,9 @@ function MeetingDialog({ meeting, trigger }: { meeting?: any; trigger?: React.Re
   const [date, setDate] = useState<Date>(initialDate);
   const [time, setTime] = useState(format(initialDate, "HH:mm"));
   const [form, setForm] = useState({
-    title: meeting?.title ?? "",
+    title: meeting?.title ?? defaultTitle ?? "",
     description: meeting?.description ?? "",
-    institute_id: meeting?.institute_id ?? "none",
+    institute_id: meeting?.institute_id ?? defaultInstituteId ?? "none",
     duration_minutes: meeting?.duration_minutes ?? 30,
     platform: meeting?.platform ?? "google_meet",
     meeting_link: meeting?.meeting_link ?? "",
