@@ -1,21 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Calendar, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
+import { Calendar, CheckCircle2, AlertCircle, ExternalLink, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getGoogleCalendarStatus } from "@/lib/google-calendar-status.functions";
+import { listGoogleCalendarAccounts } from "@/lib/google-calendar.functions";
 
 export function GoogleCalendarStatusCard() {
-  const fetchStatus = useServerFn(getGoogleCalendarStatus);
+  const fetchAccounts = useServerFn(listGoogleCalendarAccounts);
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["google-calendar-status"],
-    queryFn: () => fetchStatus(),
+    queryKey: ["google-calendar-accounts"],
+    queryFn: () => fetchAccounts(),
     staleTime: 60_000,
   });
 
-  const connected = data?.connected;
-  const email = data?.email;
+  const accounts = data?.accounts ?? [];
+  const connected = accounts.length > 0;
 
   return (
     <Card>
@@ -28,7 +28,7 @@ export function GoogleCalendarStatusCard() {
             <Badge variant="outline" className="text-[10px]">Checking…</Badge>
           ) : connected ? (
             <Badge className="gap-1 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 text-[10px]">
-              <CheckCircle2 className="h-3 w-3" /> Connected
+              <CheckCircle2 className="h-3 w-3" /> {accounts.length} account{accounts.length === 1 ? "" : "s"} connected
             </Badge>
           ) : (
             <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
@@ -37,38 +37,43 @@ export function GoogleCalendarStatusCard() {
           )}
         </CardTitle>
         <CardDescription>
-          Meetings scheduled in this portal sync to this Google account's calendar.
+          Choose which Google account a meeting syncs to from the meeting dialog. Add more accounts to give your team options.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {connected ? (
-          <>
-            <div className="rounded-lg border bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">Synced account</p>
-              <p className="mt-0.5 truncate font-medium">{email ?? "—"}</p>
-              {data?.calendars && data.calendars.length > 1 && (
-                <p className="mt-1 text-[11px] text-muted-foreground">{data.calendars.length} calendars accessible</p>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" variant="outline">
-                <a href="https://calendar.google.com" target="_blank" rel="noreferrer">
-                  Open Google Calendar <ExternalLink className="ml-1 h-3 w-3" />
-                </a>
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isRefetching}>
-                {isRefetching ? "Refreshing…" : "Refresh"}
-              </Button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              To switch accounts, ask the workspace admin to disconnect Google Calendar and reconnect with a different Google account.
-            </p>
-          </>
+          <ul className="space-y-2">
+            {accounts.map((a) => (
+              <li key={a.key} className="flex items-start justify-between gap-3 rounded-lg border bg-muted/30 p-3">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 truncate font-medium">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> {a.email ?? "(unable to load email)"}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {a.calendars.length} calendar{a.calendars.length === 1 ? "" : "s"} accessible · key: <code className="rounded bg-background px-1">{a.key}</code>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Google Calendar isn't connected yet. Ask an admin to enable the integration so meetings auto-sync.
+            No Google account is connected yet. Ask the workspace admin to connect Google Calendar.
           </p>
         )}
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button asChild size="sm" variant="outline">
+            <a href="https://calendar.google.com" target="_blank" rel="noreferrer">
+              Open Google Calendar <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isRefetching}>
+            {isRefetching ? "Refreshing…" : "Refresh"}
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          To add another Google account, ask Lovable: "connect another Google Calendar account". To remove one, ask: "disconnect Google Calendar".
+        </p>
       </CardContent>
     </Card>
   );

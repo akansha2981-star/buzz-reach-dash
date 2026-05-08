@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { PushToCEODesk } from "@/components/PushToCEODesk";
 import { useServerFn } from "@tanstack/react-start";
-import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@/lib/google-calendar.functions";
+import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent, listGoogleCalendarAccounts } from "@/lib/google-calendar.functions";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/meetings")({
@@ -477,10 +477,20 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
     Array.isArray(meeting?.attendees) ? meeting.attendees.join(", ") : ""
   );
   const [syncGoogle, setSyncGoogle] = useState<boolean>(!!meeting?.google_event_id || !editing);
+  const [accountKey, setAccountKey] = useState<string>(meeting?.google_account_key ?? "");
+  const [useCustomLink, setUseCustomLink] = useState<boolean>(!!meeting?.meeting_link && meeting?.platform !== "google_meet");
 
   const createGCal = useServerFn(createGoogleCalendarEvent);
   const updateGCal = useServerFn(updateGoogleCalendarEvent);
   const deleteGCal = useServerFn(deleteGoogleCalendarEvent);
+  const fetchAccounts = useServerFn(listGoogleCalendarAccounts);
+
+  const { data: accountsData } = useQuery({
+    queryKey: ["google-calendar-accounts"],
+    queryFn: () => fetchAccounts(),
+    staleTime: 60_000,
+  });
+  const accounts = accountsData?.accounts ?? [];
 
   const { data: institutes = [] } = useQuery({
     queryKey: ["institutes-all"],
@@ -501,35 +511,44 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
       let google_event_id = meeting?.google_event_id ?? null;
       let google_calendar_id = meeting?.google_calendar_id ?? null;
       let google_html_link = meeting?.google_html_link ?? null;
+      let google_account_key: string | null = meeting?.google_account_key ?? null;
       let meeting_link = form.meeting_link || null;
+
+      const wantsCustomMeetLink = useCustomLink && !!form.meeting_link;
+      const shouldGenerateMeet = form.platform === "google_meet" && !wantsCustomMeetLink;
+      const effectiveAccount = accountKey || google_account_key || null;
 
       // Sync to Google Calendar (cancellations remove the event)
       try {
         if (syncGoogle && form.status !== "cancelled") {
           const gcalInput = {
+            accountKey: effectiveAccount,
             title: form.title,
             description: form.description || null,
             startISO: dt.toISOString(),
             durationMinutes: Number(form.duration_minutes) || 30,
             attendees: attendeeEmails,
             reminderMinutes: Number(form.reminder_minutes) || 0,
-            createMeetLink: form.platform === "google_meet",
+            createMeetLink: shouldGenerateMeet,
+            customLocation: wantsCustomMeetLink ? form.meeting_link : null,
             calendarId: google_calendar_id || "primary",
           };
           if (google_event_id) {
             const r = await updateGCal({ data: { ...gcalInput, eventId: google_event_id } });
             google_html_link = r.htmlLink ?? google_html_link;
-            if (r.meetLink) meeting_link = r.meetLink;
+            google_account_key = r.accountKey ?? google_account_key;
+            if (r.meetLink && !wantsCustomMeetLink) meeting_link = r.meetLink;
           } else {
             const r = await createGCal({ data: gcalInput });
             google_event_id = r.eventId;
             google_calendar_id = r.calendarId;
             google_html_link = r.htmlLink;
-            if (r.meetLink) meeting_link = r.meetLink;
+            google_account_key = r.accountKey;
+            if (r.meetLink && !wantsCustomMeetLink) meeting_link = r.meetLink;
           }
         } else if (google_event_id && (form.status === "cancelled" || !syncGoogle)) {
-          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary" } });
-          google_event_id = null; google_calendar_id = null; google_html_link = null;
+          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary", accountKey: google_account_key } });
+          google_event_id = null; google_calendar_id = null; google_html_link = null; google_account_key = null;
         }
       } catch (e: any) {
         toast.error(`Google Calendar sync failed: ${e.message}`);
@@ -549,6 +568,7 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
         google_event_id,
         google_calendar_id,
         google_html_link,
+        google_account_key,
       };
       if (editing) {
         const { error } = await supabase.from("meetings").update(payload).eq("id", meeting.id);
@@ -603,7 +623,29 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
             <div><Label>Duration (min)</Label><Input type="number" min={5} value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} /></div>
           </div>
-          <div><Label>Meeting link</Label><Input type="url" placeholder="https://meet.google.com/..." value={form.meeting_link} onChange={(e) => setForm({ ...form, meeting_link: e.target.value })} /></div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label>Meeting link</Label>
+              {form.platform === "google_meet" && syncGoogle && (
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Switch checked={useCustomLink} onCheckedChange={setUseCustomLink} />
+                  Use my own link
+                </label>
+              )}
+            </div>
+            <Input
+              type="url"
+              placeholder={form.platform === "google_meet" && syncGoogle && !useCustomLink
+                ? "Auto-generated Google Meet link will go here"
+                : "https://zoom.us/j/... or any meeting URL"}
+              value={form.meeting_link}
+              disabled={form.platform === "google_meet" && syncGoogle && !useCustomLink}
+              onChange={(e) => setForm({ ...form, meeting_link: e.target.value })}
+            />
+            {form.platform === "google_meet" && syncGoogle && !useCustomLink && (
+              <p className="text-[11px] text-muted-foreground">A Google Meet link will be created automatically. Toggle "Use my own link" to paste a custom one.</p>
+            )}
+          </div>
           <div>
             <Label>Linked profile</Label>
             <Select value={form.institute_id} onValueChange={(v) => setForm({ ...form, institute_id: v })}>
@@ -626,17 +668,39 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="flex items-start justify-between gap-4 rounded-lg border bg-muted/30 p-3">
-            <div className="space-y-0.5">
-              <Label className="text-sm">Sync to Google Calendar</Label>
-              <p className="text-xs text-muted-foreground">
-                Creates a real Google Calendar event{form.platform === "google_meet" ? " with a Google Meet link" : ""} and emails invites to attendees.
-                {meeting?.google_html_link && (
-                  <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
-                )}
-              </p>
+          <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label className="text-sm">Sync to Google Calendar</Label>
+                <p className="text-xs text-muted-foreground">
+                  Creates a real Google Calendar event and emails invites to attendees.
+                  {meeting?.google_html_link && (
+                    <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
+                  )}
+                </p>
+              </div>
+              <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
             </div>
-            <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
+            {syncGoogle && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Send from Google account</Label>
+                {accounts.length === 0 ? (
+                  <p className="text-xs text-amber-600">No Google account is connected. Open the dashboard to set one up.</p>
+                ) : (
+                  <Select value={accountKey || accounts[0]?.key} onValueChange={setAccountKey}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((a) => (
+                        <SelectItem key={a.key} value={a.key}>{a.email ?? a.key}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {accounts.length > 1 && (
+                  <p className="text-[11px] text-muted-foreground">Pick which connected Google account this meeting goes on.</p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
