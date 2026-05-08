@@ -1,5 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useTaskNotifications } from "@/hooks/useTaskNotifications";
 import { useAuth } from "@/lib/auth";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -13,8 +15,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { isAdmin, perms } = useAuth();
+  const { pendingCount, overdueCount } = useTaskNotifications();
   const isActive = (p: string) => path === p;
-  const outreachOpen = path.startsWith("/outreach");
   const can = (k: keyof typeof perms) => isAdmin || perms[k];
 
   return (
@@ -91,6 +93,20 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/tasks")}>
+                  <Link to="/tasks">
+                    <ListChecks />
+                    <span>Tasks</span>
+                    {pendingCount > 0 && !collapsed && (
+                      <Badge variant={overdueCount > 0 ? "destructive" : "secondary"} className="ml-auto h-5 px-1.5 text-[10px]">
+                        {pendingCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
