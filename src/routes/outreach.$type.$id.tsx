@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { TasksSection } from "@/components/TasksSection";
+import { InstituteResources } from "@/components/InstituteResources";
 import { InstituteMeetingsSection } from "@/components/InstituteMeetingsSection";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -174,9 +175,10 @@ function InstituteDetailPage() {
             </div>
 
             <Tabs defaultValue="tasks" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="meetings">Meetings</TabsTrigger>
+                <TabsTrigger value="resources">Links & Docs</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
               </TabsList>
               <TabsContent value="tasks" className="mt-4">
@@ -184,6 +186,9 @@ function InstituteDetailPage() {
               </TabsContent>
               <TabsContent value="meetings" className="mt-4">
                 <InstituteMeetingsSection instituteId={id} instituteName={data.institute.name} />
+              </TabsContent>
+              <TabsContent value="resources" className="mt-4">
+                <InstituteResources instituteId={id} />
               </TabsContent>
               <TabsContent value="timeline" className="mt-4">
                 <Card>
