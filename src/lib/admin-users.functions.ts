@@ -44,6 +44,7 @@ export const listUsers = createServerFn({ method: "GET" })
     if (error) throw error;
     const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role");
     const { data: permsList } = await supabaseAdmin.from("user_permissions").select("*");
+    const { data: profilesList } = await supabaseAdmin.from("profiles").select("id, designation, full_name");
     const roleMap = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
       const arr = roleMap.get(r.user_id) ?? [];
@@ -52,12 +53,16 @@ export const listUsers = createServerFn({ method: "GET" })
     });
     const permMap = new Map<string, Perms>();
     (permsList ?? []).forEach((p: any) => permMap.set(p.user_id, p));
+    const profMap = new Map<string, any>();
+    (profilesList ?? []).forEach((p: any) => profMap.set(p.id, p));
     return list.users.map((u) => {
       const isAdmin = (roleMap.get(u.id) ?? []).includes("admin");
+      const prof = profMap.get(u.id);
       return {
         id: u.id,
         email: u.email,
-        full_name: (u.user_metadata as any)?.full_name ?? null,
+        full_name: prof?.full_name ?? (u.user_metadata as any)?.full_name ?? null,
+        designation: prof?.designation ?? null,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
         roles: roleMap.get(u.id) ?? [],
