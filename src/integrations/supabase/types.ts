@@ -89,12 +89,14 @@ export type Database = {
         Row: {
           ceo_notes: string | null
           created_at: string
+          deadline_at: string | null
           handled_at: string | null
           handled_by: string | null
           id: string
           institute_id: string | null
           message: string | null
           priority: string
+          request_type: string
           requester_email: string | null
           requester_id: string | null
           source_id: string | null
@@ -106,12 +108,14 @@ export type Database = {
         Insert: {
           ceo_notes?: string | null
           created_at?: string
+          deadline_at?: string | null
           handled_at?: string | null
           handled_by?: string | null
           id?: string
           institute_id?: string | null
           message?: string | null
           priority?: string
+          request_type?: string
           requester_email?: string | null
           requester_id?: string | null
           source_id?: string | null
@@ -123,12 +127,14 @@ export type Database = {
         Update: {
           ceo_notes?: string | null
           created_at?: string
+          deadline_at?: string | null
           handled_at?: string | null
           handled_by?: string | null
           id?: string
           institute_id?: string | null
           message?: string | null
           priority?: string
+          request_type?: string
           requester_email?: string | null
           requester_id?: string | null
           source_id?: string | null
