@@ -207,7 +207,12 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
 
                       <div className="space-y-1.5">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Update status</p>
-                        <Select value={i.current_stage_id ?? undefined} onValueChange={(v) => updateStage.mutate({ id: i.id, name: i.name, stageId: v })}>
+                        <Select value={i.current_stage_id ?? undefined} onValueChange={(v) => {
+                          const s = stages.find((x) => x.id === v);
+                          if (!s || v === i.current_stage_id) return;
+                          setStageChange({ id: i.id, name: i.name, stageId: v, stageName: s.name });
+                          setStageNote("");
+                        }}>
                           <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Set stage" /></SelectTrigger>
                           <SelectContent>
                             {stages.map((s) => (
@@ -219,13 +224,16 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                         </Select>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 border-t pt-3">
-                        <div className="flex items-center gap-1">
-                          <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
-                            <Activity className="h-3 w-3" /> Timeline
-                          </Link>
-                        </div>
-                        <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <Activity className="h-3 w-3" /> Timeline
+                        </Link>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <MeetingDialog
+                            defaultInstituteId={i.id}
+                            defaultTitle={`Meeting with ${i.name}`}
+                            trigger={<Button size="sm" variant="outline" className="h-7 px-2 text-xs"><CalendarPlus className="mr-1 h-3 w-3" /> Schedule</Button>}
+                          />
                           <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
                             <PopoverTrigger asChild>
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
