@@ -204,6 +204,14 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
               )}
               <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} of {list.length}</span>
             </div>
+            {staleCount > 0 && (
+              <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                <AlertTriangle className="h-4 w-4 animate-pulse" />
+                {staleCount} {staleCount === 1 ? "profile needs" : "profiles need"} attention — no activity in 7+ days. Pinned to top.
+              </div>
+            )}
+            <div className="hidden">{/* spacer */}</div>
+            </div>
           </div>
 
           {filtered.length === 0 ? (
