@@ -27,11 +27,18 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"recent" | "name" | "stage" | "meeting">("recent");
 
   const qc = useQueryClient();
   const { user } = useAuth();
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
+
+  // Stage change confirmation (requires note)
+  const [stageChange, setStageChange] = useState<{ id: string; name: string; stageId: string; stageName: string } | null>(null);
+  const [stageNote, setStageNote] = useState("");
 
   const addNote = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
@@ -52,19 +59,20 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   });
 
   const updateStage = useMutation({
-    mutationFn: async ({ id, name, stageId }: { id: string; name: string; stageId: string }) => {
+    mutationFn: async ({ id, name, stageId, note }: { id: string; name: string; stageId: string; note: string }) => {
       const stage = stages.find((s) => s.id === stageId);
       const { error } = await supabase.from("institutes")
         .update({ current_stage_id: stageId, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
       await supabase.from("outreach_activities").insert({
         institute_id: id, stage_id: stageId, stage_name_snapshot: stage?.name,
-        note: `Stage updated → ${stage?.name}`, created_by: user?.id ?? null,
+        note: `Stage → ${stage?.name}: ${note.trim()}`, created_by: user?.id ?? null,
       });
-      await logAction({ action: "stage.updated", entity_type: "institute", entity_id: id, entity_label: name, details: { stage: stage?.name } });
+      await logAction({ action: "stage.updated", entity_type: "institute", entity_id: id, entity_label: name, details: { stage: stage?.name, note } });
     },
     onSuccess: () => {
       toast.success("Status updated");
+      setStageChange(null); setStageNote("");
       qc.invalidateQueries({ queryKey: ["institutes", type] });
       qc.invalidateQueries({ queryKey: ["activities-all"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -72,12 +80,38 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
     onError: (e: any) => toast.error(e.message),
   });
 
-  const filtered = useMemo(() => list.filter((i) => {
+  const cities = useMemo(() => Array.from(new Set(list.map((i) => i.city).filter(Boolean))).sort() as string[], [list]);
+  const states = useMemo(() => Array.from(new Set(list.map((i) => i.state).filter(Boolean))).sort() as string[], [list]);
+
+  const filtered = useMemo(() => {
     const m = q.trim().toLowerCase();
-    if (stageFilter !== "all" && i.current_stage_id !== stageFilter) return false;
-    if (!m) return true;
-    return [i.name, i.city, i.state, i.contact_person].some((v) => v?.toLowerCase().includes(m));
-  }), [list, q, stageFilter]);
+    let out = list.filter((i) => {
+      if (stageFilter !== "all" && i.current_stage_id !== stageFilter) return false;
+      if (stageFilter === "none" && i.current_stage_id) return false;
+      if (cityFilter !== "all" && i.city !== cityFilter) return false;
+      if (stateFilter !== "all" && i.state !== stateFilter) return false;
+      if (!m) return true;
+      return [i.name, i.city, i.state, i.contact_person].some((v) => v?.toLowerCase().includes(m));
+    });
+    out = [...out].sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "stage") {
+        const ai = stages.findIndex((s) => s.id === a.current_stage_id);
+        const bi = stages.findIndex((s) => s.id === b.current_stage_id);
+        return bi - ai;
+      }
+      if (sortBy === "meeting") {
+        const at = a.next_meeting_at ? +new Date(a.next_meeting_at) : Infinity;
+        const bt = b.next_meeting_at ? +new Date(b.next_meeting_at) : Infinity;
+        return at - bt;
+      }
+      return +new Date(b.updated_at ?? b.created_at) - +new Date(a.updated_at ?? a.created_at);
+    });
+    return out;
+  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages]);
+
+  const activeFilterCount = [stageFilter, cityFilter, stateFilter].filter((v) => v !== "all").length;
+  const clearFilters = () => { setStageFilter("all"); setCityFilter("all"); setStateFilter("all"); setQ(""); };
 
   return (
     <RequireAuth perm={type === "college" ? "can_colleges" : "can_coaching"}>
