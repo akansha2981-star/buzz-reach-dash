@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isAfter, isToday, isTomorrow, startOfDay, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from "date-fns";
+import { format, isAfter, isBefore, isToday, isTomorrow, startOfDay, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, Plus, Video, Link2, Clock, Users as UsersIcon, Trash2, Pencil, ExternalLink, CheckCircle2, XCircle, AlarmClock, ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon, CalendarDays } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -51,6 +51,9 @@ const STATUSES = [
 function MeetingsPage() {
   useRealtime("meetings", [["meetings"], ["dashboard"]]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [instFilter, setInstFilter] = useState<string>("all");
+  const [rangeFilter, setRangeFilter] = useState<"all" | "today" | "tomorrow" | "week" | "month" | "past">("all");
   const [search, setSearch] = useState("");
 
   const { data: meetings = [] } = useQuery({
@@ -62,11 +65,28 @@ function MeetingsPage() {
     },
   });
 
+  const institutesList = useMemo(() => {
+    const map = new Map<string, string>();
+    meetings.forEach((m) => { if (m.institute_id && m.institutes?.name) map.set(m.institute_id, m.institutes.name); });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [meetings]);
+
   const filtered = useMemo(() => meetings.filter((m) => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
-    if (search && !`${m.title} ${m.institutes?.name ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (platformFilter !== "all" && m.platform !== platformFilter) return false;
+    if (instFilter !== "all" && m.institute_id !== instFilter) return false;
+    if (search && !`${m.title} ${m.institutes?.name ?? ""} ${m.description ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (rangeFilter !== "all") {
+      const d = new Date(m.meeting_at);
+      const now = new Date();
+      if (rangeFilter === "today" && !isToday(d)) return false;
+      if (rangeFilter === "tomorrow" && !isTomorrow(d)) return false;
+      if (rangeFilter === "week" && !(isAfter(d, now) && isBefore(d, addDays(now, 7)))) return false;
+      if (rangeFilter === "month" && !(isAfter(d, now) && isBefore(d, addDays(now, 30)))) return false;
+      if (rangeFilter === "past" && isAfter(d, now)) return false;
+    }
     return true;
-  }), [meetings, statusFilter, search]);
+  }), [meetings, statusFilter, platformFilter, instFilter, search, rangeFilter]);
 
   const now = new Date();
   const upcoming = filtered.filter((m) => isAfter(new Date(m.meeting_at), now) && m.status === "scheduled");
@@ -75,6 +95,10 @@ function MeetingsPage() {
   const todayCount = meetings.filter((m) => isToday(new Date(m.meeting_at)) && m.status === "scheduled").length;
   const tomorrowCount = meetings.filter((m) => isTomorrow(new Date(m.meeting_at)) && m.status === "scheduled").length;
   const completedCount = meetings.filter((m) => m.status === "completed").length;
+  const cancelledCount = meetings.filter((m) => m.status === "cancelled").length;
+
+  const activeFilters = (statusFilter !== "all" ? 1 : 0) + (platformFilter !== "all" ? 1 : 0) + (instFilter !== "all" ? 1 : 0) + (rangeFilter !== "all" ? 1 : 0) + (search ? 1 : 0);
+  const clear = () => { setStatusFilter("all"); setPlatformFilter("all"); setInstFilter("all"); setRangeFilter("all"); setSearch(""); };
 
   return (
     <div className="space-y-6">
@@ -86,23 +110,59 @@ function MeetingsPage() {
         <MeetingDialog />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard icon={CalendarIcon} label="Today" value={todayCount} accent="bg-primary/15 text-primary" />
         <StatCard icon={AlarmClock} label="Tomorrow" value={tomorrowCount} accent="bg-amber-500/15 text-amber-600" />
         <StatCard icon={Clock} label="Upcoming" value={upcoming.length} accent="bg-blue-500/15 text-blue-600" />
         <StatCard icon={CheckCircle2} label="Completed" value={completedCount} accent="bg-emerald-500/15 text-emerald-600" />
+        <StatCard icon={XCircle} label="Cancelled" value={cancelledCount} accent="bg-rose-500/15 text-rose-600" />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input placeholder="Search meetings…" value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1" />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input placeholder="Search meetings, institutes, descriptions…" value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1" />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={rangeFilter} onValueChange={(v: any) => setRangeFilter(v)}>
+              <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All dates</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                <SelectItem value="week">Next 7 days</SelectItem>
+                <SelectItem value="month">Next 30 days</SelectItem>
+                <SelectItem value="past">Past</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+              <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                {PLATFORMS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={instFilter} onValueChange={setInstFilter}>
+              <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All institutes</SelectItem>
+                {institutesList.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {activeFilters > 0 && (
+              <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={clear}>Clear</Button>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground">{filtered.length} of {meetings.length}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="calendar">
         <TabsList>
