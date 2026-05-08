@@ -133,7 +133,12 @@ function InstituteDetailPage() {
               <Card>
                 <CardHeader><CardTitle>Outreach Stage</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Select value={data.institute.current_stage_id ?? undefined} onValueChange={(v) => updateStage.mutate(v)}>
+                  <Select value={data.institute.current_stage_id ?? undefined} onValueChange={(v) => {
+                    const s = stages.find((x) => x.id === v);
+                    if (!s || v === data.institute!.current_stage_id) return;
+                    setPendingStage({ id: v, name: s.name });
+                    setStageNote("");
+                  }}>
                     <SelectTrigger><SelectValue placeholder="Set stage" /></SelectTrigger>
                     <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                   </Select>
@@ -142,10 +147,15 @@ function InstituteDetailPage() {
                     const pct = Math.round((idx / stages.length) * 100);
                     return (<div><div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">Pipeline progress</span><span className="font-medium">{pct}%</span></div><Progress value={pct} /></div>);
                   })()}
+                  <MeetingDialog
+                    defaultInstituteId={id}
+                    defaultTitle={`Meeting with ${data.institute.name}`}
+                    trigger={<Button size="sm" variant="outline" className="w-full"><CalendarPlus className="mr-1 h-4 w-4" /> Schedule a meeting</Button>}
+                  />
                   <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Next meeting</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quick reminder</p>
                     <Input type="datetime-local" defaultValue={data.institute.next_meeting_at ? new Date(data.institute.next_meeting_at).toISOString().slice(0,16) : ""} onChange={(e) => setMeeting(e.target.value)} />
-                    <Button size="sm" variant="outline" className="w-full" onClick={() => setNextMeeting.mutate()}><Calendar className="mr-1 h-4 w-4" /> Save meeting</Button>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => setNextMeeting.mutate()}><Calendar className="mr-1 h-4 w-4" /> Save reminder</Button>
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Add note</p>
