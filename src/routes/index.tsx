@@ -87,11 +87,15 @@ function Dashboard() {
   const overdueTasks = pendingTasks.filter((t: any) => t.due_at && isPast(new Date(t.due_at)) && !isToday(new Date(t.due_at)));
   const todayTasks = pendingTasks.filter((t: any) => t.due_at && isToday(new Date(t.due_at)));
 
-  const stagePipeline = stages.map((s: any) => ({
-    ...s,
-    count: filt.insts.filter((i: any) => i.current_stage_id === s.id).length,
-  }));
+  const stagePipeline = stages.map((s: any) => {
+    const inStage = filt.insts.filter((i: any) => i.current_stage_id === s.id);
+    const colleges = inStage.filter((i: any) => i.type === "college").length;
+    const coaching = inStage.filter((i: any) => i.type === "coaching").length;
+    return { ...s, count: inStage.length, colleges, coaching };
+  });
   const maxStageCount = Math.max(1, ...stagePipeline.map((s: any) => s.count));
+  const noStageColleges = filt.insts.filter((i: any) => !i.current_stage_id && i.type === "college").length;
+  const noStageCoaching = filt.insts.filter((i: any) => !i.current_stage_id && i.type === "coaching").length;
 
   const recentlyAddedThisWeek = filt.insts.filter((i: any) => isWithinInterval(new Date(i.created_at), { start: subDays(new Date(), 7), end: new Date() })).length;
 
@@ -168,9 +172,13 @@ function Dashboard() {
             {stagePipeline.length === 0 && <p className="text-sm text-muted-foreground">No stages configured.</p>}
             {stagePipeline.map((s: any) => (
               <div key={s.id} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.name}</span>
-                  <span className="font-semibold">{s.count}</span>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="flex items-center gap-2 truncate"><span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.color }} />{s.name}</span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[10px]"><GraduationCap className="h-3 w-3" />{s.colleges}</Badge>
+                    <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[10px]"><BookOpen className="h-3 w-3" />{s.coaching}</Badge>
+                    <span className="ml-1 w-6 text-right font-semibold tabular-nums">{s.count}</span>
+                  </div>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div className="h-full rounded-full transition-all" style={{ width: `${(s.count / maxStageCount) * 100}%`, background: s.color }} />
@@ -179,7 +187,14 @@ function Dashboard() {
             ))}
             {noStage > 0 && (
               <div className="space-y-1 border-t pt-3">
-                <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">No stage set</span><span className="font-semibold">{noStage}</span></div>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-muted-foreground">No stage set</span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[10px]"><GraduationCap className="h-3 w-3" />{noStageColleges}</Badge>
+                    <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[10px]"><BookOpen className="h-3 w-3" />{noStageCoaching}</Badge>
+                    <span className="ml-1 w-6 text-right font-semibold tabular-nums">{noStage}</span>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
