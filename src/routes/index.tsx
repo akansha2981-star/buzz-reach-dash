@@ -267,6 +267,8 @@ function Dashboard() {
         <Stat icon={AlertTriangle} label="Overdue tasks" value={overdueTasks.length} accent={overdueTasks.length > 0 ? "bg-destructive/15 text-destructive" : ""} />
       </div>
 
+      <GoogleCalendarStatusCard />
+
       {/* Pipeline + Conversion */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
