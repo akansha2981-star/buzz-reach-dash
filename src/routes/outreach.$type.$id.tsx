@@ -190,6 +190,26 @@ function InstituteDetailPage() {
             </Card>
           </div>
         )}
+
+        <Dialog open={!!pendingStage} onOpenChange={(o) => { if (!o) { setPendingStage(null); setStageNote(""); } }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Move to "{pendingStage?.name}"</DialogTitle>
+              <DialogDescription>Add a note for the timeline before changing stage.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label>Note *</Label>
+              <Textarea rows={4} autoFocus value={stageNote} onChange={(e) => setStageNote(e.target.value)} placeholder="What changed? Next steps?" />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => { setPendingStage(null); setStageNote(""); }}>Cancel</Button>
+              <Button disabled={!stageNote.trim() || updateStage.isPending}
+                onClick={() => pendingStage && updateStage.mutate({ stageId: pendingStage.id, noteText: stageNote })}>
+                {updateStage.isPending ? "Saving…" : "Update stage"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </AppShell>
     </RequireAuth>
   );
