@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, BookOpen, Activity, CheckCircle2, Calendar, Sparkles, ListChecks, AlertTriangle, TrendingUp, Filter, X, Clock } from "lucide-react";
-import { format, isAfter, isBefore, isToday, isPast, startOfDay, subDays, isWithinInterval } from "date-fns";
+import { format, isAfter, isBefore, isToday, isPast, startOfDay, endOfDay, subDays, addDays, isWithinInterval } from "date-fns";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
