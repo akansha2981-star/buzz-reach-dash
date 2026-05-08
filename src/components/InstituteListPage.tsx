@@ -261,7 +261,7 @@ export function InstituteListPage({
       }
       return +new Date(b.updated_at ?? b.created_at) - +new Date(a.updated_at ?? a.created_at);
     });
-    return out.map((i) => {
+    return out.map((i): InstituteWithMeta => {
       const stage = stages.find((s) => s.id === i.current_stage_id);
       const idx = stage ? stages.findIndex((s) => s.id === stage.id) + 1 : 0;
       const lastAct = lastActivityMap[i.id];
@@ -275,7 +275,7 @@ export function InstituteListPage({
           ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000)
           : null,
         accent: stage?.color ?? "var(--primary)",
-      } satisfies InstituteWithMeta;
+      };
     });
   }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages, lastActivityMap]);
 
