@@ -154,7 +154,39 @@ function Dashboard() {
         <p className="mt-1 max-w-xl text-sm opacity-90">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
       </div>
 
-      {/* Filters */}
+      {/* Daily Report — auto-updated from live activity */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+            <span className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Daily Report — {format(new Date(), "EEEE, MMM d")}</span>
+            <Badge variant="outline" className="text-[10px]">Live · vs yesterday</Badge>
+          </CardTitle>
+          <CardDescription>Auto-updated as colleges, activities and meetings change.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {dailyReport.map((r) => {
+            const delta = pctChange(r.value, r.prev);
+            const up = delta > 0;
+            const down = delta < 0;
+            const tone = up ? "text-emerald-600 bg-emerald-500/10" : down ? "text-rose-600 bg-rose-500/10" : "text-muted-foreground bg-muted";
+            return (
+              <div key={r.label} className="rounded-xl border bg-card p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <r.icon className="h-3.5 w-3.5" /> {r.label}
+                </div>
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <p className="font-display text-3xl font-bold tabular-nums">{r.value}</p>
+                  <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium ${tone}`}>
+                    {up ? "▲" : down ? "▼" : "•"} {Math.abs(delta)}%
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">Yesterday: <span className="tabular-nums">{r.prev}</span> · {r.hint}</p>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><Filter className="h-4 w-4" /> Filters</div>
