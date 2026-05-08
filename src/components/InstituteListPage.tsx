@@ -210,8 +210,7 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 {staleCount} {staleCount === 1 ? "profile needs" : "profiles need"} attention — no activity in 7+ days. Pinned to top.
               </div>
             )}
-            <div className="hidden">{/* spacer */}</div>
-            </div>
+          </div>
           </div>
 
           {filtered.length === 0 ? (
