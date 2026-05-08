@@ -187,6 +187,10 @@ function InstituteDetailPage() {
               <TabsContent value="meetings" className="mt-4">
                 <InstituteMeetingsSection instituteId={id} instituteName={data.institute.name} />
               </TabsContent>
+              <TabsContent value="resources" className="mt-4">
+                <InstituteResources instituteId={id} />
+              </TabsContent>
+              </TabsContent>
               <TabsContent value="timeline" className="mt-4">
                 <Card>
                   <CardHeader><CardTitle>Activity Timeline</CardTitle></CardHeader>
