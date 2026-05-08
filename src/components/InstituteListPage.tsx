@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 import { AddTaskPopover } from "@/components/AddTaskPopover";
+import { EditInstituteDialog, DeleteInstituteButton } from "@/components/EditInstituteDialog";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
