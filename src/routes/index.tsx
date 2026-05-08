@@ -99,6 +99,50 @@ function Dashboard() {
 
   const recentlyAddedThisWeek = filt.insts.filter((i: any) => isWithinInterval(new Date(i.created_at), { start: subDays(new Date(), 7), end: new Date() })).length;
 
+  // ===== Daily Report (today vs yesterday) — uses unfiltered data =====
+  const today0 = startOfDay(new Date());
+  const today1 = endOfDay(new Date());
+  const y0 = startOfDay(subDays(new Date(), 1));
+  const y1 = endOfDay(subDays(new Date(), 1));
+  const next7End = endOfDay(addDays(new Date(), 7));
+  const prev7Start = startOfDay(subDays(new Date(), 7));
+  const prev7End = startOfDay(new Date());
+
+  const allInsts = data?.institutes ?? [];
+  const allActs = data?.activities ?? [];
+  const allMeetings = data?.meetings ?? [];
+
+  const inRange = (d: any, a: Date, b: Date) => { const x = new Date(d); return x >= a && x <= b; };
+
+  const newCollegesToday = allInsts.filter((i: any) => i.type === "college" && inRange(i.created_at, today0, today1)).length;
+  const newCollegesYday = allInsts.filter((i: any) => i.type === "college" && inRange(i.created_at, y0, y1)).length;
+
+  const newCoachingToday = allInsts.filter((i: any) => i.type === "coaching" && inRange(i.created_at, today0, today1)).length;
+  const newCoachingYday = allInsts.filter((i: any) => i.type === "coaching" && inRange(i.created_at, y0, y1)).length;
+
+  // Activities on previously existing institutes (created before today)
+  const actsOnPrevToday = allActs.filter((a: any) => inRange(a.created_at, today0, today1) && a.institutes && new Date((allInsts.find((i: any) => i.id === a.institute_id)?.created_at) ?? a.created_at) < today0).length;
+  const actsOnPrevYday = allActs.filter((a: any) => inRange(a.created_at, y0, y1) && a.institutes && new Date((allInsts.find((i: any) => i.id === a.institute_id)?.created_at) ?? a.created_at) < y0).length;
+
+  const meetingsNext7 = allMeetings.filter((m: any) => { const d = new Date(m.meeting_at); return d >= today0 && d <= next7End && m.status === "scheduled"; }).length;
+  const meetingsPrev7 = allMeetings.filter((m: any) => { const d = new Date(m.meeting_at); return d >= prev7Start && d < prev7End; }).length;
+
+  const totalActsToday = allActs.filter((a: any) => inRange(a.created_at, today0, today1)).length;
+  const totalActsYday = allActs.filter((a: any) => inRange(a.created_at, y0, y1)).length;
+
+  const pctChange = (today: number, yday: number) => {
+    if (yday === 0) return today === 0 ? 0 : 100;
+    return Math.round(((today - yday) / yday) * 100);
+  };
+
+  const dailyReport = [
+    { label: "New Colleges Today", value: newCollegesToday, prev: newCollegesYday, icon: GraduationCap, hint: "vs yesterday" },
+    { label: "New Coaching Today", value: newCoachingToday, prev: newCoachingYday, icon: BookOpen, hint: "vs yesterday" },
+    { label: "Activities on Existing", value: actsOnPrevToday, prev: actsOnPrevYday, icon: Activity, hint: "follow-ups today" },
+    { label: "Total Activities Today", value: totalActsToday, prev: totalActsYday, icon: Sparkles, hint: "vs yesterday" },
+    { label: "Meetings · Next 7 days", value: meetingsNext7, prev: meetingsPrev7, icon: Calendar, hint: "vs previous 7 days" },
+  ];
+
   const clear = () => { setRange("30"); setTypeFilter("all"); setStageFilter("all"); };
   const activeFilters = (range !== "30" ? 1 : 0) + (typeFilter !== "all" ? 1 : 0) + (stageFilter !== "all" ? 1 : 0);
 
