@@ -78,6 +78,7 @@ const createSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(6).max(72),
   full_name: z.string().min(1).max(100),
+  designation: z.string().max(100).optional().nullable(),
   role: z.enum(["admin", "user"]),
   permissions: permsSchema,
 });
@@ -96,6 +97,9 @@ export const createUser = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_permissions").insert({
       user_id: created.user.id, ...(data.role === "admin" ? adminAllPerms : data.permissions),
     });
+    await supabaseAdmin.from("profiles").upsert({
+      id: created.user.id, email: data.email, full_name: data.full_name, designation: data.designation ?? null,
+    });
     await logServer(context.userId, context.claims?.email ?? null, "user.created", "user", created.user.id, data.email, { role: data.role });
     return { id: created.user.id };
   });
@@ -104,6 +108,7 @@ const updateSchema = z.object({
   user_id: z.string().uuid(),
   password: z.string().min(6).max(72).optional(),
   full_name: z.string().min(1).max(100).optional(),
+  designation: z.string().max(100).optional().nullable(),
   role: z.enum(["admin", "user"]).optional(),
   permissions: permsSchema.optional(),
 });
