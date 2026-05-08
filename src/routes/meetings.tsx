@@ -476,6 +476,11 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
   const [attendeesText, setAttendeesText] = useState<string>(
     Array.isArray(meeting?.attendees) ? meeting.attendees.join(", ") : ""
   );
+  const [syncGoogle, setSyncGoogle] = useState<boolean>(!!meeting?.google_event_id || !editing);
+
+  const createGCal = useServerFn(createGoogleCalendarEvent);
+  const updateGCal = useServerFn(updateGoogleCalendarEvent);
+  const deleteGCal = useServerFn(deleteGoogleCalendarEvent);
 
   const { data: institutes = [] } = useQuery({
     queryKey: ["institutes-all"],
