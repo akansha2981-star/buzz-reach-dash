@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import { Download, Share, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -35,9 +35,13 @@ export function InstallAppButton({ variant = "outline" }: { variant?: "default" 
 
   const handleClick = async () => {
     if (evt) {
-      await evt.prompt();
-      await evt.userChoice;
-      setEvt(null);
+      try {
+        await evt.prompt();
+        await evt.userChoice;
+        setEvt(null);
+      } catch {
+        setIosHint(true);
+      }
     } else if (isIOS()) {
       setIosHint(true);
     } else {
@@ -53,23 +57,29 @@ export function InstallAppButton({ variant = "outline" }: { variant?: "default" 
         <span className="sm:hidden">Install</span>
       </Button>
       {iosHint && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-background/60 p-4 backdrop-blur-sm sm:items-center" onClick={() => setIosHint(false)}>
-          <div className="relative w-full max-w-sm rounded-2xl border bg-card p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-background/70 p-3 backdrop-blur-sm sm:items-center" onClick={() => setIosHint(false)}>
+          <div className="relative w-full max-w-md rounded-2xl border bg-card p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <button className="absolute right-3 top-3 text-muted-foreground hover:text-foreground" onClick={() => setIosHint(false)} aria-label="Close">
               <X className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              <h3 className="font-display text-base font-semibold">Install Works on your device</h3>
+              <h3 className="pr-6 font-display text-base font-semibold">Add Works to your Home Screen</h3>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {isIOS()
-                ? "On iPhone/iPad: tap the Share icon in Safari, then choose “Add to Home Screen”."
-                : "Open this site in Chrome, Edge, or Brave on Android/Desktop. Tap the browser menu and choose “Install app” or “Add to Home screen”."}
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Once installed, Works opens like a native app — full-screen, with quick shortcuts to Dashboard, Meetings, Tasks, Colleges and Coaching.
-            </p>
+            {isIOS() ? (
+              <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <p>iPhone/iPad does not allow websites to open the install popup directly. Install it from Safari:</p>
+                <ol className="space-y-2">
+                  <li className="flex gap-2"><span className="font-semibold text-foreground">1.</span><span>Open this live site in <span className="font-medium text-foreground">Safari</span>.</span></li>
+                  <li className="flex gap-2"><span className="font-semibold text-foreground">2.</span><span>Tap the <Share className="mx-1 inline h-4 w-4" /> Share button at the bottom.</span></li>
+                  <li className="flex gap-2"><span className="font-semibold text-foreground">3.</span><span>Choose <span className="font-medium text-foreground">Add to Home Screen</span>, then tap <span className="font-medium text-foreground">Add</span>.</span></li>
+                </ol>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Open this site in Chrome, Edge, or Brave, then use the browser menu and choose “Install app” or “Add to Home screen”.
+              </p>
+            )}
             <Button className="mt-4 w-full" onClick={() => setIosHint(false)}>Got it</Button>
           </div>
         </div>
