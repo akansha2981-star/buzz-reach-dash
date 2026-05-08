@@ -125,18 +125,52 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             <CreateInstituteDialog type={type} />
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search by name, city, state…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="space-y-3 rounded-xl border bg-card/40 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input className="pl-9" placeholder="Search by name, city, state, contact…" value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <SelectTrigger className="sm:w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recently updated</SelectItem>
+                  <SelectItem value="name">Name (A–Z)</SelectItem>
+                  <SelectItem value="stage">Stage (latest)</SelectItem>
+                  <SelectItem value="meeting">Next meeting</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={stageFilter} onValueChange={setStageFilter}>
-              <SelectTrigger className="sm:w-64"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All stages</SelectItem>
-                {stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All stages</SelectItem>
+                  <SelectItem value="none">No stage set</SelectItem>
+                  {stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={cityFilter} onValueChange={setCityFilter}>
+                <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All cities</SelectItem>
+                  {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={stateFilter} onValueChange={setStateFilter}>
+                <SelectTrigger className="h-8 w-auto gap-1 px-3 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All states</SelectItem>
+                  {states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {(activeFilterCount > 0 || q) && (
+                <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={clearFilters}>
+                  <X className="h-3 w-3" /> Clear
+                </Button>
+              )}
+              <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} of {list.length}</span>
+            </div>
           </div>
 
           {filtered.length === 0 ? (
