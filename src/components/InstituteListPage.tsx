@@ -26,7 +26,7 @@ import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
-  useRealtime("outreach_activities", [["activities-all"], ["institute"]]);
+  useRealtime("outreach_activities", [["activities-all"], ["institute"], ["last-activity-map", type]]);
   useRealtime("outreach_stages", [["stages"]]);
   const { data: list = [] } = useQuery({ queryKey: ["institutes", type], queryFn: () => fetchInstitutes(type) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
