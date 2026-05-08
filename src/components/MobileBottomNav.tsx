@@ -18,26 +18,38 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch justify-around border-t bg-background/95 backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/85 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {items.map((it) => {
-        const active = it.match(path);
-        const Icon = it.icon;
-        return (
-          <Link
-            key={it.to}
-            to={it.to}
-            className={cn(
-              "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-              active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Icon className="h-5 w-5" />
-            <span className="leading-none">{it.label}</span>
-          </Link>
-        );
-      })}
+      <div className="flex h-14 items-stretch justify-around">
+        {items.map((it) => {
+          const active = it.match(path);
+          const Icon = it.icon;
+          return (
+            <Link
+              key={it.to}
+              to={it.to}
+              className={cn(
+                "group relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-8 w-12 items-center justify-center rounded-full transition-all",
+                  active ? "bg-primary/10" : "bg-transparent group-active:bg-muted"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="leading-none">{it.label}</span>
+              {active && (
+                <span className="absolute -top-px h-0.5 w-8 rounded-full bg-primary" />
+              )}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
