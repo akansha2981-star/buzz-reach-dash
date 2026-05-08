@@ -27,6 +27,9 @@ export const Route = createFileRoute("/outreach/$type/$id")({
 function InstituteDetailPage() {
   const { type, id } = Route.useParams();
   const instType: InstituteType = type === "colleges" ? "college" : "coaching";
+  useRealtime("institutes", [["institute", id], ["institutes", instType]]);
+  useRealtime("outreach_activities", [["institute", id], ["activities-all"]]);
+  useRealtime("outreach_stages", [["stages"]]);
   const qc = useQueryClient();
   const { user } = useAuth();
   const [note, setNote] = useState("");
