@@ -125,31 +125,55 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
 }
 
 @keyframes pulse-alert {
-  0%, 100% { box-shadow: 0 0 0 0 var(--destructive); border-color: var(--destructive); }
-  50% { box-shadow: 0 0 0 6px transparent; border-color: color-mix(in oklab, var(--destructive) 40%, transparent); }
-}
-.stale-alert { animation: pulse-alert 1.4s ease-in-out infinite; border-width: 1.5px; }
-
-/* PWA safe-area + standalone tweaks */
-@supports (padding: max(0px)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--destructive);
+    border-color: var(--destructive);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+    border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
   }
 }
+.stale-alert {
+  animation: pulse-alert 1.4s ease-in-out infinite;
+  border-width: 1.5px;
+}
+
+/* PWA safe-area + standalone tweaks */
 @media (display-mode: standalone) {
-  html, body { overscroll-behavior-y: none; }
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
 }
