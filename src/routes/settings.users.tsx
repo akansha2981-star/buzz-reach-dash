@@ -243,6 +243,7 @@ function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input value={full_name} onChange={(e) => setFullName(e.target.value)} /></div>
+            <div><Label>Designation</Label><Input placeholder="e.g. Outreach Manager" value={designation} onChange={(e) => setDesignation(e.target.value)} /></div>
             <div><Label>New password (leave blank to keep)</Label><Input type="text" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
             <div>
               <Label>Role</Label>
