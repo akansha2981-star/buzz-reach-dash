@@ -102,6 +102,14 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const cities = useMemo(() => Array.from(new Set(list.map((i) => i.city).filter(Boolean))).sort() as string[], [list]);
   const states = useMemo(() => Array.from(new Set(list.map((i) => i.state).filter(Boolean))).sort() as string[], [list]);
 
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+  const isStale = (i: any) => {
+    if (!i.current_stage_id) return false;
+    const last = lastActivityMap[i.id];
+    const ref = last ? new Date(last) : new Date(i.updated_at ?? i.created_at);
+    return Date.now() - ref.getTime() > SEVEN_DAYS;
+  };
+
   const filtered = useMemo(() => {
     const m = q.trim().toLowerCase();
     let out = list.filter((i) => {
@@ -113,6 +121,10 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
       return [i.name, i.city, i.state, i.contact_person].some((v) => v?.toLowerCase().includes(m));
     });
     out = [...out].sort((a, b) => {
+      // Stale always first (red alert items)
+      const sa = isStale(a) ? 1 : 0;
+      const sb = isStale(b) ? 1 : 0;
+      if (sa !== sb) return sb - sa;
       if (sortBy === "name") return a.name.localeCompare(b.name);
       if (sortBy === "stage") {
         const ai = stages.findIndex((s) => s.id === a.current_stage_id);
@@ -127,7 +139,9 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
       return +new Date(b.updated_at ?? b.created_at) - +new Date(a.updated_at ?? a.created_at);
     });
     return out;
-  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages]);
+  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages, lastActivityMap]);
+
+  const staleCount = useMemo(() => list.filter(isStale).length, [list, lastActivityMap]);
 
   const activeFilterCount = [stageFilter, cityFilter, stateFilter].filter((v) => v !== "all").length;
   const clearFilters = () => { setStageFilter("all"); setCityFilter("all"); setStateFilter("all"); setQ(""); };
