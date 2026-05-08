@@ -426,6 +426,7 @@ function MeetingCard({ m }: { m: any }) {
           </div>
           <div className="flex flex-row items-center justify-end gap-1 p-3 sm:flex-col sm:items-end">
             <MeetingDialog meeting={m} trigger={<Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>} />
+            <PushToCEODesk sourceType="meeting" sourceId={m.id} instituteId={m.institute_id} title={m.title} />
             {m.status === "scheduled" && (
               <>
                 <Button variant="ghost" size="icon" onClick={() => setStatus.mutate("completed")} title="Mark complete">
