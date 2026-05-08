@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Mail, Lock, ArrowRight, ShieldCheck, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, Sparkles, Users, Calendar, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import heroImg from "@/assets/auth-hero.jpg";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
@@ -34,49 +33,62 @@ function AuthPage() {
 
   return (
     <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
-      {/* Ambient background gradients */}
+      {/* Subtle ambient gradient */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full opacity-40 blur-3xl"
+        <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full opacity-25 blur-3xl"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.4), transparent)" }} />
+        <div className="absolute -bottom-32 -right-32 h-[420px] w-[420px] rounded-full opacity-20 blur-3xl"
           style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.35), transparent)" }} />
-        <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(closest-side, oklch(0.78 0.14 320 / 0.35), transparent)" }} />
       </div>
 
-      {/* Left: visual panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-10 lg:flex">
-        <div
-          className="absolute inset-4 rounded-3xl bg-cover bg-center shadow-2xl ring-1 ring-border/50"
-          style={{ backgroundImage: `url(${heroImg})` }}
-        />
-        <div className="absolute inset-4 rounded-3xl bg-gradient-to-br from-background/0 via-background/10 to-background/40" />
-
-        <div className="relative z-10 flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl shadow-lg backdrop-blur"
+      {/* Left: brand panel */}
+      <div className="relative hidden w-[46%] flex-col justify-between border-r border-border/60 bg-card/40 p-12 lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-md"
             style={{ background: "var(--gradient-primary)" }}>
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="leading-tight">
-            <p className="font-display text-lg font-semibold tracking-tight text-foreground">Works</p>
+            <p className="font-display text-xl font-semibold tracking-tight">Works</p>
             <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">by B School Buzz</p>
           </div>
         </div>
 
-        <div className="relative z-10 max-w-md space-y-3">
-          <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">Outreach OS</p>
-          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-foreground">
-            Run every college <br /> conversation in one place.
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Pipelines, meetings, notes and team activity — designed for the B School Buzz outreach team.
-          </p>
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">Outreach Workspace</p>
+            <h2 className="font-display text-4xl font-bold leading-[1.1] tracking-tight">
+              The operating system for your outreach team.
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Pipelines, meetings, notes and team activity — built for the way B School Buzz works with colleges and coaching partners.
+            </p>
+          </div>
+
+          <ul className="space-y-3 text-sm">
+            {[
+              { Icon: Users, label: "Manage colleges & coaching pipelines" },
+              { Icon: Calendar, label: "Plan meetings and follow-ups" },
+              { Icon: BarChart3, label: "Track every activity in real time" },
+            ].map(({ Icon, label }) => (
+              <li key={label} className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background">
+                  <Icon className="h-4 w-4 text-primary" />
+                </span>
+                <span className="text-foreground/80">{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
+
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} B School Buzz. All rights reserved.</p>
       </div>
 
       {/* Right: form */}
-      <div className="flex w-full items-center justify-center px-4 py-10 sm:px-8 lg:w-1/2">
+      <div className="flex w-full items-center justify-center px-4 py-10 sm:px-8 lg:w-[54%]">
         <div className="w-full max-w-md">
           {/* Mobile brand */}
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-md"
               style={{ background: "var(--gradient-primary)" }}>
               <Sparkles className="h-5 w-5 text-primary-foreground" />
@@ -87,10 +99,10 @@ function AuthPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/60 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
             <div className="mb-7 space-y-1.5">
-              <h1 className="font-display text-3xl font-bold tracking-tight">Welcome back</h1>
-              <p className="text-sm text-muted-foreground">Sign in to continue to your outreach workspace.</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight">Sign in to your workspace</h1>
+              <p className="text-sm text-muted-foreground">Enter the credentials provided by your administrator.</p>
             </div>
 
             <form onSubmit={signIn} className="space-y-4">
@@ -99,7 +111,7 @@ function AuthPage() {
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input id="email" type="email" required autoComplete="email" placeholder="you@bschoolbuzz.com"
-                    className="h-11 rounded-xl pl-10"
+                    className="h-11 rounded-lg pl-10"
                     value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
@@ -110,7 +122,7 @@ function AuthPage() {
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input id="password" type={showPwd ? "text" : "password"} required autoComplete="current-password"
                     placeholder="••••••••"
-                    className="h-11 rounded-xl pl-10 pr-10"
+                    className="h-11 rounded-lg pl-10 pr-10"
                     value={password} onChange={(e) => setPassword(e.target.value)} />
                   <button type="button" onClick={() => setShowPwd((s) => !s)}
                     aria-label={showPwd ? "Hide password" : "Show password"}
@@ -121,13 +133,13 @@ function AuthPage() {
               </div>
 
               <Button type="submit" disabled={busy}
-                className="group h-11 w-full rounded-xl text-sm font-semibold shadow-lg"
+                className="group h-11 w-full rounded-lg text-sm font-semibold shadow-md"
                 style={{ background: "var(--gradient-primary)" }}>
                 {busy ? "Signing in…" : (<>Sign in <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>)}
               </Button>
             </form>
 
-            <div className="mt-6 flex items-start gap-2 rounded-xl border border-border/60 bg-muted/40 p-3">
+            <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-xs text-muted-foreground">
                 Accounts are issued by your administrator. Contact your admin if you need access.
@@ -135,8 +147,8 @@ function AuthPage() {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Works · B School Buzz
+          <p className="mt-6 text-center text-xs text-muted-foreground lg:hidden">
+            © {new Date().getFullYear()} B School Buzz
           </p>
         </div>
       </div>
