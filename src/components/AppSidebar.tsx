@@ -1,5 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useRealtime } from "@/hooks/useRealtime";
 import { Badge } from "@/components/ui/badge";
 import { useTaskNotifications } from "@/hooks/useTaskNotifications";
 import { useAuth } from "@/lib/auth";
@@ -14,8 +17,19 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { isAdmin, perms } = useAuth();
+  const { isAdmin, perms, user } = useAuth();
   const { pendingCount, overdueCount } = useTaskNotifications();
+  useRealtime("ceo_desk_requests", [["ceo-desk-badge"]]);
+  const { data: ceoOpen = 0 } = useQuery({
+    queryKey: ["ceo-desk-badge", user?.id, isAdmin],
+    enabled: !!user,
+    queryFn: async () => {
+      let q = supabase.from("ceo_desk_requests").select("id", { count: "exact", head: true }).neq("status", "closed");
+      if (!isAdmin) q = q.eq("requester_id", user!.id);
+      const { count } = await q;
+      return count ?? 0;
+    },
+  });
   const isActive = (p: string) => path === p;
   const can = (k: keyof typeof perms) => isAdmin || perms[k];
 
@@ -102,6 +116,20 @@ export function AppSidebar() {
                     {pendingCount > 0 && !collapsed && (
                       <Badge variant={overdueCount > 0 ? "destructive" : "secondary"} className="ml-auto h-5 px-1.5 text-[10px]">
                         {pendingCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
+                  <Link to="/ceo-desk">
+                    <Crown />
+                    <span>{isAdmin ? "CEO Desk" : "My CEO Requests"}</span>
+                    {ceoOpen > 0 && !collapsed && (
+                      <Badge variant="default" className="ml-auto h-5 bg-amber-500 px-1.5 text-[10px] hover:bg-amber-500">
+                        {ceoOpen}
                       </Badge>
                     )}
                   </Link>

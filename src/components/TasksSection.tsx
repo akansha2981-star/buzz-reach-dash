@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
+import { PushToCEODesk } from "@/components/PushToCEODesk";
 
 export function TasksSection({ instituteId, instituteName }: { instituteId: string; instituteName: string }) {
   useRealtime("tasks", [["tasks", instituteId], ["tasks-all"]]);
@@ -136,9 +137,14 @@ export function TaskRow({ task, onToggle, onDelete, extra }: { task: Task; onTog
           {extra}
         </div>
       </div>
-      <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={onDelete}>
-        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-      </Button>
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+        {task.status !== "done" && (
+          <PushToCEODesk sourceType="task" sourceId={task.id} instituteId={task.institute_id ?? null} title={task.title} />
+        )}
+        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onDelete}>
+          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+        </Button>
+      </div>
     </li>
   );
 }
