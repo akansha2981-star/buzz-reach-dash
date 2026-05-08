@@ -626,6 +626,18 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div className="flex items-start justify-between gap-4 rounded-lg border bg-muted/30 p-3">
+            <div className="space-y-0.5">
+              <Label className="text-sm">Sync to Google Calendar</Label>
+              <p className="text-xs text-muted-foreground">
+                Creates a real Google Calendar event{form.platform === "google_meet" ? " with a Google Meet link" : ""} and emails invites to attendees.
+                {meeting?.google_html_link && (
+                  <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
+                )}
+              </p>
+            </div>
+            <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
+          </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving…" : editing ? "Save changes" : "Schedule"}</Button>
