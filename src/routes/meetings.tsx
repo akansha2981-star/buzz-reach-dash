@@ -22,6 +22,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction, type Meeting } from "@/lib/access";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRealtime } from "@/hooks/useRealtime";
 
 export const Route = createFileRoute("/meetings")({
   component: () => (
@@ -48,6 +49,7 @@ const STATUSES = [
 ];
 
 function MeetingsPage() {
+  useRealtime("meetings", [["meetings"], ["dashboard"]]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 

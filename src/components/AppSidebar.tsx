@@ -46,7 +46,7 @@ export function AppSidebar() {
               )}
 
               {(can("can_colleges") || can("can_coaching")) && (
-                <Collapsible defaultOpen={outreachOpen} className="group/collapsible">
+                <Collapsible defaultOpen className="group/collapsible">
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton>

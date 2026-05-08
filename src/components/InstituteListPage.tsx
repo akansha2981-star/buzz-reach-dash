@@ -21,8 +21,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/access";
 import { toast } from "sonner";
+import { useRealtime } from "@/hooks/useRealtime";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
+  useRealtime("institutes", [["institutes", type], ["dashboard"]]);
+  useRealtime("outreach_activities", [["activities-all"], ["institute"]]);
+  useRealtime("outreach_stages", [["stages"]]);
   const { data: list = [] } = useQuery({ queryKey: ["institutes", type], queryFn: () => fetchInstitutes(type) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
   const [q, setQ] = useState("");

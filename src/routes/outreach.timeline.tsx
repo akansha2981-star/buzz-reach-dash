@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { fetchStages } from "@/lib/data";
 import { logAction } from "@/lib/access";
 import { toast } from "sonner";
+import { useRealtime } from "@/hooks/useRealtime";
 
 export const Route = createFileRoute("/outreach/timeline")({ component: TimelinePage });
 
@@ -36,6 +37,8 @@ async function fetchAllActivities() {
 }
 
 function TimelinePage() {
+  useRealtime("outreach_activities", [["activities-all"]]);
+  useRealtime("institutes", [["activities-all"]]);
   const qc = useQueryClient();
   const { user } = useAuth();
   const { data = [], isLoading } = useQuery({ queryKey: ["activities-all"], queryFn: fetchAllActivities });
