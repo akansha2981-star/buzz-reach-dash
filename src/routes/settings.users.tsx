@@ -163,17 +163,17 @@ function PermsGrid({ value, onChange, disabled }: { value: any; onChange: (v: an
 
 function CreateUserDialog() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "user" as "admin" | "user" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", designation: "", role: "user" as "admin" | "user" });
   const [perms, setPerms] = useState<any>(DEFAULT_PERMS);
   const create = useServerFn(createUser);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: () => create({ data: { ...form, permissions: perms } }),
+    mutationFn: () => create({ data: { ...form, designation: form.designation || null, permissions: perms } }),
     onSuccess: () => {
       toast.success("Account created");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);
-      setForm({ email: "", password: "", full_name: "", role: "user" });
+      setForm({ email: "", password: "", full_name: "", designation: "", role: "user" });
       setPerms(DEFAULT_PERMS);
     },
     onError: (e: any) => toast.error(e.message),
