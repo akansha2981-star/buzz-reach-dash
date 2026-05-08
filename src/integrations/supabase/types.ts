@@ -50,6 +50,95 @@ export type Database = {
         }
         Relationships: []
       }
+      ceo_desk_notes: {
+        Row: {
+          author_email: string | null
+          author_id: string | null
+          created_at: string
+          id: string
+          note: string
+          request_id: string
+        }
+        Insert: {
+          author_email?: string | null
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          note: string
+          request_id: string
+        }
+        Update: {
+          author_email?: string | null
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ceo_desk_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "ceo_desk_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ceo_desk_requests: {
+        Row: {
+          ceo_notes: string | null
+          created_at: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          institute_id: string | null
+          message: string | null
+          priority: string
+          requester_email: string | null
+          requester_id: string | null
+          source_id: string | null
+          source_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ceo_notes?: string | null
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          institute_id?: string | null
+          message?: string | null
+          priority?: string
+          requester_email?: string | null
+          requester_id?: string | null
+          source_id?: string | null
+          source_type: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ceo_notes?: string | null
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          institute_id?: string | null
+          message?: string | null
+          priority?: string
+          requester_email?: string | null
+          requester_id?: string | null
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       institute_emails: {
         Row: {
           email: string
