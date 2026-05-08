@@ -71,6 +71,13 @@ export function AppSidebar() {
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         )}
+                        {(can("can_colleges") || can("can_coaching")) && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton asChild isActive={isActive("/outreach/timeline")}>
+                              <Link to="/outreach/timeline"><Activity className="h-4 w-4" /><span>Timeline</span></Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </SidebarMenuItem>
