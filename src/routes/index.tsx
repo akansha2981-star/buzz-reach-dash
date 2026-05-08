@@ -87,11 +87,15 @@ function Dashboard() {
   const overdueTasks = pendingTasks.filter((t: any) => t.due_at && isPast(new Date(t.due_at)) && !isToday(new Date(t.due_at)));
   const todayTasks = pendingTasks.filter((t: any) => t.due_at && isToday(new Date(t.due_at)));
 
-  const stagePipeline = stages.map((s: any) => ({
-    ...s,
-    count: filt.insts.filter((i: any) => i.current_stage_id === s.id).length,
-  }));
+  const stagePipeline = stages.map((s: any) => {
+    const inStage = filt.insts.filter((i: any) => i.current_stage_id === s.id);
+    const colleges = inStage.filter((i: any) => i.type === "college").length;
+    const coaching = inStage.filter((i: any) => i.type === "coaching").length;
+    return { ...s, count: inStage.length, colleges, coaching };
+  });
   const maxStageCount = Math.max(1, ...stagePipeline.map((s: any) => s.count));
+  const noStageColleges = filt.insts.filter((i: any) => !i.current_stage_id && i.type === "college").length;
+  const noStageCoaching = filt.insts.filter((i: any) => !i.current_stage_id && i.type === "coaching").length;
 
   const recentlyAddedThisWeek = filt.insts.filter((i: any) => isWithinInterval(new Date(i.created_at), { start: subDays(new Date(), 7), end: new Date() })).length;
 
