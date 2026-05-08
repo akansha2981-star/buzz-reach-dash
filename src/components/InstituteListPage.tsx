@@ -339,30 +339,81 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             <div className="space-y-2">
               {filtered.map((i) => {
                 const stage = stages.find((s) => s.id === i.current_stage_id);
+                const idx = stage ? stages.findIndex((s) => s.id === stage.id) + 1 : 0;
+                const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
                 const typePath = type === "college" ? "colleges" : "coaching";
+                const accent = stage?.color ?? "hsl(var(--primary))";
                 const stale = isStale(i);
                 const lastAct = lastActivityMap[i.id];
                 const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
                 return (
-                  <Card key={i.id} className={`overflow-hidden ${stale ? "border-destructive/40" : ""}`}>
-                    <CardContent className="flex flex-wrap items-center gap-3 p-3">
-                      <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
-                        <div className="flex items-center gap-2">
-                          <h3 className="truncate font-semibold">{i.name}</h3>
-                          {stale && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
+                  <Card key={i.id} className={`relative overflow-hidden ${stale ? "border-destructive/40" : ""}`}>
+                    <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
+                    <CardContent className="space-y-3 p-4 pl-5">
+                      <div className="flex flex-wrap items-start gap-3">
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
+                          <div className="flex items-center gap-2">
+                            <h3 className="truncate font-display text-base font-semibold">{i.name}</h3>
+                            {stale && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                            {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
+                            {i.website && <span className="flex items-center gap-1"><Globe className="h-3 w-3" />Website</span>}
+                            {i.contact_person && <span>· {i.contact_person}</span>}
+                            {i.next_meeting_at && <span className="flex items-center gap-1"><CalendarPlus className="h-3 w-3" />Next: {new Date(i.next_meeting_at).toLocaleDateString()}</span>}
+                            {stale && <span className="text-destructive">No activity {daysSince ?? "7+"}d</span>}
+                          </div>
+                        </Link>
+                        {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline" className="shrink-0">{stage.name}</Badge>}
+                        <div className="flex shrink-0 items-center">
+                          <EditInstituteDialog institute={i} type={type} />
+                          <DeleteInstituteButton institute={i} type={type} />
                         </div>
-                        <div className="mt-0.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
-                          {stale && <span className="text-destructive">No activity {daysSince ?? "7+"}d</span>}
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[11px]"><span className="text-muted-foreground">Pipeline</span><span className="font-medium">{pct}%</span></div>
+                          <Progress value={pct} className="h-1.5" />
                         </div>
-                      </Link>
-                      {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge>}
-                      <div className="flex items-center gap-1">
-                        <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><CalendarPlus className="h-3.5 w-3.5" /></Button>} />
-                        <InstituteTimelineDialog instituteId={i.id} instituteName={i.name} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><Activity className="h-3.5 w-3.5" /></Button>} />
-                        <EditInstituteDialog institute={i} type={type} />
-                        <DeleteInstituteButton institute={i} type={type} />
-                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex h-7 items-center gap-0.5 rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                        <Select value={i.current_stage_id ?? undefined} onValueChange={(v) => {
+                          const s = stages.find((x) => x.id === v);
+                          if (!s || v === i.current_stage_id) return;
+                          setStageChange({ id: i.id, name: i.name, stageId: v, stageName: s.name });
+                          setStageNote("");
+                        }}>
+                          <SelectTrigger className="h-8 text-xs sm:w-44"><SelectValue placeholder="Set stage" /></SelectTrigger>
+                          <SelectContent>
+                            {stages.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1 border-t pt-2">
+                        <InstituteTimelineDialog instituteId={i.id} instituteName={i.name}
+                          trigger={<Button size="sm" variant="ghost" className="h-7 px-2 text-xs"><Activity className="mr-1 h-3 w-3" /> Timeline</Button>} />
+                        <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`}
+                          trigger={<Button size="sm" variant="outline" className="h-7 px-2 text-xs"><CalendarPlus className="mr-1 h-3 w-3" /> Schedule</Button>} />
+                        <AddTaskPopover instituteId={i.id} instituteName={i.name} />
+                        <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
+                          <PopoverTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
+                              <MessageSquarePlus className="mr-1 h-3 w-3" /> Note
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-80">
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium">New note for {i.name}</p>
+                              <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
+                              <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="ml-auto inline-flex h-7 items-center gap-0.5 rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
                           Open <ChevronRight className="h-3 w-3" />
                         </Link>
                       </div>
@@ -373,12 +424,15 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             </div>
           ) : view === "table" ? (
             <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead>Stage</TableHead>
+                    <TableHead className="w-[160px]">Pipeline</TableHead>
                     <TableHead>Next meeting</TableHead>
                     <TableHead>Last activity</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -387,6 +441,8 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 <TableBody>
                   {filtered.map((i) => {
                     const stage = stages.find((s) => s.id === i.current_stage_id);
+                    const idx = stage ? stages.findIndex((s) => s.id === stage.id) + 1 : 0;
+                    const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
                     const typePath = type === "college" ? "colleges" : "coaching";
                     const stale = isStale(i);
                     const lastAct = lastActivityMap[i.id];
@@ -396,21 +452,65 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                         <TableCell className="font-medium">
                           <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="hover:text-primary">
                             <span className="inline-flex items-center gap-2">
-                              {stale && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                              {stale && <AlertTriangle className="h-3.5 w-3.5 text-destructive animate-pulse" />}
                               {i.name}
                             </span>
                           </Link>
+                          {i.website && <div className="mt-0.5 text-[10px] text-muted-foreground flex items-center gap-1"><Globe className="h-2.5 w-2.5" />Website</div>}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{[i.city, i.state].filter(Boolean).join(", ") || "—"}</TableCell>
-                        <TableCell>{stage ? <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{i.contact_person || "—"}</TableCell>
+                        <TableCell>
+                          <Select value={i.current_stage_id ?? undefined} onValueChange={(v) => {
+                            const s = stages.find((x) => x.id === v);
+                            if (!s || v === i.current_stage_id) return;
+                            setStageChange({ id: i.id, name: i.name, stageId: v, stageName: s.name });
+                            setStageNote("");
+                          }}>
+                            <SelectTrigger className="h-7 w-36 text-xs">
+                              <SelectValue placeholder={stage?.name ?? "Set stage"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {stages.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.name}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Progress value={pct} className="h-1.5 w-20" />
+                            <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-xs">{i.next_meeting_at ? new Date(i.next_meeting_at).toLocaleDateString() : "—"}</TableCell>
-                        <TableCell className="text-xs">{daysSince !== null ? `${daysSince}d ago` : "—"}</TableCell>
+                        <TableCell className="text-xs">{daysSince !== null ? <span className={stale ? "text-destructive font-medium" : ""}>{daysSince}d ago</span> : "—"}</TableCell>
                         <TableCell className="text-right">
-                          <div className="inline-flex items-center gap-1">
-                            <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><CalendarPlus className="h-3.5 w-3.5" /></Button>} />
+                          <div className="inline-flex items-center gap-0.5">
+                            <InstituteTimelineDialog instituteId={i.id} instituteName={i.name}
+                              trigger={<Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Timeline"><Activity className="h-3.5 w-3.5" /></Button>} />
+                            <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`}
+                              trigger={<Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Schedule meeting"><CalendarPlus className="h-3.5 w-3.5" /></Button>} />
+                            <AddTaskPopover instituteId={i.id} instituteName={i.name} />
+                            <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
+                              <PopoverTrigger asChild>
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Add note" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
+                                  <MessageSquarePlus className="h-3.5 w-3.5" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-80">
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium">New note for {i.name}</p>
+                                  <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
+                                  <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                             <EditInstituteDialog institute={i} type={type} />
                             <DeleteInstituteButton institute={i} type={type} />
-                            <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">Open</Link>
+                            <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="ml-1 inline-flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">Open</Link>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -418,24 +518,50 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                   })}
                 </TableBody>
               </Table>
+              </div>
             </Card>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-1.5">
               {filtered.map((i) => {
                 const stage = stages.find((s) => s.id === i.current_stage_id);
                 const typePath = type === "college" ? "colleges" : "coaching";
                 const stale = isStale(i);
+                const lastAct = lastActivityMap[i.id];
+                const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
                 return (
-                  <Link
-                    key={i.id}
-                    to="/outreach/$type/$id"
-                    params={{ type: typePath, id: i.id }}
-                    className={`group inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 ${stale ? "border-destructive/40" : "border-border"}`}
-                  >
-                    {stale && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                    <span className="truncate max-w-[200px]">{i.name}</span>
-                    {stage && <span className="h-2 w-2 rounded-full" style={{ background: stage.color }} />}
-                  </Link>
+                  <div key={i.id} className={`flex flex-wrap items-center gap-2 rounded-md border bg-card px-2 py-1.5 text-xs ${stale ? "border-destructive/40" : "border-border"}`}>
+                    {stale && <AlertTriangle className="h-3 w-3 shrink-0 text-destructive animate-pulse" />}
+                    {stage && <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: stage.color }} title={stage.name} />}
+                    <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 truncate font-medium hover:text-primary">{i.name}</Link>
+                    {(i.city || i.state) && <span className="hidden text-muted-foreground sm:inline">{[i.city, i.state].filter(Boolean).join(", ")}</span>}
+                    {stage && <span className="hidden text-muted-foreground md:inline">· {stage.name}</span>}
+                    {i.next_meeting_at && <span className="hidden text-muted-foreground md:inline">· {new Date(i.next_meeting_at).toLocaleDateString()}</span>}
+                    {daysSince !== null && <span className={`hidden md:inline ${stale ? "text-destructive font-medium" : "text-muted-foreground"}`}>· {daysSince}d</span>}
+                    <div className="ml-auto flex items-center gap-0.5">
+                      <InstituteTimelineDialog instituteId={i.id} instituteName={i.name}
+                        trigger={<Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Timeline"><Activity className="h-3 w-3" /></Button>} />
+                      <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`}
+                        trigger={<Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Schedule"><CalendarPlus className="h-3 w-3" /></Button>} />
+                      <AddTaskPopover instituteId={i.id} instituteName={i.name} />
+                      <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
+                        <PopoverTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Note" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
+                            <MessageSquarePlus className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-80">
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium">New note for {i.name}</p>
+                            <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
+                            <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <EditInstituteDialog institute={i} type={type} />
+                      <DeleteInstituteButton institute={i} type={type} />
+                      <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="ml-1 inline-flex h-6 items-center rounded bg-primary px-1.5 text-[10px] font-medium text-primary-foreground hover:bg-primary/90">Open</Link>
+                    </div>
+                  </div>
                 );
               })}
             </div>
