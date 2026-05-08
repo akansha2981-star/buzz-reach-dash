@@ -53,6 +53,14 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"recent" | "name" | "stage" | "meeting">("recent");
+  const [view, setView] = useState<"grid" | "list" | "table" | "compact">(() => {
+    if (typeof window === "undefined") return "grid";
+    return (localStorage.getItem(`institute-view:${type}`) as any) || "grid";
+  });
+  const setViewPersist = (v: "grid" | "list" | "table" | "compact") => {
+    setView(v);
+    if (typeof window !== "undefined") localStorage.setItem(`institute-view:${type}`, v);
+  };
 
   const qc = useQueryClient();
   const { user } = useAuth();
