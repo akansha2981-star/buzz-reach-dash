@@ -218,10 +218,19 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
                 const typePath = type === "college" ? "colleges" : "coaching";
                 const accent = stage?.color ?? "hsl(var(--primary))";
+                const stale = isStale(i);
+                const lastAct = lastActivityMap[i.id];
+                const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
                 return (
-                  <Card key={i.id} className="group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl" style={{ boxShadow: "var(--shadow-card)" }}>
+                  <Card key={i.id} className={`group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl ${stale ? "stale-alert" : ""}`} style={{ boxShadow: "var(--shadow-card)" }}>
                     <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />
                     <CardContent className="space-y-4 p-5">
+                      {stale && (
+                        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5 animate-pulse" />
+                          No activity for {daysSince ?? "7+"} days — needs follow-up
+                        </div>
+                      )}
                       <div className="flex items-start justify-between gap-2">
                         <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
                           <h3 className="truncate font-display text-lg font-semibold leading-tight">{i.name}</h3>
