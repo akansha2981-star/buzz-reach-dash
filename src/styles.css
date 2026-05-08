@@ -134,3 +134,9 @@
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
+
+@keyframes pulse-alert {
+  0%, 100% { box-shadow: 0 0 0 0 var(--destructive); border-color: var(--destructive); }
+  50% { box-shadow: 0 0 0 6px transparent; border-color: color-mix(in oklab, var(--destructive) 40%, transparent); }
+}
+.stale-alert { animation: pulse-alert 1.4s ease-in-out infinite; border-width: 1.5px; }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, MapPin, Globe, MessageSquarePlus, Activity, ChevronRight, CalendarPlus, X } from "lucide-react";
+import { Search, MapPin, Globe, MessageSquarePlus, Activity, ChevronRight, CalendarPlus, X, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { CreateInstituteDialog } from "@/components/CreateInstituteDialog";
@@ -26,10 +26,24 @@ import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
-  useRealtime("outreach_activities", [["activities-all"], ["institute"]]);
+  useRealtime("outreach_activities", [["activities-all"], ["institute"], ["last-activity-map", type]]);
   useRealtime("outreach_stages", [["stages"]]);
   const { data: list = [] } = useQuery({ queryKey: ["institutes", type], queryFn: () => fetchInstitutes(type) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
+  const { data: lastActivityMap = {} } = useQuery({
+    queryKey: ["last-activity-map", type],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("outreach_activities")
+        .select("institute_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((a: any) => { if (!map[a.institute_id]) map[a.institute_id] = a.created_at; });
+      return map;
+    },
+  });
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
@@ -88,6 +102,14 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const cities = useMemo(() => Array.from(new Set(list.map((i) => i.city).filter(Boolean))).sort() as string[], [list]);
   const states = useMemo(() => Array.from(new Set(list.map((i) => i.state).filter(Boolean))).sort() as string[], [list]);
 
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+  const isStale = (i: any) => {
+    if (!i.current_stage_id) return false;
+    const last = lastActivityMap[i.id];
+    const ref = last ? new Date(last) : new Date(i.updated_at ?? i.created_at);
+    return Date.now() - ref.getTime() > SEVEN_DAYS;
+  };
+
   const filtered = useMemo(() => {
     const m = q.trim().toLowerCase();
     let out = list.filter((i) => {
@@ -99,6 +121,10 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
       return [i.name, i.city, i.state, i.contact_person].some((v) => v?.toLowerCase().includes(m));
     });
     out = [...out].sort((a, b) => {
+      // Stale always first (red alert items)
+      const sa = isStale(a) ? 1 : 0;
+      const sb = isStale(b) ? 1 : 0;
+      if (sa !== sb) return sb - sa;
       if (sortBy === "name") return a.name.localeCompare(b.name);
       if (sortBy === "stage") {
         const ai = stages.findIndex((s) => s.id === a.current_stage_id);
@@ -113,7 +139,9 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
       return +new Date(b.updated_at ?? b.created_at) - +new Date(a.updated_at ?? a.created_at);
     });
     return out;
-  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages]);
+  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages, lastActivityMap]);
+
+  const staleCount = useMemo(() => list.filter(isStale).length, [list, lastActivityMap]);
 
   const activeFilterCount = [stageFilter, cityFilter, stateFilter].filter((v) => v !== "all").length;
   const clearFilters = () => { setStageFilter("all"); setCityFilter("all"); setStateFilter("all"); setQ(""); };
@@ -176,6 +204,12 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
               )}
               <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} of {list.length}</span>
             </div>
+            {staleCount > 0 && (
+              <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                <AlertTriangle className="h-4 w-4 animate-pulse" />
+                {staleCount} {staleCount === 1 ? "profile needs" : "profiles need"} attention — no activity in 7+ days. Pinned to top.
+              </div>
+            )}
           </div>
 
           {filtered.length === 0 ? (
@@ -190,10 +224,19 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
                 const typePath = type === "college" ? "colleges" : "coaching";
                 const accent = stage?.color ?? "hsl(var(--primary))";
+                const stale = isStale(i);
+                const lastAct = lastActivityMap[i.id];
+                const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
                 return (
-                  <Card key={i.id} className="group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl" style={{ boxShadow: "var(--shadow-card)" }}>
+                  <Card key={i.id} className={`group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl ${stale ? "stale-alert" : ""}`} style={{ boxShadow: "var(--shadow-card)" }}>
                     <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />
                     <CardContent className="space-y-4 p-5">
+                      {stale && (
+                        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5 animate-pulse" />
+                          No activity for {daysSince ?? "7+"} days — needs follow-up
+                        </div>
+                      )}
                       <div className="flex items-start justify-between gap-2">
                         <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
                           <h3 className="truncate font-display text-lg font-semibold leading-tight">{i.name}</h3>
