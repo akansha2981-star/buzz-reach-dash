@@ -140,3 +140,16 @@
   50% { box-shadow: 0 0 0 6px transparent; border-color: color-mix(in oklab, var(--destructive) 40%, transparent); }
 }
 .stale-alert { animation: pulse-alert 1.4s ease-in-out infinite; border-width: 1.5px; }
+
+/* PWA safe-area + standalone tweaks */
+@supports (padding: max(0px)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+}
