@@ -140,6 +140,163 @@ function StatCard({ icon: Icon, label, value, accent }: any) {
   );
 }
 
+function CalendarView({ meetings }: { meetings: any[] }) {
+  const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
+  const [selected, setSelected] = useState<Date>(new Date());
+
+  const monthStart = startOfMonth(cursor);
+  const monthEnd = endOfMonth(cursor);
+  const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
+
+  const byDay = useMemo(() => {
+    const map = new Map<string, any[]>();
+    meetings.forEach((m) => {
+      const key = format(new Date(m.meeting_at), "yyyy-MM-dd");
+      const arr = map.get(key) ?? [];
+      arr.push(m);
+      map.set(key, arr);
+    });
+    return map;
+  }, [meetings]);
+
+  const dayMeetings = (byDay.get(format(selected, "yyyy-MM-dd")) ?? [])
+    .sort((a, b) => +new Date(a.meeting_at) - +new Date(b.meeting_at));
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="font-display text-xl">{format(cursor, "MMMM yyyy")}</CardTitle>
+            <CardDescription>Click a day to see meetings</CardDescription>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => { setCursor(startOfMonth(new Date())); setSelected(new Date()); }}>Today</Button>
+            <Button variant="ghost" size="icon" onClick={() => setCursor(subMonths(cursor, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setCursor(addMonths(cursor, 1))}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 gap-1 border-b pb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d}>{d}</div>)}
+          </div>
+          <div className="mt-2 grid grid-cols-7 gap-1">
+            {days.map((d) => {
+              const key = format(d, "yyyy-MM-dd");
+              const items = byDay.get(key) ?? [];
+              const inMonth = isSameMonth(d, cursor);
+              const sel = isSameDay(d, selected);
+              const today = isToday(d);
+              return (
+                <button key={key} onClick={() => setSelected(d)}
+                  className={cn(
+                    "group relative flex min-h-[76px] flex-col rounded-md border p-1.5 text-left transition-all hover:border-primary/40 hover:bg-accent/40",
+                    !inMonth && "opacity-40",
+                    sel && "border-primary bg-primary/5 ring-1 ring-primary/30",
+                    today && !sel && "border-primary/40",
+                  )}>
+                  <span className={cn("text-xs font-medium", today && "inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground")}>
+                    {format(d, "d")}
+                  </span>
+                  <div className="mt-1 space-y-0.5">
+                    {items.slice(0, 2).map((m: any) => {
+                      const status = STATUSES.find((s) => s.value === m.status) ?? STATUSES[0];
+                      return (
+                        <div key={m.id} className="flex items-center gap-1 truncate rounded bg-background/80 px-1 py-0.5 text-[10px] font-medium">
+                          <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", status.color)} />
+                          <span className="truncate">{format(new Date(m.meeting_at), "HH:mm")} {m.title}</span>
+                        </div>
+                      );
+                    })}
+                    {items.length > 2 && <p className="px-1 text-[10px] text-muted-foreground">+{items.length - 2} more</p>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            {STATUSES.map((s) => (
+              <span key={s.value} className="inline-flex items-center gap-1.5"><span className={cn("h-2 w-2 rounded-full", s.color)} /> {s.label}</span>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="font-display text-lg">{format(selected, "EEEE, MMM d")}</CardTitle>
+          <CardDescription>{dayMeetings.length} meeting{dayMeetings.length === 1 ? "" : "s"}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {dayMeetings.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nothing scheduled.</p>
+          ) : dayMeetings.map((m: any) => {
+            const status = STATUSES.find((s) => s.value === m.status) ?? STATUSES[0];
+            return (
+              <div key={m.id} className="rounded-lg border p-3 transition-colors hover:bg-accent/40">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-muted-foreground">{format(new Date(m.meeting_at), "p")} · {m.duration_minutes}m</p>
+                  <Badge variant="outline" className="gap-1 text-[10px]"><span className={cn("h-1.5 w-1.5 rounded-full", status.color)} />{status.label}</Badge>
+                </div>
+                <p className="mt-1 font-medium">{m.title}</p>
+                {m.institutes && <p className="text-xs text-muted-foreground">{m.institutes.name}</p>}
+                <div className="mt-2 flex items-center justify-between">
+                  {m.meeting_link ? (
+                    <a href={m.meeting_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                      <Link2 className="h-3 w-3" /> Join
+                    </a>
+                  ) : <span />}
+                  <MeetingDialog meeting={m} trigger={<Button variant="ghost" size="sm" className="h-7 px-2 text-xs"><Pencil className="mr-1 h-3 w-3" /> Edit</Button>} />
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AgendaView({ meetings }: { meetings: any[] }) {
+  const groups = useMemo(() => {
+    const sorted = [...meetings].sort((a, b) => +new Date(a.meeting_at) - +new Date(b.meeting_at));
+    const map = new Map<string, any[]>();
+    sorted.forEach((m) => {
+      const key = format(new Date(m.meeting_at), "yyyy-MM-dd");
+      const arr = map.get(key) ?? [];
+      arr.push(m);
+      map.set(key, arr);
+    });
+    return Array.from(map.entries());
+  }, [meetings]);
+
+  if (groups.length === 0) return <EmptyState text="No meetings to show." />;
+
+  return (
+    <div className="space-y-4">
+      {groups.map(([day, items]) => {
+        const d = parseISO(day);
+        const label = isToday(d) ? "Today" : isTomorrow(d) ? "Tomorrow" : format(d, "EEEE, MMM d");
+        return (
+          <div key={day}>
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">{label}</h3>
+              <span className="text-xs text-muted-foreground">· {format(d, "MMMM d, yyyy")}</span>
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">{items.length}</span>
+            </div>
+            <div className="space-y-2">
+              {items.map((m: any) => <MeetingCard key={m.id} m={m} />)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function EmptyState({ text }: { text: string }) {
   return <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">{text}</CardContent></Card>;
 }
