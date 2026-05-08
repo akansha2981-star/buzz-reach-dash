@@ -1,15 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Mail, Phone, Globe, MapPin, Calendar, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Globe, MapPin, Calendar, Trash2, CalendarPlus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { MeetingDialog } from "@/routes/meetings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchInstitute, fetchStages, type InstituteType } from "@/lib/data";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,21 +30,23 @@ function InstituteDetailPage() {
   const { user } = useAuth();
   const [note, setNote] = useState("");
   const [meeting, setMeeting] = useState("");
+  const [pendingStage, setPendingStage] = useState<{ id: string; name: string } | null>(null);
+  const [stageNote, setStageNote] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["institute", id], queryFn: () => fetchInstitute(id) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
 
   const updateStage = useMutation({
-    mutationFn: async (stageId: string) => {
+    mutationFn: async ({ stageId, noteText }: { stageId: string; noteText: string }) => {
       const stage = stages.find((s) => s.id === stageId);
       const { error } = await supabase.from("institutes").update({ current_stage_id: stageId, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
       await supabase.from("outreach_activities").insert({
         institute_id: id, stage_id: stageId, stage_name_snapshot: stage?.name,
-        note: `Stage updated → ${stage?.name}`, created_by: user?.id ?? null,
+        note: `Stage → ${stage?.name}: ${noteText.trim()}`, created_by: user?.id ?? null,
       });
     },
-    onSuccess: () => { toast.success("Stage updated"); qc.invalidateQueries({ queryKey: ["institute", id] }); qc.invalidateQueries({ queryKey: ["institutes", instType] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
+    onSuccess: () => { toast.success("Stage updated"); setPendingStage(null); setStageNote(""); qc.invalidateQueries({ queryKey: ["institute", id] }); qc.invalidateQueries({ queryKey: ["institutes", instType] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -128,7 +133,12 @@ function InstituteDetailPage() {
               <Card>
                 <CardHeader><CardTitle>Outreach Stage</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Select value={data.institute.current_stage_id ?? undefined} onValueChange={(v) => updateStage.mutate(v)}>
+                  <Select value={data.institute.current_stage_id ?? undefined} onValueChange={(v) => {
+                    const s = stages.find((x) => x.id === v);
+                    if (!s || v === data.institute!.current_stage_id) return;
+                    setPendingStage({ id: v, name: s.name });
+                    setStageNote("");
+                  }}>
                     <SelectTrigger><SelectValue placeholder="Set stage" /></SelectTrigger>
                     <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                   </Select>
@@ -137,10 +147,15 @@ function InstituteDetailPage() {
                     const pct = Math.round((idx / stages.length) * 100);
                     return (<div><div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">Pipeline progress</span><span className="font-medium">{pct}%</span></div><Progress value={pct} /></div>);
                   })()}
+                  <MeetingDialog
+                    defaultInstituteId={id}
+                    defaultTitle={`Meeting with ${data.institute.name}`}
+                    trigger={<Button size="sm" variant="outline" className="w-full"><CalendarPlus className="mr-1 h-4 w-4" /> Schedule a meeting</Button>}
+                  />
                   <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Next meeting</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quick reminder</p>
                     <Input type="datetime-local" defaultValue={data.institute.next_meeting_at ? new Date(data.institute.next_meeting_at).toISOString().slice(0,16) : ""} onChange={(e) => setMeeting(e.target.value)} />
-                    <Button size="sm" variant="outline" className="w-full" onClick={() => setNextMeeting.mutate()}><Calendar className="mr-1 h-4 w-4" /> Save meeting</Button>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => setNextMeeting.mutate()}><Calendar className="mr-1 h-4 w-4" /> Save reminder</Button>
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Add note</p>
@@ -175,6 +190,26 @@ function InstituteDetailPage() {
             </Card>
           </div>
         )}
+
+        <Dialog open={!!pendingStage} onOpenChange={(o) => { if (!o) { setPendingStage(null); setStageNote(""); } }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Move to "{pendingStage?.name}"</DialogTitle>
+              <DialogDescription>Add a note for the timeline before changing stage.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label>Note *</Label>
+              <Textarea rows={4} autoFocus value={stageNote} onChange={(e) => setStageNote(e.target.value)} placeholder="What changed? Next steps?" />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => { setPendingStage(null); setStageNote(""); }}>Cancel</Button>
+              <Button disabled={!stageNote.trim() || updateStage.isPending}
+                onClick={() => pendingStage && updateStage.mutate({ stageId: pendingStage.id, noteText: stageNote })}>
+                {updateStage.isPending ? "Saving…" : "Update stage"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </AppShell>
     </RequireAuth>
   );
