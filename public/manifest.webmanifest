@@ -13,11 +13,36 @@
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Dashboard", "short_name": "Home", "url": "/", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Meetings", "short_name": "Meetings", "url": "/meetings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Tasks", "short_name": "Tasks", "url": "/tasks", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Colleges", "short_name": "Colleges", "url": "/outreach/colleges", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Coaching", "short_name": "Coaching", "url": "/outreach/coaching", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Meetings",
+      "short_name": "Meetings",
+      "url": "/meetings",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tasks",
+      "short_name": "Tasks",
+      "url": "/tasks",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Colleges",
+      "short_name": "Colleges",
+      "url": "/outreach/colleges",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Coaching",
+      "short_name": "Coaching",
+      "url": "/outreach/coaching",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ],
   "categories": ["business", "productivity"]
 }
