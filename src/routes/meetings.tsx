@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isAfter, isToday, isTomorrow, startOfDay, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from "date-fns";
+import { format, isAfter, isBefore, isToday, isTomorrow, startOfDay, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, Plus, Video, Link2, Clock, Users as UsersIcon, Trash2, Pencil, ExternalLink, CheckCircle2, XCircle, AlarmClock, ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon, CalendarDays } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
