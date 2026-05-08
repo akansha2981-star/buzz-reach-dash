@@ -30,21 +30,23 @@ function InstituteDetailPage() {
   const { user } = useAuth();
   const [note, setNote] = useState("");
   const [meeting, setMeeting] = useState("");
+  const [pendingStage, setPendingStage] = useState<{ id: string; name: string } | null>(null);
+  const [stageNote, setStageNote] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["institute", id], queryFn: () => fetchInstitute(id) });
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
 
   const updateStage = useMutation({
-    mutationFn: async (stageId: string) => {
+    mutationFn: async ({ stageId, noteText }: { stageId: string; noteText: string }) => {
       const stage = stages.find((s) => s.id === stageId);
       const { error } = await supabase.from("institutes").update({ current_stage_id: stageId, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
       await supabase.from("outreach_activities").insert({
         institute_id: id, stage_id: stageId, stage_name_snapshot: stage?.name,
-        note: `Stage updated → ${stage?.name}`, created_by: user?.id ?? null,
+        note: `Stage → ${stage?.name}: ${noteText.trim()}`, created_by: user?.id ?? null,
       });
     },
-    onSuccess: () => { toast.success("Stage updated"); qc.invalidateQueries({ queryKey: ["institute", id] }); qc.invalidateQueries({ queryKey: ["institutes", instType] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
+    onSuccess: () => { toast.success("Stage updated"); setPendingStage(null); setStageNote(""); qc.invalidateQueries({ queryKey: ["institute", id] }); qc.invalidateQueries({ queryKey: ["institutes", instType] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
