@@ -129,6 +129,12 @@ export const updateUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
       await supabaseAdmin.from("user_roles").insert({ user_id: data.user_id, role: data.role });
     }
+    if (data.full_name !== undefined || data.designation !== undefined) {
+      const profUpdate: any = { id: data.user_id };
+      if (data.full_name !== undefined) profUpdate.full_name = data.full_name;
+      if (data.designation !== undefined) profUpdate.designation = data.designation;
+      await supabaseAdmin.from("profiles").upsert(profUpdate);
+    }
     if (data.permissions || data.role) {
       const finalPerms = data.role === "admin" ? adminAllPerms : (data.permissions ?? null);
       if (finalPerms) {
