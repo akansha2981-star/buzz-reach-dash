@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, MapPin, Globe, MessageSquarePlus, Activity, ChevronRight, CalendarPlus, X, AlertTriangle } from "lucide-react";
+import { Search, MapPin, Globe, MessageSquarePlus, Activity, ChevronRight, CalendarPlus, X, AlertTriangle, LayoutGrid, List, Table as TableIcon } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { CreateInstituteDialog } from "@/components/CreateInstituteDialog";
@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { fetchInstitutes, fetchStages, type InstituteType } from "@/lib/data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -51,6 +53,14 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"recent" | "name" | "stage" | "meeting">("recent");
+  const [view, setView] = useState<"grid" | "list" | "table" | "compact">(() => {
+    if (typeof window === "undefined") return "grid";
+    return (localStorage.getItem(`institute-view:${type}`) as any) || "grid";
+  });
+  const setViewPersist = (v: "grid" | "list" | "table" | "compact") => {
+    setView(v);
+    if (typeof window !== "undefined") localStorage.setItem(`institute-view:${type}`, v);
+  };
 
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -205,6 +215,12 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 </Button>
               )}
               <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} of {list.length}</span>
+              <ToggleGroup type="single" size="sm" value={view} onValueChange={(v) => v && setViewPersist(v as any)} className="ml-2">
+                <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view" className="h-8 px-2"><List className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="table" aria-label="Table view" className="h-8 px-2"><TableIcon className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="compact" aria-label="Compact view" className="h-8 px-2 text-[10px] font-bold">XS</ToggleGroupItem>
+              </ToggleGroup>
             </div>
             {staleCount > 0 && (
               <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
@@ -218,7 +234,7 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <p className="text-sm text-muted-foreground">No profiles yet.</p>
             </CardContent></Card>
-          ) : (
+          ) : view === "grid" ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((i) => {
                 const stage = stages.find((s) => s.id === i.current_stage_id);
@@ -316,6 +332,110 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                       </div>
                     </CardContent>
                   </Card>
+                );
+              })}
+            </div>
+          ) : view === "list" ? (
+            <div className="space-y-2">
+              {filtered.map((i) => {
+                const stage = stages.find((s) => s.id === i.current_stage_id);
+                const typePath = type === "college" ? "colleges" : "coaching";
+                const stale = isStale(i);
+                const lastAct = lastActivityMap[i.id];
+                const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
+                return (
+                  <Card key={i.id} className={`overflow-hidden ${stale ? "border-destructive/40" : ""}`}>
+                    <CardContent className="flex flex-wrap items-center gap-3 p-3">
+                      <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
+                        <div className="flex items-center gap-2">
+                          <h3 className="truncate font-semibold">{i.name}</h3>
+                          {stale && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                          {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
+                          {stale && <span className="text-destructive">No activity {daysSince ?? "7+"}d</span>}
+                        </div>
+                      </Link>
+                      {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge>}
+                      <div className="flex items-center gap-1">
+                        <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><CalendarPlus className="h-3.5 w-3.5" /></Button>} />
+                        <InstituteTimelineDialog instituteId={i.id} instituteName={i.name} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><Activity className="h-3.5 w-3.5" /></Button>} />
+                        <EditInstituteDialog institute={i} type={type} />
+                        <DeleteInstituteButton institute={i} type={type} />
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex h-7 items-center gap-0.5 rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                          Open <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : view === "table" ? (
+            <Card className="overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Stage</TableHead>
+                    <TableHead>Next meeting</TableHead>
+                    <TableHead>Last activity</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((i) => {
+                    const stage = stages.find((s) => s.id === i.current_stage_id);
+                    const typePath = type === "college" ? "colleges" : "coaching";
+                    const stale = isStale(i);
+                    const lastAct = lastActivityMap[i.id];
+                    const daysSince = lastAct ? Math.floor((Date.now() - new Date(lastAct).getTime()) / 86400000) : null;
+                    return (
+                      <TableRow key={i.id} className={stale ? "bg-destructive/5" : ""}>
+                        <TableCell className="font-medium">
+                          <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="hover:text-primary">
+                            <span className="inline-flex items-center gap-2">
+                              {stale && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                              {i.name}
+                            </span>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{[i.city, i.state].filter(Boolean).join(", ") || "—"}</TableCell>
+                        <TableCell>{stage ? <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                        <TableCell className="text-xs">{i.next_meeting_at ? new Date(i.next_meeting_at).toLocaleDateString() : "—"}</TableCell>
+                        <TableCell className="text-xs">{daysSince !== null ? `${daysSince}d ago` : "—"}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="inline-flex items-center gap-1">
+                            <MeetingDialog defaultInstituteId={i.id} defaultTitle={`Meeting with ${i.name}`} trigger={<Button size="sm" variant="ghost" className="h-7 px-2"><CalendarPlus className="h-3.5 w-3.5" /></Button>} />
+                            <EditInstituteDialog institute={i} type={type} />
+                            <DeleteInstituteButton institute={i} type={type} />
+                            <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">Open</Link>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Card>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {filtered.map((i) => {
+                const stage = stages.find((s) => s.id === i.current_stage_id);
+                const typePath = type === "college" ? "colleges" : "coaching";
+                const stale = isStale(i);
+                return (
+                  <Link
+                    key={i.id}
+                    to="/outreach/$type/$id"
+                    params={{ type: typePath, id: i.id }}
+                    className={`group inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 ${stale ? "border-destructive/40" : "border-border"}`}
+                  >
+                    {stale && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                    <span className="truncate max-w-[200px]">{i.name}</span>
+                    {stage && <span className="h-2 w-2 rounded-full" style={{ background: stage.color }} />}
+                  </Link>
                 );
               })}
             </div>
