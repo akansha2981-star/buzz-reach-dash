@@ -44,6 +44,7 @@ export const listUsers = createServerFn({ method: "GET" })
     if (error) throw error;
     const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role");
     const { data: permsList } = await supabaseAdmin.from("user_permissions").select("*");
+    const { data: profilesList } = await supabaseAdmin.from("profiles").select("id, designation, full_name");
     const roleMap = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
       const arr = roleMap.get(r.user_id) ?? [];
@@ -52,12 +53,16 @@ export const listUsers = createServerFn({ method: "GET" })
     });
     const permMap = new Map<string, Perms>();
     (permsList ?? []).forEach((p: any) => permMap.set(p.user_id, p));
+    const profMap = new Map<string, any>();
+    (profilesList ?? []).forEach((p: any) => profMap.set(p.id, p));
     return list.users.map((u) => {
       const isAdmin = (roleMap.get(u.id) ?? []).includes("admin");
+      const prof = profMap.get(u.id);
       return {
         id: u.id,
         email: u.email,
-        full_name: (u.user_metadata as any)?.full_name ?? null,
+        full_name: prof?.full_name ?? (u.user_metadata as any)?.full_name ?? null,
+        designation: prof?.designation ?? null,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
         roles: roleMap.get(u.id) ?? [],
@@ -73,6 +78,7 @@ const createSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(6).max(72),
   full_name: z.string().min(1).max(100),
+  designation: z.string().max(100).optional().nullable(),
   role: z.enum(["admin", "user"]),
   permissions: permsSchema,
 });
@@ -91,6 +97,9 @@ export const createUser = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_permissions").insert({
       user_id: created.user.id, ...(data.role === "admin" ? adminAllPerms : data.permissions),
     });
+    await supabaseAdmin.from("profiles").upsert({
+      id: created.user.id, email: data.email, full_name: data.full_name, designation: data.designation ?? null,
+    });
     await logServer(context.userId, context.claims?.email ?? null, "user.created", "user", created.user.id, data.email, { role: data.role });
     return { id: created.user.id };
   });
@@ -99,6 +108,7 @@ const updateSchema = z.object({
   user_id: z.string().uuid(),
   password: z.string().min(6).max(72).optional(),
   full_name: z.string().min(1).max(100).optional(),
+  designation: z.string().max(100).optional().nullable(),
   role: z.enum(["admin", "user"]).optional(),
   permissions: permsSchema.optional(),
 });
@@ -118,6 +128,12 @@ export const updateUser = createServerFn({ method: "POST" })
     if (data.role) {
       await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
       await supabaseAdmin.from("user_roles").insert({ user_id: data.user_id, role: data.role });
+    }
+    if (data.full_name !== undefined || data.designation !== undefined) {
+      const profUpdate: any = { id: data.user_id };
+      if (data.full_name !== undefined) profUpdate.full_name = data.full_name;
+      if (data.designation !== undefined) profUpdate.designation = data.designation;
+      await supabaseAdmin.from("profiles").upsert(profUpdate);
     }
     if (data.permissions || data.role) {
       const finalPerms = data.role === "admin" ? adminAllPerms : (data.permissions ?? null);

@@ -31,6 +31,17 @@ function Dashboard() {
   const [typeFilter, setTypeFilter] = useState<TypeKey>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
 
+  const { data: me } = useQuery({
+    queryKey: ["me-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data: p } = await supabase.from("profiles").select("full_name, email, designation").eq("id", u.user.id).maybeSingle();
+      const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      return { ...p, email: p?.email ?? u.user.email, roles: (r ?? []).map((x: any) => x.role) };
+    },
+  });
+
   const { data } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
@@ -154,9 +165,13 @@ function Dashboard() {
       <div className="rounded-2xl p-5 text-primary-foreground sm:p-6" style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-elegant)" }}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="h-4 w-4" /> Welcome back</div>
-            <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Your outreach, organized.</h2>
-            <p className="mt-1 max-w-xl text-sm opacity-90">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
+            <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="h-4 w-4" /> Welcome back{me?.full_name ? `, ${me.full_name.split(" ")[0]}` : ""}</div>
+            <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{me?.full_name ?? me?.email ?? "Your outreach"}</h2>
+            <p className="mt-1 text-sm opacity-90">
+              {me?.designation ? <span className="font-medium">{me.designation}</span> : <span className="italic opacity-80">Add your designation in Settings → Users</span>}
+              {me?.roles?.includes("admin") ? <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">CEO · Master Admin</span> : null}
+            </p>
+            <p className="mt-2 max-w-xl text-xs opacity-80">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
           </div>
           <NewCEORequestDialog
             trigger={

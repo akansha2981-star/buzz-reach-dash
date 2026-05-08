@@ -109,7 +109,7 @@ function UserRow({ user }: { user: any }) {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-medium">{user.full_name ?? "—"}</p>
+            <p className="font-medium">{user.full_name ?? "—"}{user.designation ? <span className="ml-2 text-xs font-normal text-muted-foreground">· {user.designation}</span> : null}</p>
             {isAdminUser ? (
               <Badge className="gap-1"><ShieldCheck className="h-3 w-3" /> Admin</Badge>
             ) : (
@@ -163,17 +163,17 @@ function PermsGrid({ value, onChange, disabled }: { value: any; onChange: (v: an
 
 function CreateUserDialog() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "user" as "admin" | "user" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", designation: "", role: "user" as "admin" | "user" });
   const [perms, setPerms] = useState<any>(DEFAULT_PERMS);
   const create = useServerFn(createUser);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: () => create({ data: { ...form, permissions: perms } }),
+    mutationFn: () => create({ data: { ...form, designation: form.designation || null, permissions: perms } }),
     onSuccess: () => {
       toast.success("Account created");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);
-      setForm({ email: "", password: "", full_name: "", role: "user" });
+      setForm({ email: "", password: "", full_name: "", designation: "", role: "user" });
       setPerms(DEFAULT_PERMS);
     },
     onError: (e: any) => toast.error(e.message),
@@ -190,6 +190,7 @@ function CreateUserDialog() {
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Designation</Label><Input placeholder="e.g. Outreach Manager" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></div>
             <div><Label>Email</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><Label>Password</Label><Input type="text" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 6 characters" /></div>
             <div>
@@ -220,12 +221,13 @@ function CreateUserDialog() {
 function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [full_name, setFullName] = useState(user.full_name ?? "");
+  const [designation, setDesignation] = useState(user.designation ?? "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "user">(user.roles.includes("admin") ? "admin" : "user");
   const [perms, setPerms] = useState<any>(user.permissions);
   const upd = useServerFn(updateUser);
   const m = useMutation({
-    mutationFn: () => upd({ data: { user_id: user.id, full_name, role, permissions: perms, ...(password ? { password } : {}) } }),
+    mutationFn: () => upd({ data: { user_id: user.id, full_name, designation: designation || null, role, permissions: perms, ...(password ? { password } : {}) } }),
     onSuccess: () => { toast.success("Updated"); onSaved(); setOpen(false); setPassword(""); },
     onError: (e: any) => toast.error(e.message),
   });
@@ -241,6 +243,7 @@ function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => void }) {
         <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input value={full_name} onChange={(e) => setFullName(e.target.value)} /></div>
+            <div><Label>Designation</Label><Input placeholder="e.g. Outreach Manager" value={designation} onChange={(e) => setDesignation(e.target.value)} /></div>
             <div><Label>New password (leave blank to keep)</Label><Input type="text" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
             <div>
               <Label>Role</Label>
