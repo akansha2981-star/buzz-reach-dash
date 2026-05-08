@@ -511,35 +511,44 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
       let google_event_id = meeting?.google_event_id ?? null;
       let google_calendar_id = meeting?.google_calendar_id ?? null;
       let google_html_link = meeting?.google_html_link ?? null;
+      let google_account_key: string | null = meeting?.google_account_key ?? null;
       let meeting_link = form.meeting_link || null;
+
+      const wantsCustomMeetLink = useCustomLink && !!form.meeting_link;
+      const shouldGenerateMeet = form.platform === "google_meet" && !wantsCustomMeetLink;
+      const effectiveAccount = accountKey || google_account_key || null;
 
       // Sync to Google Calendar (cancellations remove the event)
       try {
         if (syncGoogle && form.status !== "cancelled") {
           const gcalInput = {
+            accountKey: effectiveAccount,
             title: form.title,
             description: form.description || null,
             startISO: dt.toISOString(),
             durationMinutes: Number(form.duration_minutes) || 30,
             attendees: attendeeEmails,
             reminderMinutes: Number(form.reminder_minutes) || 0,
-            createMeetLink: form.platform === "google_meet",
+            createMeetLink: shouldGenerateMeet,
+            customLocation: wantsCustomMeetLink ? form.meeting_link : null,
             calendarId: google_calendar_id || "primary",
           };
           if (google_event_id) {
             const r = await updateGCal({ data: { ...gcalInput, eventId: google_event_id } });
             google_html_link = r.htmlLink ?? google_html_link;
-            if (r.meetLink) meeting_link = r.meetLink;
+            google_account_key = r.accountKey ?? google_account_key;
+            if (r.meetLink && !wantsCustomMeetLink) meeting_link = r.meetLink;
           } else {
             const r = await createGCal({ data: gcalInput });
             google_event_id = r.eventId;
             google_calendar_id = r.calendarId;
             google_html_link = r.htmlLink;
-            if (r.meetLink) meeting_link = r.meetLink;
+            google_account_key = r.accountKey;
+            if (r.meetLink && !wantsCustomMeetLink) meeting_link = r.meetLink;
           }
         } else if (google_event_id && (form.status === "cancelled" || !syncGoogle)) {
-          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary" } });
-          google_event_id = null; google_calendar_id = null; google_html_link = null;
+          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary", accountKey: google_account_key } });
+          google_event_id = null; google_calendar_id = null; google_html_link = null; google_account_key = null;
         }
       } catch (e: any) {
         toast.error(`Google Calendar sync failed: ${e.message}`);
@@ -559,6 +568,7 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
         google_event_id,
         google_calendar_id,
         google_html_link,
+        google_account_key,
       };
       if (editing) {
         const { error } = await supabase.from("meetings").update(payload).eq("id", meeting.id);
