@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, MapPin, Globe, MessageSquarePlus } from "lucide-react";
+import { Search, MapPin, Globe, MessageSquarePlus, Activity, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { CreateInstituteDialog } from "@/components/CreateInstituteDialog";
@@ -44,6 +44,27 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
       setNoteFor(null); setNoteText("");
       qc.invalidateQueries({ queryKey: ["activities-all"] });
       qc.invalidateQueries({ queryKey: ["institute"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const updateStage = useMutation({
+    mutationFn: async ({ id, name, stageId }: { id: string; name: string; stageId: string }) => {
+      const stage = stages.find((s) => s.id === stageId);
+      const { error } = await supabase.from("institutes")
+        .update({ current_stage_id: stageId, updated_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+      await supabase.from("outreach_activities").insert({
+        institute_id: id, stage_id: stageId, stage_name_snapshot: stage?.name,
+        note: `Stage updated → ${stage?.name}`, created_by: user?.id ?? null,
+      });
+      await logAction({ action: "stage.updated", entity_type: "institute", entity_id: id, entity_label: name, details: { stage: stage?.name } });
+    },
+    onSuccess: () => {
+      toast.success("Status updated");
+      qc.invalidateQueries({ queryKey: ["institutes", type] });
+      qc.invalidateQueries({ queryKey: ["activities-all"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -92,39 +113,66 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 const idx = stage ? stages.findIndex((s) => s.id === stage.id) + 1 : 0;
                 const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
                 const typePath = type === "college" ? "colleges" : "coaching";
+                const accent = stage?.color ?? "hsl(var(--primary))";
                 return (
-                  <Card key={i.id} className="h-full transition-all hover:-translate-y-0.5 hover:shadow-lg" style={{ boxShadow: "var(--shadow-card)" }}>
-                    <CardContent className="space-y-3 p-5">
+                  <Card key={i.id} className="group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl" style={{ boxShadow: "var(--shadow-card)" }}>
+                    <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />
+                    <CardContent className="space-y-4 p-5">
                       <div className="flex items-start justify-between gap-2">
-                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="hover:text-primary">
-                          <h3 className="font-display text-lg font-semibold leading-tight">{i.name}</h3>
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="min-w-0 flex-1 hover:text-primary">
+                          <h3 className="truncate font-display text-lg font-semibold leading-tight">{i.name}</h3>
+                          <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                            {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
+                            {i.website && <span className="flex items-center gap-1"><Globe className="h-3 w-3" />Website</span>}
+                          </div>
                         </Link>
-                        {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge>}
+                        {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline" className="shrink-0">{stage.name}</Badge>}
                       </div>
-                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
-                        {i.website && <span className="flex items-center gap-1"><Globe className="h-3 w-3" />Website</span>}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs"><span className="text-muted-foreground">Progress</span><span className="font-medium">{pct}%</span></div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs"><span className="text-muted-foreground">Pipeline progress</span><span className="font-medium">{pct}%</span></div>
                         <Progress value={pct} className="h-1.5" />
                       </div>
-                      <div className="flex items-center justify-between gap-2 pt-1">
-                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="text-xs font-medium text-primary hover:underline">Open profile →</Link>
-                        <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
-                          <PopoverTrigger asChild>
-                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
-                              <MessageSquarePlus className="mr-1 h-3 w-3" /> Add note
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent align="end" className="w-80">
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium">New note for {i.name}</p>
-                              <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
-                              <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
+
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Update status</p>
+                        <Select value={i.current_stage_id ?? undefined} onValueChange={(v) => updateStage.mutate({ id: i.id, name: i.name, stageId: v })}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Set stage" /></SelectTrigger>
+                          <SelectContent>
+                            {stages.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 border-t pt-3">
+                        <div className="flex items-center gap-1">
+                          <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                            <Activity className="h-3 w-3" /> Timeline
+                          </Link>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
+                            <PopoverTrigger asChild>
+                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
+                                <MessageSquarePlus className="mr-1 h-3 w-3" /> Note
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-80">
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium">New note for {i.name}</p>
+                                <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
+                                <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="inline-flex h-7 items-center gap-0.5 rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                            Open <ChevronRight className="h-3 w-3" />
+                          </Link>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
