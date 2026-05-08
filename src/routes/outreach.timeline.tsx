@@ -37,6 +37,8 @@ async function fetchAllActivities() {
 }
 
 function TimelinePage() {
+  useRealtime("outreach_activities", [["activities-all"]]);
+  useRealtime("institutes", [["activities-all"]]);
   const qc = useQueryClient();
   const { user } = useAuth();
   const { data = [], isLoading } = useQuery({ queryKey: ["activities-all"], queryFn: fetchAllActivities });
