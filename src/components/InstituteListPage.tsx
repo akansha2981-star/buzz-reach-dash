@@ -23,6 +23,7 @@ import { logAction } from "@/lib/access";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
+import { AddTaskPopover } from "@/components/AddTaskPopover";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
@@ -288,6 +289,7 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                             defaultTitle={`Meeting with ${i.name}`}
                             trigger={<Button size="sm" variant="outline" className="h-7 px-2 text-xs"><CalendarPlus className="mr-1 h-3 w-3" /> Schedule</Button>}
                           />
+                          <AddTaskPopover instituteId={i.id} instituteName={i.name} />
                           <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
                             <PopoverTrigger asChild>
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
