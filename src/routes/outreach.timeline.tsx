@@ -127,7 +127,7 @@ function TimelinePage() {
                               <PopoverContent align="end" className="w-80">
                                 <div className="space-y-2">
                                   <p className="text-xs font-medium">Add note to {inst.name}</p>
-                                  <Textarea rows={3} value={newNote?.instituteId === inst.id ? newNote.text : ""}
+                                  <Textarea rows={3} value={newNote && newNote.instituteId === inst.id ? newNote.text : ""}
                                     onChange={(e) => setNewNote({ instituteId: inst.id, text: e.target.value })} />
                                   <Button size="sm" className="w-full"
                                     disabled={addNote.isPending || !(newNote && newNote.instituteId === inst.id && newNote.text.trim())}
