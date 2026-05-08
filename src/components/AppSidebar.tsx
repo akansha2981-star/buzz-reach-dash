@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -68,6 +68,13 @@ export function AppSidebar() {
                           <SidebarMenuSubItem>
                             <SidebarMenuSubButton asChild isActive={isActive("/outreach/coaching")}>
                               <Link to="/outreach/coaching"><BookOpen className="h-4 w-4" /><span>Coaching</span></Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )}
+                        {(can("can_colleges") || can("can_coaching")) && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton asChild isActive={isActive("/outreach/timeline")}>
+                              <Link to="/outreach/timeline"><Activity className="h-4 w-4" /><span>Timeline</span></Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         )}

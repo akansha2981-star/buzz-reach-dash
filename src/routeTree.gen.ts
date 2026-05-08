@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
+import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
@@ -51,6 +52,11 @@ const SettingsLogsRoute = SettingsLogsRouteImport.update({
   path: '/settings/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OutreachTimelineRoute = OutreachTimelineRouteImport.update({
+  id: '/outreach/timeline',
+  path: '/outreach/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutreachCollegesRoute = OutreachCollegesRouteImport.update({
   id: '/outreach/colleges',
   path: '/outreach/colleges',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/outreach/timeline': typeof OutreachTimelineRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/outreach/timeline': typeof OutreachTimelineRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
+  '/outreach/timeline': typeof OutreachTimelineRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/outreach/timeline'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/outreach/timeline'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
+    | '/outreach/timeline'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
   OutreachCoachingRoute: typeof OutreachCoachingRoute
   OutreachCollegesRoute: typeof OutreachCollegesRoute
+  OutreachTimelineRoute: typeof OutreachTimelineRoute
   SettingsLogsRoute: typeof SettingsLogsRoute
   SettingsStagesRoute: typeof SettingsStagesRoute
   SettingsUsersRoute: typeof SettingsUsersRoute
@@ -214,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/logs'
       fullPath: '/settings/logs'
       preLoaderRoute: typeof SettingsLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/timeline': {
+      id: '/outreach/timeline'
+      path: '/outreach/timeline'
+      fullPath: '/outreach/timeline'
+      preLoaderRoute: typeof OutreachTimelineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/outreach/colleges': {
@@ -273,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
   OutreachCoachingRoute: OutreachCoachingRoute,
   OutreachCollegesRoute: OutreachCollegesRoute,
+  OutreachTimelineRoute: OutreachTimelineRoute,
   SettingsLogsRoute: SettingsLogsRoute,
   SettingsStagesRoute: SettingsStagesRoute,
   SettingsUsersRoute: SettingsUsersRoute,
