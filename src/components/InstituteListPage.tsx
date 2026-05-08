@@ -91,25 +91,43 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                 const stage = stages.find((s) => s.id === i.current_stage_id);
                 const idx = stage ? stages.findIndex((s) => s.id === stage.id) + 1 : 0;
                 const pct = stages.length ? Math.round((idx / stages.length) * 100) : 0;
+                const typePath = type === "college" ? "colleges" : "coaching";
                 return (
-                  <Link key={i.id} to="/outreach/$type/$id" params={{ type: type === "college" ? "colleges" : "coaching", id: i.id }}>
-                    <Card className="h-full transition-all hover:-translate-y-0.5 hover:shadow-lg" style={{ boxShadow: "var(--shadow-card)" }}>
-                      <CardContent className="space-y-3 p-5">
-                        <div className="flex items-start justify-between gap-2">
+                  <Card key={i.id} className="h-full transition-all hover:-translate-y-0.5 hover:shadow-lg" style={{ boxShadow: "var(--shadow-card)" }}>
+                    <CardContent className="space-y-3 p-5">
+                      <div className="flex items-start justify-between gap-2">
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="hover:text-primary">
                           <h3 className="font-display text-lg font-semibold leading-tight">{i.name}</h3>
-                          {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge>}
-                        </div>
-                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
-                          {i.website && <span className="flex items-center gap-1"><Globe className="h-3 w-3" />Website</span>}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-xs"><span className="text-muted-foreground">Progress</span><span className="font-medium">{pct}%</span></div>
-                          <Progress value={pct} className="h-1.5" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                        </Link>
+                        {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline">{stage.name}</Badge>}
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        {(i.city || i.state) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[i.city, i.state].filter(Boolean).join(", ")}</span>}
+                        {i.website && <span className="flex items-center gap-1"><Globe className="h-3 w-3" />Website</span>}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs"><span className="text-muted-foreground">Progress</span><span className="font-medium">{pct}%</span></div>
+                        <Progress value={pct} className="h-1.5" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <Link to="/outreach/$type/$id" params={{ type: typePath, id: i.id }} className="text-xs font-medium text-primary hover:underline">Open profile →</Link>
+                        <Popover open={noteFor === i.id} onOpenChange={(o) => { if (!o) { setNoteFor(null); setNoteText(""); } }}>
+                          <PopoverTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setNoteFor(i.id); setNoteText(""); }}>
+                              <MessageSquarePlus className="mr-1 h-3 w-3" /> Add note
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-80">
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium">New note for {i.name}</p>
+                              <Textarea rows={3} value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="What happened today?" />
+                              <Button size="sm" className="w-full" disabled={addNote.isPending || !noteText.trim()} onClick={() => addNote.mutate({ id: i.id, name: i.name })}>Save note</Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
