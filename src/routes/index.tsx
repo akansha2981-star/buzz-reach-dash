@@ -164,19 +164,25 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl p-5 text-primary-foreground sm:p-6" style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-elegant)" }}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="h-4 w-4" /> Welcome back{me?.full_name ? `, ${me.full_name.split(" ")[0]}` : ""}</div>
-            <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{me?.full_name ?? me?.email ?? "Your outreach"}</h2>
-            <p className="mt-1 text-sm opacity-90">
-              {me?.designation ? <span className="font-medium">{me.designation}</span> : <span className="italic opacity-80">Add your designation in Settings → Users</span>}
-              {me?.roles?.includes("admin") ? <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">CEO · Master Admin</span> : null}
-            </p>
-            <p className="mt-2 max-w-xl text-xs opacity-80">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-xs opacity-90 sm:text-sm"><Sparkles className="h-4 w-4 shrink-0" /> <span className="truncate">Welcome back{me?.full_name ? `, ${me.full_name.split(" ")[0]}` : ""}</span></div>
+            <h2 className="mt-2 truncate font-display text-xl font-bold sm:text-3xl">{me?.full_name ?? me?.email ?? "Your outreach"}</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+              {me?.designation ? (
+                <span className="font-medium opacity-95">{me.designation}</span>
+              ) : (
+                <span className="italic opacity-80">Add designation in Settings → Users</span>
+              )}
+              {me?.roles?.includes("admin") && (
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">CEO · Master Admin</span>
+              )}
+            </div>
+            <p className="mt-3 hidden max-w-xl text-xs opacity-80 sm:block">Track every conversation with colleges and coaching institutes from first email to deal closed.</p>
           </div>
           <NewCEORequestDialog
             trigger={
-              <Button size="sm" variant="secondary" className="shrink-0">
+              <Button size="sm" variant="secondary" className="w-full shrink-0 sm:w-auto">
                 <Crown className="mr-1 h-4 w-4 text-amber-600" /> Request to CEO
               </Button>
             }
