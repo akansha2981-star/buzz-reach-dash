@@ -130,8 +130,8 @@ function TimelinePage() {
                                   <Textarea rows={3} value={newNote?.instituteId === inst.id ? newNote.text : ""}
                                     onChange={(e) => setNewNote({ instituteId: inst.id, text: e.target.value })} />
                                   <Button size="sm" className="w-full"
-                                    disabled={addNote.isPending || !(newNote?.instituteId === inst.id && newNote.text.trim())}
-                                    onClick={() => addNote.mutate({ instituteId: inst.id, text: newNote!.text, name: inst.name })}>
+                                    disabled={addNote.isPending || !(newNote && newNote.instituteId === inst.id && newNote.text.trim())}
+                                    onClick={() => newNote && addNote.mutate({ instituteId: inst.id, text: newNote.text, name: inst.name })}>
                                     Save note
                                   </Button>
                                 </div>
