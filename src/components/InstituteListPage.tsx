@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 import { AddTaskPopover } from "@/components/AddTaskPopover";
+import { EditInstituteDialog, DeleteInstituteButton } from "@/components/EditInstituteDialog";
 
 export function InstituteListPage({ type, title, subtitle }: { type: InstituteType; title: string; subtitle: string }) {
   useRealtime("institutes", [["institutes", type], ["dashboard"]]);
@@ -247,6 +248,10 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
                           </div>
                         </Link>
                         {stage && <Badge style={{ background: `${stage.color}20`, color: stage.color, borderColor: `${stage.color}40` }} variant="outline" className="shrink-0">{stage.name}</Badge>}
+                        <div className="flex shrink-0 items-center">
+                          <EditInstituteDialog institute={i} type={type} />
+                          <DeleteInstituteButton institute={i} type={type} />
+                        </div>
                       </div>
 
                       <div className="space-y-1.5">
