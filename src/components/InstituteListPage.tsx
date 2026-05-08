@@ -260,6 +260,26 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
             </div>
           )}
         </div>
+
+        <Dialog open={!!stageChange} onOpenChange={(o) => { if (!o) { setStageChange(null); setStageNote(""); } }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Move to "{stageChange?.stageName}"</DialogTitle>
+              <DialogDescription>Add a note explaining this stage change for {stageChange?.name}. This will be saved to the timeline.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="stage-note">Note *</Label>
+              <Textarea id="stage-note" rows={4} autoFocus value={stageNote} onChange={(e) => setStageNote(e.target.value)} placeholder="What changed? Next steps?" />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => { setStageChange(null); setStageNote(""); }}>Cancel</Button>
+              <Button disabled={!stageNote.trim() || updateStage.isPending}
+                onClick={() => stageChange && updateStage.mutate({ ...stageChange, note: stageNote })}>
+                {updateStage.isPending ? "Saving…" : "Update stage"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </AppShell>
     </RequireAuth>
   );
