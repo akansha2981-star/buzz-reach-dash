@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
 import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
+import { GoogleCalendarStatusCard } from "@/components/GoogleCalendarStatusCard";
 import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: () => <RequireAuth><AppShell title="Dashboard"><Dashboard /></AppShell></RequireAuth> });
