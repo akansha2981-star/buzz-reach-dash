@@ -90,6 +90,7 @@ function CEODeskPage() {
             {isAdmin ? "Requests, escalations & approvals from your team" : "Your requests sent to the CEO"}
           </p>
         </div>
+        <NewCEORequestDialog />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
