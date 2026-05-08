@@ -17,8 +17,19 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { isAdmin, perms } = useAuth();
+  const { isAdmin, perms, user } = useAuth();
   const { pendingCount, overdueCount } = useTaskNotifications();
+  useRealtime("ceo_desk_requests", [["ceo-desk-badge"]]);
+  const { data: ceoOpen = 0 } = useQuery({
+    queryKey: ["ceo-desk-badge", user?.id, isAdmin],
+    enabled: !!user,
+    queryFn: async () => {
+      let q = supabase.from("ceo_desk_requests").select("id", { count: "exact", head: true }).neq("status", "closed");
+      if (!isAdmin) q = q.eq("requester_id", user!.id);
+      const { count } = await q;
+      return count ?? 0;
+    },
+  });
   const isActive = (p: string) => path === p;
   const can = (k: keyof typeof perms) => isAdmin || perms[k];
 
