@@ -18,6 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { cn } from "@/lib/utils";
+import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
 
 export const Route = createFileRoute("/ceo-desk")({
   component: () => (
@@ -89,6 +90,7 @@ function CEODeskPage() {
             {isAdmin ? "Requests, escalations & approvals from your team" : "Your requests sent to the CEO"}
           </p>
         </div>
+        <NewCEORequestDialog />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -196,11 +198,17 @@ function RequestCard({ r, canManage, currentUserId }: { r: any; canManage: boole
               <Badge className={cn("gap-1", PRIORITY_COLOR[r.priority], "text-white hover:opacity-90")}>{r.priority}</Badge>
               <Badge variant="outline" className="gap-1"><span className={cn("h-2 w-2 rounded-full", STATUS_COLOR[r.status])} />{r.status.replace("_", " ")}</Badge>
               <Badge variant="secondary">{r.source_type}</Badge>
+              {r.request_type && r.request_type !== "general" && <Badge variant="outline">{r.request_type}</Badge>}
             </div>
             {r.message && <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">{r.message}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span>From: <strong className="text-foreground">{r.requester_email ?? "—"}</strong></span>
               <span>{formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}</span>
+              {r.deadline_at && (
+                <span className={cn("flex items-center gap-1 font-medium", new Date(r.deadline_at) < new Date() ? "text-rose-600" : "text-amber-600")}>
+                  <AlertCircle className="h-3 w-3" /> Due {format(new Date(r.deadline_at), "MMM d, h:mm a")}
+                </span>
+              )}
               {r.institutes && (
                 <Link to="/outreach/$type/$id" params={{ type: r.institutes.type === "college" ? "colleges" : "coaching", id: r.institute_id }} className="text-primary hover:underline">
                   {r.institutes.name}
