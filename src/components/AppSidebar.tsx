@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
