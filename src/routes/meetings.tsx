@@ -623,7 +623,29 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
             <div><Label>Duration (min)</Label><Input type="number" min={5} value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} /></div>
           </div>
-          <div><Label>Meeting link</Label><Input type="url" placeholder="https://meet.google.com/..." value={form.meeting_link} onChange={(e) => setForm({ ...form, meeting_link: e.target.value })} /></div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label>Meeting link</Label>
+              {form.platform === "google_meet" && syncGoogle && (
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Switch checked={useCustomLink} onCheckedChange={setUseCustomLink} />
+                  Use my own link
+                </label>
+              )}
+            </div>
+            <Input
+              type="url"
+              placeholder={form.platform === "google_meet" && syncGoogle && !useCustomLink
+                ? "Auto-generated Google Meet link will go here"
+                : "https://zoom.us/j/... or any meeting URL"}
+              value={form.meeting_link}
+              disabled={form.platform === "google_meet" && syncGoogle && !useCustomLink}
+              onChange={(e) => setForm({ ...form, meeting_link: e.target.value })}
+            />
+            {form.platform === "google_meet" && syncGoogle && !useCustomLink && (
+              <p className="text-[11px] text-muted-foreground">A Google Meet link will be created automatically. Toggle "Use my own link" to paste a custom one.</p>
+            )}
+          </div>
           <div>
             <Label>Linked profile</Label>
             <Select value={form.institute_id} onValueChange={(v) => setForm({ ...form, institute_id: v })}>
