@@ -48,6 +48,27 @@ export function InstituteListPage({ type, title, subtitle }: { type: InstituteTy
     onError: (e: any) => toast.error(e.message),
   });
 
+  const updateStage = useMutation({
+    mutationFn: async ({ id, name, stageId }: { id: string; name: string; stageId: string }) => {
+      const stage = stages.find((s) => s.id === stageId);
+      const { error } = await supabase.from("institutes")
+        .update({ current_stage_id: stageId, updated_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+      await supabase.from("outreach_activities").insert({
+        institute_id: id, stage_id: stageId, stage_name_snapshot: stage?.name,
+        note: `Stage updated → ${stage?.name}`, created_by: user?.id ?? null,
+      });
+      await logAction({ action: "stage.updated", entity_type: "institute", entity_id: id, entity_label: name, details: { stage: stage?.name } });
+    },
+    onSuccess: () => {
+      toast.success("Status updated");
+      qc.invalidateQueries({ queryKey: ["institutes", type] });
+      qc.invalidateQueries({ queryKey: ["activities-all"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const filtered = useMemo(() => list.filter((i) => {
     const m = q.trim().toLowerCase();
     if (stageFilter !== "all" && i.current_stage_id !== stageFilter) return false;
