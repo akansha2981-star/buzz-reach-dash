@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { MobileQuickActionFAB } from "./MobileQuickActionFAB";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   return (
@@ -17,6 +18,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             {children}
           </main>
         </div>
+        <MobileQuickActionFAB />
         <MobileBottomNav />
       </div>
     </SidebarProvider>
