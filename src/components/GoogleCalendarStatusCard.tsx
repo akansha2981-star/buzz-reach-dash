@@ -1,12 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Calendar, CheckCircle2, AlertCircle, ExternalLink, Mail } from "lucide-react";
+import { Calendar, CheckCircle2, AlertCircle, ExternalLink, Mail, Plus } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listGoogleCalendarAccounts } from "@/lib/google-calendar.functions";
 
 export function GoogleCalendarStatusCard() {
+  const { isAdmin } = useAuth();
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const fetchAccounts = useServerFn(listGoogleCalendarAccounts);
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["google-calendar-accounts"],
@@ -62,6 +67,11 @@ export function GoogleCalendarStatusCard() {
           </p>
         )}
         <div className="flex flex-wrap gap-2 pt-1">
+          {isAdmin && (
+            <Button size="sm" onClick={() => setShowAddDialog(true)}>
+              <Plus className="mr-1 h-3 w-3" /> Add Google account
+            </Button>
+          )}
           <Button asChild size="sm" variant="outline">
             <a href="https://calendar.google.com" target="_blank" rel="noreferrer">
               Open Google Calendar <ExternalLink className="ml-1 h-3 w-3" />
@@ -71,10 +81,36 @@ export function GoogleCalendarStatusCard() {
             {isRefetching ? "Refreshing…" : "Refresh"}
           </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          To add another Google account, ask Lovable: "connect another Google Calendar account". To remove one, ask: "disconnect Google Calendar".
-        </p>
+        {!isAdmin && (
+          <p className="text-[11px] text-muted-foreground">
+            To add or remove a Google account, ask your workspace admin.
+          </p>
+        )}
       </CardContent>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add another Google account</DialogTitle>
+            <DialogDescription>
+              Google Calendar accounts are connected through Lovable's connector system. Follow these steps:
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal space-y-2 pl-5 text-sm">
+            <li>Open the Lovable editor for this project.</li>
+            <li>In the chat, ask: <code className="rounded bg-muted px-1.5 py-0.5">"connect another Google Calendar account"</code></li>
+            <li>Approve the connection prompt and sign in with the new Google account.</li>
+            <li>Return here and click <strong>Refresh</strong> — the new account will appear in the list.</li>
+          </ol>
+          <p className="text-xs text-muted-foreground">
+            This flow requires Lovable workspace access. Once connected, all team members can pick the account from the meeting dialog.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Close</Button>
+            <Button onClick={() => { setShowAddDialog(false); refetch(); }}>I've connected — Refresh</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
