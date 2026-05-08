@@ -20,6 +20,8 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { TasksSection } from "@/components/TasksSection";
+import { InstituteMeetingsSection } from "@/components/InstituteMeetingsSection";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/outreach/$type/$id")({
   component: InstituteDetailPage,
