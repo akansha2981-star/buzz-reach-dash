@@ -24,6 +24,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/useRealtime";
 import { PushToCEODesk } from "@/components/PushToCEODesk";
+import { useServerFn } from "@tanstack/react-start";
+import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@/lib/google-calendar.functions";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/meetings")({
   component: () => (
@@ -473,6 +476,11 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
   const [attendeesText, setAttendeesText] = useState<string>(
     Array.isArray(meeting?.attendees) ? meeting.attendees.join(", ") : ""
   );
+  const [syncGoogle, setSyncGoogle] = useState<boolean>(!!meeting?.google_event_id || !editing);
+
+  const createGCal = useServerFn(createGoogleCalendarEvent);
+  const updateGCal = useServerFn(updateGoogleCalendarEvent);
+  const deleteGCal = useServerFn(deleteGoogleCalendarEvent);
 
   const { data: institutes = [] } = useQuery({
     queryKey: ["institutes-all"],
@@ -488,6 +496,45 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
       const [hh, mm] = time.split(":").map(Number);
       const dt = new Date(date); dt.setHours(hh ?? 9, mm ?? 0, 0, 0);
       const attendees = attendeesText.split(",").map((s) => s.trim()).filter(Boolean);
+      const attendeeEmails = attendees.filter((a) => /.+@.+\..+/.test(a));
+
+      let google_event_id = meeting?.google_event_id ?? null;
+      let google_calendar_id = meeting?.google_calendar_id ?? null;
+      let google_html_link = meeting?.google_html_link ?? null;
+      let meeting_link = form.meeting_link || null;
+
+      // Sync to Google Calendar (cancellations remove the event)
+      try {
+        if (syncGoogle && form.status !== "cancelled") {
+          const gcalInput = {
+            title: form.title,
+            description: form.description || null,
+            startISO: dt.toISOString(),
+            durationMinutes: Number(form.duration_minutes) || 30,
+            attendees: attendeeEmails,
+            reminderMinutes: Number(form.reminder_minutes) || 0,
+            createMeetLink: form.platform === "google_meet",
+            calendarId: google_calendar_id || "primary",
+          };
+          if (google_event_id) {
+            const r = await updateGCal({ data: { ...gcalInput, eventId: google_event_id } });
+            google_html_link = r.htmlLink ?? google_html_link;
+            if (r.meetLink) meeting_link = r.meetLink;
+          } else {
+            const r = await createGCal({ data: gcalInput });
+            google_event_id = r.eventId;
+            google_calendar_id = r.calendarId;
+            google_html_link = r.htmlLink;
+            if (r.meetLink) meeting_link = r.meetLink;
+          }
+        } else if (google_event_id && (form.status === "cancelled" || !syncGoogle)) {
+          await deleteGCal({ data: { eventId: google_event_id, calendarId: google_calendar_id || "primary" } });
+          google_event_id = null; google_calendar_id = null; google_html_link = null;
+        }
+      } catch (e: any) {
+        toast.error(`Google Calendar sync failed: ${e.message}`);
+      }
+
       const payload = {
         title: form.title,
         description: form.description || null,
@@ -495,10 +542,13 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
         meeting_at: dt.toISOString(),
         duration_minutes: Number(form.duration_minutes) || 30,
         platform: form.platform,
-        meeting_link: form.meeting_link || null,
+        meeting_link,
         attendees,
         reminder_minutes: Number(form.reminder_minutes) || 0,
         status: form.status,
+        google_event_id,
+        google_calendar_id,
+        google_html_link,
       };
       if (editing) {
         const { error } = await supabase.from("meetings").update(payload).eq("id", meeting.id);
@@ -576,6 +626,18 @@ export function MeetingDialog({ meeting, trigger, defaultInstituteId, defaultTit
             </div>
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div className="flex items-start justify-between gap-4 rounded-lg border bg-muted/30 p-3">
+            <div className="space-y-0.5">
+              <Label className="text-sm">Sync to Google Calendar</Label>
+              <p className="text-xs text-muted-foreground">
+                Creates a real Google Calendar event{form.platform === "google_meet" ? " with a Google Meet link" : ""} and emails invites to attendees.
+                {meeting?.google_html_link && (
+                  <> · <a href={meeting.google_html_link} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open event</a></>
+                )}
+              </p>
+            </div>
+            <Switch checked={syncGoogle} onCheckedChange={setSyncGoogle} />
+          </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving…" : editing ? "Save changes" : "Schedule"}</Button>

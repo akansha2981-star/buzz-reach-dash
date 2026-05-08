@@ -329,6 +329,9 @@ export type Database = {
           created_by: string | null
           description: string | null
           duration_minutes: number | null
+          google_calendar_id: string | null
+          google_event_id: string | null
+          google_html_link: string | null
           id: string
           institute_id: string | null
           meeting_at: string
@@ -346,6 +349,9 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
+          google_html_link?: string | null
           id?: string
           institute_id?: string | null
           meeting_at: string
@@ -363,6 +369,9 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
+          google_html_link?: string | null
           id?: string
           institute_id?: string | null
           meeting_at?: string
