@@ -145,6 +145,39 @@ export type Database = {
         }
         Relationships: []
       }
+      institute_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_path: string
+          id: string
+          institute_id: string
+          label: string
+          mime_type: string | null
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_path: string
+          id?: string
+          institute_id: string
+          label: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_path?: string
+          id?: string
+          institute_id?: string
+          label?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Relationships: []
+      }
       institute_emails: {
         Row: {
           email: string
@@ -173,6 +206,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      institute_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          institute_id: string
+          label: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institute_id: string
+          label: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institute_id?: string
+          label?: string
+          url?: string
+        }
+        Relationships: []
       }
       institute_phones: {
         Row: {
