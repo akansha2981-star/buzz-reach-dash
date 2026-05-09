@@ -4,6 +4,7 @@ import { Building2, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { useAuth } from "@/lib/auth";
 import { useMyEmployee, isManagerRole, HR_ROLES, type HRRole } from "@/lib/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
