@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { DOC_CATEGORIES, CATEGORY_COLORS, type DocCategory } from "@/lib/document-categories";
 
 const BUCKET = "institute-docs";
 
@@ -50,20 +53,25 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
   // Links
   const [linkLabel, setLinkLabel] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkCategory, setLinkCategory] = useState<DocCategory>("Others");
   const addLink = useMutation({
     mutationFn: async () => {
       if (!linkLabel.trim() || !linkUrl.trim()) throw new Error("Label and URL required");
       let url = linkUrl.trim();
       if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
       const { error } = await supabase.from("institute_links").insert({
-        institute_id: instituteId, label: linkLabel.trim().slice(0, 200), url: url.slice(0, 2000),
+        institute_id: instituteId,
+        label: linkLabel.trim().slice(0, 200),
+        name: linkLabel.trim().slice(0, 200),
+        url: url.slice(0, 2000),
+        category: linkCategory,
         created_by: user?.id ?? null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Link added");
-      setLinkLabel(""); setLinkUrl("");
+      setLinkLabel(""); setLinkUrl(""); setLinkCategory("Others");
       qc.invalidateQueries({ queryKey: ["institute-links", instituteId] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -79,6 +87,7 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
 
   // Docs
   const [docLabel, setDocLabel] = useState("");
+  const [docCategory, setDocCategory] = useState<DocCategory>("Others");
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(file: File) {
