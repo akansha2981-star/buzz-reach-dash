@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   List,
   Table as TableIcon,
+  Upload,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -66,6 +67,7 @@ import { useRealtime } from "@/hooks/useRealtime";
 import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 import { AddTaskPopover } from "@/components/AddTaskPopover";
 import { EditInstituteDialog, DeleteInstituteButton } from "@/components/EditInstituteDialog";
+import { QuickDocUploadPopover } from "@/components/QuickDocUploadPopover";
 
 type ViewMode = "grid" | "list" | "table" | "compact";
 type InstituteWithMeta = Institute & {
@@ -454,6 +456,16 @@ export function InstituteListPage({
             <Button size="sm" variant="outline" className={sizeClass} title="Add note">
               <MessageSquarePlus className={iconClass} />
               {!dense && "Note"}
+            </Button>
+          }
+        />
+        <QuickDocUploadPopover
+          instituteId={i.id}
+          instituteName={i.name}
+          trigger={
+            <Button size="sm" variant="outline" className={sizeClass} title="Upload document">
+              <Upload className={iconClass} />
+              {!dense && "Doc"}
             </Button>
           }
         />
