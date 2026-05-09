@@ -11,7 +11,8 @@ import {
   LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone, BarChart3, Shield,
 } from "lucide-react";
 
-const TABS = [
+type Tab = { to: string; label: string; icon: any; exact?: boolean; manager?: boolean; admin?: boolean };
+const TABS: Tab[] = [
   { to: "/hrms", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/hrms/attendance", label: "Attendance", icon: Clock },
   { to: "/hrms/leaves", label: "Leaves", icon: CalendarDays },
