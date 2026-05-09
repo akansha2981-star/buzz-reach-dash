@@ -21,7 +21,8 @@ export const Route = createFileRoute("/hrms/employees")({
 
 function EmployeesPage() {
   const { data: me } = useMyEmployee();
-  const isAdmin = isHRAdminRole(me?.hr_role);
+  const { isAdmin: isAppAdmin } = useAuth();
+  const isAdmin = isHRAdminRole(me?.hr_role) || isAppAdmin;
   const { data: departments = [] } = useDepartments();
   const qc = useQueryClient();
 
