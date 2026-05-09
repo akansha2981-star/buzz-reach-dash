@@ -124,6 +124,12 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/documents")}>
+                  <Link to="/documents"><FolderOpen /><span>Documents</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
                   <Link to="/ceo-desk">
                     <Crown />
