@@ -6,6 +6,7 @@ import { useRealtime } from "@/hooks/useRealtime";
 import { Badge } from "@/components/ui/badge";
 import { useTaskNotifications } from "@/hooks/useTaskNotifications";
 import { useAuth } from "@/lib/auth";
+import { useMyEmployee, isHRAdminRole } from "@/lib/hr";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
