@@ -24,8 +24,12 @@ import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as HrmsLeavesRouteImport } from './routes/hrms.leaves'
+import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
 import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
+import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
+import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
+import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
 const TasksRoute = TasksRouteImport.update({
@@ -103,6 +107,11 @@ const HrmsLeavesRoute = HrmsLeavesRouteImport.update({
   path: '/hrms/leaves',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HrmsEmployeesRoute = HrmsEmployeesRouteImport.update({
+  id: '/hrms/employees',
+  path: '/hrms/employees',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HrmsAttendanceRoute = HrmsAttendanceRouteImport.update({
   id: '/hrms/attendance',
   path: '/hrms/attendance',
@@ -112,6 +121,21 @@ const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => OutreachTypeRoute,
+} as any)
+const HrmsEmployeesIdRoute = HrmsEmployeesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => HrmsEmployeesRoute,
+} as any)
+const HrmsAdminLeavesRoute = HrmsAdminLeavesRouteImport.update({
+  id: '/hrms/admin/leaves',
+  path: '/hrms/admin/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsAdminAttendanceRoute = HrmsAdminAttendanceRouteImport.update({
+  id: '/hrms/admin/attendance',
+  path: '/hrms/admin/attendance',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   id: '/api/public/bootstrap-admin',
@@ -127,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
+  '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -137,6 +162,9 @@ export interface FileRoutesByFullPath {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
+  '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesByTo {
@@ -147,6 +175,7 @@ export interface FileRoutesByTo {
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
+  '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -157,6 +186,9 @@ export interface FileRoutesByTo {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
+  '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesById {
@@ -168,6 +200,7 @@ export interface FileRoutesById {
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
+  '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -178,6 +211,9 @@ export interface FileRoutesById {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
+  '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +226,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/tasks'
     | '/hrms/attendance'
+    | '/hrms/employees'
     | '/hrms/leaves'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -200,6 +237,9 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms/'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/attendance'
+    | '/hrms/admin/leaves'
+    | '/hrms/employees/$id'
     | '/outreach/$type/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -210,6 +250,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/tasks'
     | '/hrms/attendance'
+    | '/hrms/employees'
     | '/hrms/leaves'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -220,6 +261,9 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/attendance'
+    | '/hrms/admin/leaves'
+    | '/hrms/employees/$id'
     | '/outreach/$type/$id'
   id:
     | '__root__'
@@ -230,6 +274,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/tasks'
     | '/hrms/attendance'
+    | '/hrms/employees'
     | '/hrms/leaves'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -240,6 +285,9 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms/'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/attendance'
+    | '/hrms/admin/leaves'
+    | '/hrms/employees/$id'
     | '/outreach/$type/$id'
   fileRoutesById: FileRoutesById
 }
@@ -251,6 +299,7 @@ export interface RootRouteChildren {
   MeetingsRoute: typeof MeetingsRoute
   TasksRoute: typeof TasksRoute
   HrmsAttendanceRoute: typeof HrmsAttendanceRoute
+  HrmsEmployeesRoute: typeof HrmsEmployeesRouteWithChildren
   HrmsLeavesRoute: typeof HrmsLeavesRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
   OutreachCoachingRoute: typeof OutreachCoachingRoute
@@ -261,6 +310,8 @@ export interface RootRouteChildren {
   SettingsUsersRoute: typeof SettingsUsersRoute
   HrmsIndexRoute: typeof HrmsIndexRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
+  HrmsAdminAttendanceRoute: typeof HrmsAdminAttendanceRoute
+  HrmsAdminLeavesRoute: typeof HrmsAdminLeavesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -370,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsLeavesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hrms/employees': {
+      id: '/hrms/employees'
+      path: '/hrms/employees'
+      fullPath: '/hrms/employees'
+      preLoaderRoute: typeof HrmsEmployeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hrms/attendance': {
       id: '/hrms/attendance'
       path: '/hrms/attendance'
@@ -384,6 +442,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutreachTypeIdRouteImport
       parentRoute: typeof OutreachTypeRoute
     }
+    '/hrms/employees/$id': {
+      id: '/hrms/employees/$id'
+      path: '/$id'
+      fullPath: '/hrms/employees/$id'
+      preLoaderRoute: typeof HrmsEmployeesIdRouteImport
+      parentRoute: typeof HrmsEmployeesRoute
+    }
+    '/hrms/admin/leaves': {
+      id: '/hrms/admin/leaves'
+      path: '/hrms/admin/leaves'
+      fullPath: '/hrms/admin/leaves'
+      preLoaderRoute: typeof HrmsAdminLeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/admin/attendance': {
+      id: '/hrms/admin/attendance'
+      path: '/hrms/admin/attendance'
+      fullPath: '/hrms/admin/attendance'
+      preLoaderRoute: typeof HrmsAdminAttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bootstrap-admin': {
       id: '/api/public/bootstrap-admin'
       path: '/api/public/bootstrap-admin'
@@ -393,6 +472,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface HrmsEmployeesRouteChildren {
+  HrmsEmployeesIdRoute: typeof HrmsEmployeesIdRoute
+}
+
+const HrmsEmployeesRouteChildren: HrmsEmployeesRouteChildren = {
+  HrmsEmployeesIdRoute: HrmsEmployeesIdRoute,
+}
+
+const HrmsEmployeesRouteWithChildren = HrmsEmployeesRoute._addFileChildren(
+  HrmsEmployeesRouteChildren,
+)
 
 interface OutreachTypeRouteChildren {
   OutreachTypeIdRoute: typeof OutreachTypeIdRoute
@@ -414,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeetingsRoute: MeetingsRoute,
   TasksRoute: TasksRoute,
   HrmsAttendanceRoute: HrmsAttendanceRoute,
+  HrmsEmployeesRoute: HrmsEmployeesRouteWithChildren,
   HrmsLeavesRoute: HrmsLeavesRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
   OutreachCoachingRoute: OutreachCoachingRoute,
@@ -424,6 +516,8 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsUsersRoute: SettingsUsersRoute,
   HrmsIndexRoute: HrmsIndexRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
+  HrmsAdminAttendanceRoute: HrmsAdminAttendanceRoute,
+  HrmsAdminLeavesRoute: HrmsAdminLeavesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
