@@ -20,6 +20,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { isAdmin, perms, user } = useAuth();
+  const { data: meHR } = useMyEmployee();
+  const showHRAdmin = isAdmin || isHRAdminRole(meHR?.hr_role);
   const { pendingCount, overdueCount } = useTaskNotifications();
   useRealtime("ceo_desk_requests", [["ceo-desk-badge"]]);
   const { data: ceoOpen = 0 } = useQuery({
