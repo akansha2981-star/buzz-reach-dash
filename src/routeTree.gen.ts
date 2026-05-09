@@ -25,6 +25,7 @@ import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
 import { Route as HrmsProductivityRouteImport } from './routes/hrms.productivity'
+import { Route as HrmsMeRouteImport } from './routes/hrms.me'
 import { Route as HrmsLeavesRouteImport } from './routes/hrms.leaves'
 import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
 import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
@@ -117,6 +118,11 @@ const HrmsProductivityRoute = HrmsProductivityRouteImport.update({
   path: '/hrms/productivity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HrmsMeRoute = HrmsMeRouteImport.update({
+  id: '/hrms/me',
+  path: '/hrms/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HrmsLeavesRoute = HrmsLeavesRouteImport.update({
   id: '/hrms/leaves',
   path: '/hrms/leaves',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
+  '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
+  '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
   '/hrms/leaves': typeof HrmsLeavesRoute
+  '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/hrms/attendance'
     | '/hrms/employees'
     | '/hrms/leaves'
+    | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
     | '/outreach/$type'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/hrms/attendance'
     | '/hrms/employees'
     | '/hrms/leaves'
+    | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
     | '/outreach/$type'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/hrms/attendance'
     | '/hrms/employees'
     | '/hrms/leaves'
+    | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
     | '/outreach/$type'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   HrmsAttendanceRoute: typeof HrmsAttendanceRoute
   HrmsEmployeesRoute: typeof HrmsEmployeesRouteWithChildren
   HrmsLeavesRoute: typeof HrmsLeavesRoute
+  HrmsMeRoute: typeof HrmsMeRoute
   HrmsProductivityRoute: typeof HrmsProductivityRoute
   HrmsTasksRoute: typeof HrmsTasksRoute
   OutreachTypeRoute: typeof OutreachTypeRouteWithChildren
@@ -493,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsProductivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hrms/me': {
+      id: '/hrms/me'
+      path: '/hrms/me'
+      fullPath: '/hrms/me'
+      preLoaderRoute: typeof HrmsMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hrms/leaves': {
       id: '/hrms/leaves'
       path: '/hrms/leaves'
@@ -608,6 +628,7 @@ const rootRouteChildren: RootRouteChildren = {
   HrmsAttendanceRoute: HrmsAttendanceRoute,
   HrmsEmployeesRoute: HrmsEmployeesRouteWithChildren,
   HrmsLeavesRoute: HrmsLeavesRoute,
+  HrmsMeRoute: HrmsMeRoute,
   HrmsProductivityRoute: HrmsProductivityRoute,
   HrmsTasksRoute: HrmsTasksRoute,
   OutreachTypeRoute: OutreachTypeRouteWithChildren,
