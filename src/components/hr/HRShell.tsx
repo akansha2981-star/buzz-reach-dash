@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Building2, ShieldAlert, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { useMyEmployee, isHRAdminRole, isManagerRole, HR_ROLES } from "@/lib/hr";
+import { useMyEmployee, isManagerRole, HR_ROLES, type HRRole } from "@/lib/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,7 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
   );
 }
 
-export function HRRoleBadge({ role }: { role: HR_ROLES[number]["value"] }) {
+export function HRRoleBadge({ role }: { role: HRRole }) {
   const cfg = HR_ROLES.find((r) => r.value === role);
   return <Badge variant="outline" className={cn("border", cfg?.tone)}>{cfg?.label ?? role}</Badge>;
 }
