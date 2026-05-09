@@ -21,18 +21,22 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
       ? { id: "", hr_role: "super_admin", status: "active", full_name: "Admin" }
       : null);
 
+  // Don't block the whole shell on the HR profile lookup — render children
+  // immediately and let each page show its own skeleton. Only show the "no
+  // profile" or "suspended" screens once loading has settled.
+  const showSuspended = !isLoading && effectiveMe && effectiveMe.status !== "active";
+  const showNoProfile = !isLoading && !effectiveMe;
+
   return (
     <RequireAuth>
       <AppShell title={title ?? "HR"}>
-        {isLoading ? (
-          <div className="py-20 text-center text-sm text-muted-foreground">Loading HR profile…</div>
-        ) : !effectiveMe ? (
+        {showNoProfile ? (
           <NoEmployeeProfile />
-        ) : effectiveMe.status !== "active" ? (
+        ) : showSuspended ? (
           <SuspendedNotice />
         ) : (
           <div className="space-y-4">
-            {!me && isAppAdmin && (
+            {!me && !isLoading && isAppAdmin && (
               <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
                 You don't have an HR employee record yet. Use Employees → Add Employee to add yourself.
               </div>
