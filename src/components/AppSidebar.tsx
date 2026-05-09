@@ -153,12 +153,12 @@ export function AppSidebar() {
           <SidebarGroupLabel>HR</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Collapsible defaultOpen={path.startsWith("/hrms")} className="group/collapsible">
+              <Collapsible defaultOpen={path.startsWith("/hrms") && !path.startsWith("/hrms/admin")} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
-                      <Briefcase />
-                      <span>HRMS</span>
+                      <UserIcon />
+                      <span>HR · Me</span>
                       <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
@@ -166,53 +166,86 @@ export function AppSidebar() {
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive("/hrms")}>
-                          <Link to="/hrms"><LayoutDashboard className="h-4 w-4" /><span>Dashboard</span></Link>
+                          <Link to="/hrms"><LayoutDashboard className="h-4 w-4" /><span>My Report</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive("/hrms/attendance")}>
-                          <Link to="/hrms/attendance"><Clock className="h-4 w-4" /><span>Attendance</span></Link>
+                          <Link to="/hrms/attendance"><Clock className="h-4 w-4" /><span>Login / Logout</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive("/hrms/leaves")}>
-                          <Link to="/hrms/leaves"><CalendarDays className="h-4 w-4" /><span>Leaves</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/productivity")}>
-                          <Link to="/hrms/productivity"><TrendingUp className="h-4 w-4" /><span>Productivity</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/tasks")}>
-                          <Link to="/hrms/tasks"><ListChecks className="h-4 w-4" /><span>HR Tasks</span></Link>
+                          <Link to="/hrms/leaves"><CalendarDays className="h-4 w-4" /><span>My Leaves</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive("/hrms/announcements")}>
-                          <Link to="/hrms/announcements"><Megaphone className="h-4 w-4" /><span>Announcements</span></Link>
+                          <Link to="/hrms/announcements"><Megaphone className="h-4 w-4" /><span>Important Updates</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/employees")}>
-                          <Link to="/hrms/employees"><Users className="h-4 w-4" /><span>Employees</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/leaves")}>
-                          <Link to="/hrms/admin/leaves"><ClipboardList className="h-4 w-4" /><span>Approvals</span></Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/attendance")}>
-                          <Link to="/hrms/admin/attendance"><Activity className="h-4 w-4" /><span>Org Attendance</span></Link>
+                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/me")}>
+                          <Link to="/hrms/me"><FolderOpen className="h-4 w-4" /><span>My Documents</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+
+              {showHRAdmin && (
+                <Collapsible defaultOpen={path.startsWith("/hrms/admin") || path.startsWith("/hrms/employees")} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        <UserCog />
+                        <span>HR · Admin</span>
+                        <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/employees")}>
+                            <Link to="/hrms/employees"><Users className="h-4 w-4" /><span>Employees</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/leaves")}>
+                            <Link to="/hrms/admin/leaves"><ClipboardList className="h-4 w-4" /><span>Leave Approvals</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/attendance")}>
+                            <Link to="/hrms/admin/attendance"><Activity className="h-4 w-4" /><span>Org Attendance</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/productivity")}>
+                            <Link to="/hrms/productivity"><TrendingUp className="h-4 w-4" /><span>Productivity</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/tasks")}>
+                            <Link to="/hrms/tasks"><ListChecks className="h-4 w-4" /><span>HR Tasks</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/analytics")}>
+                            <Link to="/hrms/admin/analytics"><BarChart3 className="h-4 w-4" /><span>Analytics</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/hrms/admin/audit")}>
+                            <Link to="/hrms/admin/audit"><Shield className="h-4 w-4" /><span>Audit Log</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
