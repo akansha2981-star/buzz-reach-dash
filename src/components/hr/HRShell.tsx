@@ -78,19 +78,23 @@ export function HRRoleBadge({ role }: { role: HRRole }) {
 }
 
 function NoEmployeeProfile() {
+  const qc = useQueryClient();
   return (
     <div className="mx-auto max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
       <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
-      <h2 className="mt-3 font-display text-lg font-semibold">No HR profile yet</h2>
+      <h2 className="mt-3 font-display text-lg font-semibold">No HR profile found</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        You haven't been added as an employee. Ask your HR admin to add you to the directory.
+        We couldn't load your employee record. If your admin just added you, click Refresh.
       </p>
       <p className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <Sparkles className="h-3 w-3" /> If you ARE the HR admin, head to{" "}
+        <Sparkles className="h-3 w-3" /> Otherwise, ask your HR admin to add you.
       </p>
-      <div className="mt-3">
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => qc.invalidateQueries({ queryKey: ["hr-me"] })}>
+          <RefreshCw className="mr-1 h-4 w-4" /> Refresh
+        </Button>
         <Button asChild size="sm">
-          <Link to="/hrms/employees">Open Employee Directory</Link>
+          <Link to="/hrms/employees">Open Directory</Link>
         </Button>
       </div>
     </div>
