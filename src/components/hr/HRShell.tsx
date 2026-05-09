@@ -50,7 +50,7 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
                   return (
                     <Link
                       key={t.to}
-                      to={t.to}
+                      to={t.to as any}
                       className={cn(
                         "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                         active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:bg-muted hover:text-foreground"
