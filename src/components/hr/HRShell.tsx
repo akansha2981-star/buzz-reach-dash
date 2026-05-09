@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone,
+  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone, BarChart3, Shield,
 } from "lucide-react";
 
 const TABS = [
@@ -21,6 +21,8 @@ const TABS = [
   { to: "/hrms/employees", label: "Employees", icon: Users, manager: true },
   { to: "/hrms/admin/leaves", label: "Approvals", icon: ClipboardList, manager: true },
   { to: "/hrms/admin/attendance", label: "Org Attendance", icon: FileText, manager: true },
+  { to: "/hrms/admin/analytics", label: "Analytics", icon: BarChart3, admin: true },
+  { to: "/hrms/admin/audit", label: "Audit Log", icon: Shield, admin: true },
 ];
 
 export function HRShell({ children, title }: { children: ReactNode; title?: string }) {
