@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DOC_CATEGORIES, CATEGORY_COLORS, type DocCategory } from "@/lib/document-categories";
 import { RequireAuth } from "@/components/RequireAuth";
+import { AppShell } from "@/components/AppShell";
 
 const BUCKET = "institute-docs";
 const ANY = "__any__";
@@ -454,7 +455,9 @@ function EmptyState({ icon: Icon, text }: { icon: any; text: string }) {
 export const Route = createFileRoute("/documents")({
   component: () => (
     <RequireAuth>
-      <DocumentsPage />
+      <AppShell title="Documents">
+        <DocumentsPage />
+      </AppShell>
     </RequireAuth>
   ),
 });
