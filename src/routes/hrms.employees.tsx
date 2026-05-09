@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { HRShell, HRRoleBadge } from "@/components/hr/HRShell";
 import { useDepartments, useMyEmployee, isHRAdminRole, HR_ROLES, type HRRole, type HREmployee, type HREmploymentStatus } from "@/lib/hr";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/hrms/employees")({
   component: () => <HRShell title="Employee Directory"><EmployeesPage /></HRShell>,
