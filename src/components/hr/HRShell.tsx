@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone,
+  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone, BarChart3, Shield,
 } from "lucide-react";
 
-const TABS = [
+type Tab = { to: string; label: string; icon: any; exact?: boolean; manager?: boolean; admin?: boolean };
+const TABS: Tab[] = [
   { to: "/hrms", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/hrms/attendance", label: "Attendance", icon: Clock },
   { to: "/hrms/leaves", label: "Leaves", icon: CalendarDays },
@@ -21,6 +22,8 @@ const TABS = [
   { to: "/hrms/employees", label: "Employees", icon: Users, manager: true },
   { to: "/hrms/admin/leaves", label: "Approvals", icon: ClipboardList, manager: true },
   { to: "/hrms/admin/attendance", label: "Org Attendance", icon: FileText, manager: true },
+  { to: "/hrms/admin/analytics", label: "Analytics", icon: BarChart3, admin: true },
+  { to: "/hrms/admin/audit", label: "Audit Log", icon: Shield, admin: true },
 ];
 
 export function HRShell({ children, title }: { children: ReactNode; title?: string }) {
@@ -41,13 +44,13 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
             {/* HR module nav */}
             <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
               <div className="inline-flex min-w-full gap-1 rounded-xl border bg-card p-1 shadow-sm">
-                {TABS.filter((t) => !t.manager || isManagerRole(me.hr_role)).map((t) => {
+                {TABS.filter((t) => (!t.manager || isManagerRole(me.hr_role)) && (!t.admin || me.hr_role === "super_admin" || me.hr_role === "hr_admin")).map((t) => {
                   const active = t.exact ? path === t.to : path.startsWith(t.to);
                   const Icon = t.icon;
                   return (
                     <Link
                       key={t.to}
-                      to={t.to}
+                      to={t.to as any}
                       className={cn(
                         "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                         active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:bg-muted hover:text-foreground"

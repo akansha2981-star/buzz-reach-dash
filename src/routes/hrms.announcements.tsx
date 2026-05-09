@@ -44,6 +44,17 @@ function AnnouncementsPage() {
     },
   });
 
+  // Realtime: refresh announcements when any change happens
+  useEffect(() => {
+    const ch = supabase
+      .channel("hr-ann-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "hr_announcements" }, () => {
+        qc.invalidateQueries({ queryKey: ["hr-announcements"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
   const { data: myReads = [] } = useQuery({
     queryKey: ["hr-ann-reads", me?.id],
     enabled: !!me,
