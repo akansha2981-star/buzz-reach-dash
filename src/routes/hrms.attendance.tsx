@@ -66,7 +66,7 @@ function AttendancePage() {
 
   const clockOut = useMutation({
     mutationFn: async () => {
-      if (!today) throw new Error("Not clocked in");
+      if (!today || !today.clock_in_at) throw new Error("Not clocked in");
       const now = new Date();
       const inTime = new Date(today.clock_in_at);
       const totalMin = Math.round((now.getTime() - inTime.getTime()) / 60000);
@@ -99,7 +99,7 @@ function AttendancePage() {
 
   const endBreak = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("hr_breaks").update({ end_at: new Date().toISOString() }).eq("id", openBreak.id);
+      const { error } = await supabase.from("hr_breaks").update({ end_at: new Date().toISOString() }).eq("id", openBreak!.id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Break ended"); refetchToday(); },
