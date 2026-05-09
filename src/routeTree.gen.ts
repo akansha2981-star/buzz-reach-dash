@@ -32,6 +32,7 @@ import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcemen
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
+import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
 import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
 import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
@@ -151,6 +152,11 @@ const HrmsAdminLeavesRoute = HrmsAdminLeavesRouteImport.update({
   path: '/hrms/admin/leaves',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HrmsAdminAuditRoute = HrmsAdminAuditRouteImport.update({
+  id: '/hrms/admin/audit',
+  path: '/hrms/admin/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HrmsAdminAttendanceRoute = HrmsAdminAttendanceRouteImport.update({
   id: '/hrms/admin/attendance',
   path: '/hrms/admin/attendance',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
+  '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
+    | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
     | '/outreach/$type/$id'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
+    | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
     | '/outreach/$type/$id'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
+    | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
     | '/outreach/$type/$id'
@@ -363,6 +375,7 @@ export interface RootRouteChildren {
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
   HrmsAdminAnalyticsRoute: typeof HrmsAdminAnalyticsRoute
   HrmsAdminAttendanceRoute: typeof HrmsAdminAttendanceRoute
+  HrmsAdminAuditRoute: typeof HrmsAdminAuditRoute
   HrmsAdminLeavesRoute: typeof HrmsAdminLeavesRoute
 }
 
@@ -529,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsAdminLeavesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hrms/admin/audit': {
+      id: '/hrms/admin/audit'
+      path: '/hrms/admin/audit'
+      fullPath: '/hrms/admin/audit'
+      preLoaderRoute: typeof HrmsAdminAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hrms/admin/attendance': {
       id: '/hrms/admin/attendance'
       path: '/hrms/admin/attendance'
@@ -601,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
   HrmsAdminAnalyticsRoute: HrmsAdminAnalyticsRoute,
   HrmsAdminAttendanceRoute: HrmsAdminAttendanceRoute,
+  HrmsAdminAuditRoute: HrmsAdminAuditRoute,
   HrmsAdminLeavesRoute: HrmsAdminLeavesRoute,
 }
 export const routeTree = rootRouteImport
