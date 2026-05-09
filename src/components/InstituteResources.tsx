@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { DOC_CATEGORIES, CATEGORY_COLORS, type DocCategory } from "@/lib/document-categories";
 
 const BUCKET = "institute-docs";
 
@@ -50,20 +53,25 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
   // Links
   const [linkLabel, setLinkLabel] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkCategory, setLinkCategory] = useState<DocCategory>("Others");
   const addLink = useMutation({
     mutationFn: async () => {
       if (!linkLabel.trim() || !linkUrl.trim()) throw new Error("Label and URL required");
       let url = linkUrl.trim();
       if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
       const { error } = await supabase.from("institute_links").insert({
-        institute_id: instituteId, label: linkLabel.trim().slice(0, 200), url: url.slice(0, 2000),
+        institute_id: instituteId,
+        label: linkLabel.trim().slice(0, 200),
+        name: linkLabel.trim().slice(0, 200),
+        url: url.slice(0, 2000),
+        category: linkCategory,
         created_by: user?.id ?? null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Link added");
-      setLinkLabel(""); setLinkUrl("");
+      setLinkLabel(""); setLinkUrl(""); setLinkCategory("Others");
       qc.invalidateQueries({ queryKey: ["institute-links", instituteId] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -79,6 +87,7 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
 
   // Docs
   const [docLabel, setDocLabel] = useState("");
+  const [docCategory, setDocCategory] = useState<DocCategory>("Others");
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(file: File) {
@@ -98,6 +107,8 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
       const { error: insErr } = await supabase.from("institute_documents").insert({
         institute_id: instituteId,
         label: (docLabel.trim() || file.name).slice(0, 200),
+        name: (docLabel.trim() || file.name).slice(0, 200),
+        category: docCategory,
         file_path: path,
         mime_type: file.type || null,
         size_bytes: file.size,
@@ -105,7 +116,7 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
       });
       if (insErr) throw insErr;
       toast.success("Document uploaded");
-      setDocLabel("");
+      setDocLabel(""); setDocCategory("Others");
       qc.invalidateQueries({ queryKey: ["institute-docs", instituteId] });
     } catch (e: any) {
       toast.error(e.message);
@@ -158,6 +169,15 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
                 <Input placeholder="https://…" value={linkUrl} maxLength={2000} onChange={(e) => setLinkUrl(e.target.value)} />
               </div>
             </div>
+            <div>
+              <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Category</Label>
+              <Select value={linkCategory} onValueChange={(v) => setLinkCategory(v as DocCategory)}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DOC_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <Button size="sm" className="w-full" disabled={addLink.isPending || !linkLabel.trim() || !linkUrl.trim()} onClick={() => addLink.mutate()}>
               <Plus className="mr-1 h-4 w-4" /> Add link
             </Button>
@@ -170,7 +190,8 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
                 <li key={l.id} className="group flex items-center gap-2 rounded-md border bg-card p-2">
                   <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <a href={l.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium hover:text-primary">
-                    {l.label}
+                    {l.name ?? l.label}
+                    <Badge variant="outline" className={cn("ml-2 border text-[10px]", CATEGORY_COLORS[l.category ?? "Others"])}>{l.category ?? "Others"}</Badge>
                     <span className="ml-2 text-xs font-normal text-muted-foreground">{l.url}</span>
                   </a>
                   <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => delLink.mutate(l.id)}>
@@ -193,9 +214,20 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-            <div>
-              <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Label (optional)</Label>
-              <Input placeholder="e.g. MoU draft v2" value={docLabel} maxLength={200} onChange={(e) => setDocLabel(e.target.value)} />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>
+                <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Label</Label>
+                <Input placeholder="e.g. MoU draft v2" value={docLabel} maxLength={200} onChange={(e) => setDocLabel(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Category</Label>
+                <Select value={docCategory} onValueChange={(v) => setDocCategory(v as DocCategory)}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DOC_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed bg-background px-3 py-3 text-sm hover:bg-accent">
               <Upload className="h-4 w-4" />
@@ -218,7 +250,8 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
                 <li key={d.id} className="group flex items-center gap-2 rounded-md border bg-card p-2">
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <button onClick={() => openDoc(d.file_path)} className="min-w-0 flex-1 truncate text-left text-sm font-medium hover:text-primary">
-                    {d.label}
+                    {d.name ?? d.label}
+                    <Badge variant="outline" className={cn("ml-2 border text-[10px]", CATEGORY_COLORS[d.category ?? "Others"])}>{d.category ?? "Others"}</Badge>
                     <span className="ml-2 text-xs font-normal text-muted-foreground">
                       {formatBytes(d.size_bytes)} · {format(new Date(d.created_at), "MMM d")}
                     </span>

@@ -147,33 +147,39 @@ export type Database = {
       }
       institute_documents: {
         Row: {
+          category: string
           created_at: string
           created_by: string | null
           file_path: string
           id: string
-          institute_id: string
+          institute_id: string | null
           label: string
           mime_type: string | null
+          name: string | null
           size_bytes: number | null
         }
         Insert: {
+          category?: string
           created_at?: string
           created_by?: string | null
           file_path: string
           id?: string
-          institute_id: string
+          institute_id?: string | null
           label: string
           mime_type?: string | null
+          name?: string | null
           size_bytes?: number | null
         }
         Update: {
+          category?: string
           created_at?: string
           created_by?: string | null
           file_path?: string
           id?: string
-          institute_id?: string
+          institute_id?: string | null
           label?: string
           mime_type?: string | null
+          name?: string | null
           size_bytes?: number | null
         }
         Relationships: []
@@ -209,27 +215,33 @@ export type Database = {
       }
       institute_links: {
         Row: {
+          category: string
           created_at: string
           created_by: string | null
           id: string
-          institute_id: string
+          institute_id: string | null
           label: string
+          name: string | null
           url: string
         }
         Insert: {
+          category?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          institute_id: string
+          institute_id?: string | null
           label: string
+          name?: string | null
           url: string
         }
         Update: {
+          category?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          institute_id?: string
+          institute_id?: string | null
           label?: string
+          name?: string | null
           url?: string
         }
         Relationships: []
