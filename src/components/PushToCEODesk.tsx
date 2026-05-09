@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Crown } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ type Props = {
 
 export function PushToCEODesk({ sourceType, sourceId, instituteId, title, variant = "icon", className }: Props) {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState<string>("normal");
@@ -41,6 +43,8 @@ export function PushToCEODesk({ sourceType, sourceId, instituteId, title, varian
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Pushed to CEO Desk");
+    qc.invalidateQueries({ queryKey: ["ceo-desk"] });
+    qc.invalidateQueries({ queryKey: ["ceo-desk-badge"] });
     setOpen(false); setMessage(""); setPriority("normal");
   };
 

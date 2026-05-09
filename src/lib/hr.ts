@@ -65,10 +65,12 @@ export function useMyEmployee() {
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<HREmployee | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      // Use getSession (local cache) instead of getUser (network round-trip)
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return null;
       const { data, error } = await supabase
-        .from("hr_employees").select("*").eq("user_id", user.id).maybeSingle();
+        .from("hr_employees").select("*").eq("user_id", userId).maybeSingle();
       if (error) throw error;
       return data as HREmployee | null;
     },
