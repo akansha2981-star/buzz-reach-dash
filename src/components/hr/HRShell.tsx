@@ -51,28 +51,6 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
           <SuspendedNotice />
         ) : (
           <div className="space-y-4">
-            {/* HR module nav */}
-            <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
-              <div className="inline-flex min-w-full gap-1 rounded-xl border bg-card p-1 shadow-sm">
-                {TABS.filter((t) => (!t.manager || isManagerRole(effectiveMe.hr_role)) && (!t.admin || effectiveMe.hr_role === "super_admin" || effectiveMe.hr_role === "hr_admin")).map((t) => {
-                  const active = t.exact ? path === t.to : path.startsWith(t.to);
-                  const Icon = t.icon;
-                  return (
-                    <Link
-                      key={t.to}
-                      to={t.to as any}
-                      className={cn(
-                        "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                        active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {t.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
             {!me && isAppAdmin && (
               <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
                 You don't have an HR employee record yet. Use Employees → Add Employee to add yourself.
