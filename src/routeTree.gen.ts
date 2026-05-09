@@ -33,6 +33,7 @@ import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
 import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
+import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
 const TasksRoute = TasksRouteImport.update({
@@ -155,6 +156,11 @@ const HrmsAdminAttendanceRoute = HrmsAdminAttendanceRouteImport.update({
   path: '/hrms/admin/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HrmsAdminAnalyticsRoute = HrmsAdminAnalyticsRouteImport.update({
+  id: '/hrms/admin/analytics',
+  path: '/hrms/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   id: '/api/public/bootstrap-admin',
   path: '/api/public/bootstrap-admin',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms/'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/hrms/'
     | '/api/public/bootstrap-admin'
+    | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   SettingsUsersRoute: typeof SettingsUsersRoute
   HrmsIndexRoute: typeof HrmsIndexRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
+  HrmsAdminAnalyticsRoute: typeof HrmsAdminAnalyticsRoute
   HrmsAdminAttendanceRoute: typeof HrmsAdminAttendanceRoute
   HrmsAdminLeavesRoute: typeof HrmsAdminLeavesRoute
 }
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsAdminAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hrms/admin/analytics': {
+      id: '/hrms/admin/analytics'
+      path: '/hrms/admin/analytics'
+      fullPath: '/hrms/admin/analytics'
+      preLoaderRoute: typeof HrmsAdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bootstrap-admin': {
       id: '/api/public/bootstrap-admin'
       path: '/api/public/bootstrap-admin'
@@ -579,9 +599,20 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsUsersRoute: SettingsUsersRoute,
   HrmsIndexRoute: HrmsIndexRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
+  HrmsAdminAnalyticsRoute: HrmsAdminAnalyticsRoute,
   HrmsAdminAttendanceRoute: HrmsAdminAttendanceRoute,
   HrmsAdminLeavesRoute: HrmsAdminLeavesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
