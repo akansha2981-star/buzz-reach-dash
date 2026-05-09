@@ -61,6 +61,9 @@ export const HR_BUCKET = "hr-docs";
 export function useMyEmployee() {
   return useQuery({
     queryKey: ["hr-me"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<HREmployee | null> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
@@ -75,6 +78,8 @@ export function useMyEmployee() {
 export function useDepartments() {
   return useQuery({
     queryKey: ["hr-departments"],
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase.from("hr_departments").select("*").order("name");
       if (error) throw error;
@@ -86,6 +91,8 @@ export function useDepartments() {
 export function useLeaveTypes() {
   return useQuery({
     queryKey: ["hr-leave-types"],
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase.from("hr_leave_types").select("*").eq("active", true).order("name");
       if (error) throw error;
