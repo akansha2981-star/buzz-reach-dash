@@ -107,6 +107,8 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
       const { error: insErr } = await supabase.from("institute_documents").insert({
         institute_id: instituteId,
         label: (docLabel.trim() || file.name).slice(0, 200),
+        name: (docLabel.trim() || file.name).slice(0, 200),
+        category: docCategory,
         file_path: path,
         mime_type: file.type || null,
         size_bytes: file.size,
@@ -114,7 +116,7 @@ export function InstituteResources({ instituteId }: { instituteId: string }) {
       });
       if (insErr) throw insErr;
       toast.success("Document uploaded");
-      setDocLabel("");
+      setDocLabel(""); setDocCategory("Others");
       qc.invalidateQueries({ queryKey: ["institute-docs", instituteId] });
     } catch (e: any) {
       toast.error(e.message);
