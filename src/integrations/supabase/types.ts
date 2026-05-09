@@ -145,6 +145,68 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_announcement_reads: {
+        Row: {
+          announcement_id: string
+          employee_id: string
+          id: string
+          read_at: string
+        }
+        Insert: {
+          announcement_id: string
+          employee_id: string
+          id?: string
+          read_at?: string
+        }
+        Update: {
+          announcement_id?: string
+          employee_id?: string
+          id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_announcement_reads_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "hr_announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_announcements: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pinned?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hr_attendance: {
         Row: {
           clock_in_at: string | null
@@ -585,6 +647,90 @@ export type Database = {
           is_paid?: boolean
           name?: string
           requires_doc?: boolean
+        }
+        Relationships: []
+      }
+      hr_tasks: {
+        Row: {
+          assigned_by: string | null
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: Database["public"]["Enums"]["hr_task_priority"]
+          status: Database["public"]["Enums"]["hr_task_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["hr_task_priority"]
+          status?: Database["public"]["Enums"]["hr_task_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["hr_task_priority"]
+          status?: Database["public"]["Enums"]["hr_task_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_work_logs: {
+        Row: {
+          accomplishments: string | null
+          blockers: string | null
+          created_at: string
+          employee_id: string
+          hours: number
+          id: string
+          mood: string | null
+          summary: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          accomplishments?: string | null
+          blockers?: string | null
+          created_at?: string
+          employee_id: string
+          hours?: number
+          id?: string
+          mood?: string | null
+          summary: string
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          accomplishments?: string | null
+          blockers?: string | null
+          created_at?: string
+          employee_id?: string
+          hours?: number
+          id?: string
+          mood?: string | null
+          summary?: string
+          updated_at?: string
+          work_date?: string
         }
         Relationships: []
       }
@@ -1091,6 +1237,8 @@ export type Database = {
         | "team_leader"
         | "employee"
         | "intern"
+      hr_task_priority: "low" | "medium" | "high" | "urgent"
+      hr_task_status: "todo" | "in_progress" | "review" | "done" | "cancelled"
       institute_type: "college" | "coaching"
     }
     CompositeTypes: {
@@ -1245,6 +1393,8 @@ export const Constants = {
         "employee",
         "intern",
       ],
+      hr_task_priority: ["low", "medium", "high", "urgent"],
+      hr_task_status: ["todo", "in_progress", "review", "done", "cancelled"],
       institute_type: ["college", "coaching"],
     },
   },

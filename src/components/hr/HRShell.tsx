@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText,
+  LayoutDashboard, Clock, CalendarDays, Users, ClipboardList, FileText, TrendingUp, ListChecks, Megaphone,
 } from "lucide-react";
 
 const TABS = [
   { to: "/hrms", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/hrms/attendance", label: "Attendance", icon: Clock },
   { to: "/hrms/leaves", label: "Leaves", icon: CalendarDays },
+  { to: "/hrms/productivity", label: "Productivity", icon: TrendingUp },
+  { to: "/hrms/tasks", label: "Tasks", icon: ListChecks },
+  { to: "/hrms/announcements", label: "Announcements", icon: Megaphone },
   { to: "/hrms/employees", label: "Employees", icon: Users, manager: true },
   { to: "/hrms/admin/leaves", label: "Approvals", icon: ClipboardList, manager: true },
   { to: "/hrms/admin/attendance", label: "Org Attendance", icon: FileText, manager: true },

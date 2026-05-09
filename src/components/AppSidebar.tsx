@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Briefcase, Clock, CalendarDays, ClipboardList } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Briefcase, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -174,6 +174,21 @@ export function AppSidebar() {
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive("/hrms/leaves")}>
                           <Link to="/hrms/leaves"><CalendarDays className="h-4 w-4" /><span>Leaves</span></Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/productivity")}>
+                          <Link to="/hrms/productivity"><TrendingUp className="h-4 w-4" /><span>Productivity</span></Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/tasks")}>
+                          <Link to="/hrms/tasks"><ListChecks className="h-4 w-4" /><span>HR Tasks</span></Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/hrms/announcements")}>
+                          <Link to="/hrms/announcements"><Megaphone className="h-4 w-4" /><span>Announcements</span></Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
