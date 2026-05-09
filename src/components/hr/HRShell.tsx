@@ -43,7 +43,7 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
             {/* HR module nav */}
             <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
               <div className="inline-flex min-w-full gap-1 rounded-xl border bg-card p-1 shadow-sm">
-                {TABS.filter((t) => !t.manager || isManagerRole(me.hr_role)).map((t) => {
+                {TABS.filter((t) => (!t.manager || isManagerRole(me.hr_role)) && (!t.admin || me.hr_role === "super_admin" || me.hr_role === "hr_admin")).map((t) => {
                   const active = t.exact ? path === t.to : path.startsWith(t.to);
                   const Icon = t.icon;
                   return (
