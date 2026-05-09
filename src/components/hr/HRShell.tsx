@@ -29,23 +29,31 @@ const TABS: Tab[] = [
 
 export function HRShell({ children, title }: { children: ReactNode; title?: string }) {
   const { data: me, isLoading } = useMyEmployee();
+  const { isAdmin: isAppAdmin } = useAuth();
   const path = useRouterState({ select: (r) => r.location.pathname });
+
+  // Synthetic profile so app-level admins can use the HR module even before
+  // their hr_employees row exists (so they can create the first employees).
+  const effectiveMe: { id: string; hr_role: HRRole; status: "active" | "suspended" | "inactive"; full_name: string } | null =
+    me ?? (isAppAdmin
+      ? { id: "", hr_role: "super_admin", status: "active", full_name: "Admin" }
+      : null);
 
   return (
     <RequireAuth>
       <AppShell title={title ?? "HR"}>
         {isLoading ? (
           <div className="py-20 text-center text-sm text-muted-foreground">Loading HR profile…</div>
-        ) : !me ? (
+        ) : !effectiveMe ? (
           <NoEmployeeProfile />
-        ) : me.status !== "active" ? (
+        ) : effectiveMe.status !== "active" ? (
           <SuspendedNotice />
         ) : (
           <div className="space-y-4">
             {/* HR module nav */}
             <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
               <div className="inline-flex min-w-full gap-1 rounded-xl border bg-card p-1 shadow-sm">
-                {TABS.filter((t) => (!t.manager || isManagerRole(me.hr_role)) && (!t.admin || me.hr_role === "super_admin" || me.hr_role === "hr_admin")).map((t) => {
+                {TABS.filter((t) => (!t.manager || isManagerRole(effectiveMe.hr_role)) && (!t.admin || effectiveMe.hr_role === "super_admin" || effectiveMe.hr_role === "hr_admin")).map((t) => {
                   const active = t.exact ? path === t.to : path.startsWith(t.to);
                   const Icon = t.icon;
                   return (
@@ -64,6 +72,11 @@ export function HRShell({ children, title }: { children: ReactNode; title?: stri
                 })}
               </div>
             </div>
+            {!me && isAppAdmin && (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                You don't have an HR employee record yet. Use Employees → Add Employee to add yourself.
+              </div>
+            )}
             {children}
           </div>
         )}
