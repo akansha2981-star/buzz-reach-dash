@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Building2, ShieldAlert, Sparkles } from "lucide-react";
+import { Building2, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useMyEmployee, isManagerRole, HR_ROLES, type HRRole } from "@/lib/hr";
