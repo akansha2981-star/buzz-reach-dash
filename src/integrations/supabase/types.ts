@@ -77,6 +77,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "ceo_desk_notes_request_fk"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "ceo_desk_requests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ceo_desk_notes_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
@@ -143,7 +150,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ceo_desk_requests_institute_fk"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hr_announcement_reads: {
         Row: {
