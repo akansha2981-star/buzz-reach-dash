@@ -40,10 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (s?.user) setTimeout(() => loadFor(s.user.id), 0);
       else { setIsAdmin(false); setPerms(DEFAULT_PERMS); }
     });
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session?.user) await loadFor(data.session.user.id);
       setLoading(false);
+      if (data.session?.user) loadFor(data.session.user.id).catch((e) => console.error("loadFor failed", e));
     });
     return () => sub.subscription.unsubscribe();
   }, []);
