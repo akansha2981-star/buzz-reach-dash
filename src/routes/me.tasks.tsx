@@ -50,8 +50,26 @@ function TasksPage() {
     return r;
   }, [tasks, q, pri, status, sort]);
 
+  const stats = useMemo(() => {
+    const s = { total: tasks.length, completed: 0, pending: 0, overdue: 0, urgent: 0 };
+    tasks.forEach((t) => {
+      const st = deriveStatus(t);
+      if (st === "completed") s.completed++; else s.pending++;
+      if (st === "overdue") s.overdue++;
+      if (t.priority === "urgent" && st !== "completed") s.urgent++;
+    });
+    return s;
+  }, [tasks]);
+
   return (
     <MeShell title="All Tasks" subtitle={`${filtered.length} of ${tasks.length} tasks`}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <StatTile icon={CheckCircle2} label="Completed" value={stats.completed} tone="text-emerald-600" />
+        <StatTile icon={Clock} label="Pending" value={stats.pending} tone="text-blue-600" />
+        <StatTile icon={AlertCircle} label="Overdue" value={stats.overdue} tone="text-rose-600" />
+        <StatTile icon={Flame} label="Urgent" value={stats.urgent} tone="text-amber-600" />
+      </div>
+      <QuickAddInline />
       <Card>
         <CardContent className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
