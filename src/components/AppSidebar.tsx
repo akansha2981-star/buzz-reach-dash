@@ -251,37 +251,12 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>My Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel>Personal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me")}>
-                  <Link to="/me"><Sun /><span>Today</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me/tasks")}>
-                  <Link to="/me/tasks"><CheckSquare /><span>My Tasks</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me/calendar")}>
-                  <Link to="/me/calendar"><CalendarDays /><span>Calendar</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me/focus")}>
-                  <Link to="/me/focus"><Timer /><span>Focus</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me/habits")}>
-                  <Link to="/me/habits"><Target /><span>Habits</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/me/analytics")}>
-                  <Link to="/me/analytics"><LineChart /><span>Analytics</span></Link>
+                <SidebarMenuButton asChild isActive={path.startsWith("/me")}>
+                  <Link to="/me"><Sparkles /><span>My Workspace</span></Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

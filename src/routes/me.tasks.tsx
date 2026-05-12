@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, LayoutGrid, List as ListIcon } from "lucide-react";
+import { Search, LayoutGrid, List as ListIcon, Plus, CheckCircle2, Clock, AlertCircle, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
-import { useMyTasks, deriveStatus, useUpdateTask, type MeTask, type MeTaskStatus, type MeTaskPriority } from "@/lib/me";
+import { useMyTasks, useCreateTask, deriveStatus, useUpdateTask, type MeTask, type MeTaskStatus, type MeTaskPriority } from "@/lib/me";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 
@@ -50,8 +50,26 @@ function TasksPage() {
     return r;
   }, [tasks, q, pri, status, sort]);
 
+  const stats = useMemo(() => {
+    const s = { total: tasks.length, completed: 0, pending: 0, overdue: 0, urgent: 0 };
+    tasks.forEach((t) => {
+      const st = deriveStatus(t);
+      if (st === "completed") s.completed++; else s.pending++;
+      if (st === "overdue") s.overdue++;
+      if (t.priority === "urgent" && st !== "completed") s.urgent++;
+    });
+    return s;
+  }, [tasks]);
+
   return (
     <MeShell title="All Tasks" subtitle={`${filtered.length} of ${tasks.length} tasks`}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <StatTile icon={CheckCircle2} label="Completed" value={stats.completed} tone="text-emerald-600" />
+        <StatTile icon={Clock} label="Pending" value={stats.pending} tone="text-blue-600" />
+        <StatTile icon={AlertCircle} label="Overdue" value={stats.overdue} tone="text-rose-600" />
+        <StatTile icon={Flame} label="Urgent" value={stats.urgent} tone="text-amber-600" />
+      </div>
+      <QuickAddInline />
       <Card>
         <CardContent className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -171,5 +189,44 @@ function DraggableCard({ task }: { task: MeTask }) {
     <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={cn(isDragging && "opacity-60")}>
       <TaskCard task={task} />
     </div>
+  );
+}
+
+function StatTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: string }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="flex items-center gap-3 p-3">
+        <div className={cn("rounded-xl bg-muted p-2", tone)}><Icon className="h-4 w-4" /></div>
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold leading-tight">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickAddInline() {
+  const [title, setTitle] = useState("");
+  const create = useCreateTask();
+  const submit = async () => {
+    if (!title.trim()) return;
+    await create.mutateAsync({ title: title.trim() });
+    setTitle("");
+  };
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-2 p-2">
+        <Plus className="ml-1 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+          placeholder="Quick add a task and press Enter…"
+          className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+        />
+        {title && <Button size="sm" onClick={submit} disabled={create.isPending}>Add</Button>}
+      </CardContent>
+    </Card>
   );
 }
