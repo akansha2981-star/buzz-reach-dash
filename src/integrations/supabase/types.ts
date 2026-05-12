@@ -938,6 +938,337 @@ export type Database = {
           },
         ]
       }
+      me_badges: {
+        Row: {
+          code: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      me_focus_sessions: {
+        Row: {
+          completed: boolean
+          duration_minutes: number
+          ended_at: string | null
+          id: string
+          started_at: string
+          task_id: string | null
+          type: Database["public"]["Enums"]["me_focus_type"]
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          duration_minutes?: number
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          task_id?: string | null
+          type?: Database["public"]["Enums"]["me_focus_type"]
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          duration_minutes?: number
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          task_id?: string | null
+          type?: Database["public"]["Enums"]["me_focus_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_focus_sessions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "me_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      me_goals: {
+        Row: {
+          created_at: string
+          id: string
+          progress: number
+          status: string
+          target_date: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      me_habit_logs: {
+        Row: {
+          done: boolean
+          habit_id: string
+          id: string
+          log_date: string
+          user_id: string
+        }
+        Insert: {
+          done?: boolean
+          habit_id: string
+          id?: string
+          log_date: string
+          user_id: string
+        }
+        Update: {
+          done?: boolean
+          habit_id?: string
+          id?: string
+          log_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "me_habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      me_habits: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          target_per_week: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          target_per_week?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          target_per_week?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      me_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          scheduled_for: string | null
+          task_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          task_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          task_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "me_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      me_subtasks: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          position: number
+          task_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          position?: number
+          task_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          position?: number
+          task_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "me_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      me_task_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_task_notes_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "me_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      me_tasks: {
+        Row: {
+          category: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          due_time: string | null
+          estimated_minutes: number | null
+          id: string
+          position: number
+          priority: Database["public"]["Enums"]["me_task_priority"]
+          recurrence_parent_id: string | null
+          recurrence_rule: Json | null
+          reminder_at: string | null
+          status: Database["public"]["Enums"]["me_task_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          position?: number
+          priority?: Database["public"]["Enums"]["me_task_priority"]
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          reminder_at?: string | null
+          status?: Database["public"]["Enums"]["me_task_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          position?: number
+          priority?: Database["public"]["Enums"]["me_task_priority"]
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          reminder_at?: string | null
+          status?: Database["public"]["Enums"]["me_task_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meetings: {
         Row: {
           attendees: Json | null
@@ -1255,6 +1586,14 @@ export type Database = {
       hr_task_priority: "low" | "medium" | "high" | "urgent"
       hr_task_status: "todo" | "in_progress" | "review" | "done" | "cancelled"
       institute_type: "college" | "coaching"
+      me_focus_type: "pomodoro" | "short_break" | "long_break" | "focus"
+      me_task_priority: "low" | "medium" | "high" | "urgent"
+      me_task_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "delayed"
+        | "overdue"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1411,6 +1750,15 @@ export const Constants = {
       hr_task_priority: ["low", "medium", "high", "urgent"],
       hr_task_status: ["todo", "in_progress", "review", "done", "cancelled"],
       institute_type: ["college", "coaching"],
+      me_focus_type: ["pomodoro", "short_break", "long_break", "focus"],
+      me_task_priority: ["low", "medium", "high", "urgent"],
+      me_task_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "delayed",
+        "overdue",
+      ],
     },
   },
 } as const
