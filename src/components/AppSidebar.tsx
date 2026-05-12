@@ -250,6 +250,44 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarGroup>
+          <SidebarGroupLabel>My Workspace</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me")}>
+                  <Link to="/me"><Sun /><span>Today</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me/tasks")}>
+                  <Link to="/me/tasks"><CheckSquare /><span>My Tasks</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me/calendar")}>
+                  <Link to="/me/calendar"><CalendarDays /><span>Calendar</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me/focus")}>
+                  <Link to="/me/focus"><Timer /><span>Focus</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me/habits")}>
+                  <Link to="/me/habits"><Target /><span>Habits</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/me/analytics")}>
+                  <Link to="/me/analytics"><LineChart /><span>Analytics</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {(can("can_users") || can("can_stages") || can("can_logs")) && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
