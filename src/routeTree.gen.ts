@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as MeetingsRouteImport } from './routes/meetings'
+import { Route as MeRouteImport } from './routes/me'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
@@ -23,6 +25,8 @@ import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
+import { Route as MeTasksRouteImport } from './routes/me.tasks'
+import { Route as MeCalendarRouteImport } from './routes/me.calendar'
 import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
 import { Route as HrmsProductivityRouteImport } from './routes/hrms.productivity'
 import { Route as HrmsMeRouteImport } from './routes/hrms.me'
@@ -48,6 +52,11 @@ const MeetingsRoute = MeetingsRouteImport.update({
   path: '/meetings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocumentsRoute = DocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -67,6 +76,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MeIndexRoute = MeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MeRoute,
 } as any)
 const HrmsIndexRoute = HrmsIndexRouteImport.update({
   id: '/hrms/',
@@ -107,6 +121,16 @@ const OutreachTypeRoute = OutreachTypeRouteImport.update({
   id: '/outreach/$type',
   path: '/outreach/$type',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MeTasksRoute = MeTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeCalendarRoute = MeCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => MeRoute,
 } as any)
 const HrmsTasksRoute = HrmsTasksRouteImport.update({
   id: '/hrms/tasks',
@@ -184,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
+  '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
@@ -193,6 +218,8 @@ export interface FileRoutesByFullPath {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/calendar': typeof MeCalendarRoute
+  '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -201,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
+  '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
@@ -223,6 +251,8 @@ export interface FileRoutesByTo {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/calendar': typeof MeCalendarRoute
+  '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -231,6 +261,7 @@ export interface FileRoutesByTo {
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/hrms': typeof HrmsIndexRoute
+  '/me': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
@@ -245,6 +276,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
+  '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
@@ -254,6 +286,8 @@ export interface FileRoutesById {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/calendar': typeof MeCalendarRoute
+  '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
@@ -262,6 +296,7 @@ export interface FileRoutesById {
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
   '/hrms/': typeof HrmsIndexRoute
+  '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
@@ -277,6 +312,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
+    | '/me'
     | '/meetings'
     | '/tasks'
     | '/hrms/announcements'
@@ -286,6 +322,8 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/calendar'
+    | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -294,6 +332,7 @@ export interface FileRouteTypes {
     | '/settings/stages'
     | '/settings/users'
     | '/hrms/'
+    | '/me/'
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
@@ -316,6 +355,8 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/calendar'
+    | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -324,6 +365,7 @@ export interface FileRouteTypes {
     | '/settings/stages'
     | '/settings/users'
     | '/hrms'
+    | '/me'
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
@@ -337,6 +379,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
+    | '/me'
     | '/meetings'
     | '/tasks'
     | '/hrms/announcements'
@@ -346,6 +389,8 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/calendar'
+    | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
     | '/outreach/colleges'
@@ -354,6 +399,7 @@ export interface FileRouteTypes {
     | '/settings/stages'
     | '/settings/users'
     | '/hrms/'
+    | '/me/'
     | '/api/public/bootstrap-admin'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
@@ -368,6 +414,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CeoDeskRoute: typeof CeoDeskRoute
   DocumentsRoute: typeof DocumentsRoute
+  MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
   TasksRoute: typeof TasksRoute
   HrmsAnnouncementsRoute: typeof HrmsAnnouncementsRoute
@@ -408,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeetingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/documents': {
       id: '/documents'
       path: '/documents'
@@ -435,6 +489,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/me/': {
+      id: '/me/'
+      path: '/'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof MeRoute
     }
     '/hrms/': {
       id: '/hrms/'
@@ -491,6 +552,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/outreach/$type'
       preLoaderRoute: typeof OutreachTypeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/me/tasks': {
+      id: '/me/tasks'
+      path: '/tasks'
+      fullPath: '/me/tasks'
+      preLoaderRoute: typeof MeTasksRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/calendar': {
+      id: '/me/calendar'
+      path: '/calendar'
+      fullPath: '/me/calendar'
+      preLoaderRoute: typeof MeCalendarRouteImport
+      parentRoute: typeof MeRoute
     }
     '/hrms/tasks': {
       id: '/hrms/tasks'
@@ -593,6 +668,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MeRouteChildren {
+  MeCalendarRoute: typeof MeCalendarRoute
+  MeTasksRoute: typeof MeTasksRoute
+  MeIndexRoute: typeof MeIndexRoute
+}
+
+const MeRouteChildren: MeRouteChildren = {
+  MeCalendarRoute: MeCalendarRoute,
+  MeTasksRoute: MeTasksRoute,
+  MeIndexRoute: MeIndexRoute,
+}
+
+const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
+
 interface HrmsEmployeesRouteChildren {
   HrmsEmployeesIdRoute: typeof HrmsEmployeesIdRoute
 }
@@ -622,6 +711,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CeoDeskRoute: CeoDeskRoute,
   DocumentsRoute: DocumentsRoute,
+  MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
   TasksRoute: TasksRoute,
   HrmsAnnouncementsRoute: HrmsAnnouncementsRoute,
@@ -648,13 +738,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
