@@ -7,8 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { TaskDialog } from "./TaskDialog";
+import { useTaskReminderEngine } from "@/hooks/useTaskReminderEngine";
 
 export function MeShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
+  useTaskReminderEngine();
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
