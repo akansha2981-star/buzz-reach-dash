@@ -191,3 +191,42 @@ function DraggableCard({ task }: { task: MeTask }) {
     </div>
   );
 }
+
+function StatTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: string }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="flex items-center gap-3 p-3">
+        <div className={cn("rounded-xl bg-muted p-2", tone)}><Icon className="h-4 w-4" /></div>
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold leading-tight">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickAddInline() {
+  const [title, setTitle] = useState("");
+  const create = useCreateTask();
+  const submit = async () => {
+    if (!title.trim()) return;
+    await create.mutateAsync({ title: title.trim() });
+    setTitle("");
+  };
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-2 p-2">
+        <Plus className="ml-1 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+          placeholder="Quick add a task and press Enter…"
+          className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+        />
+        {title && <Button size="sm" onClick={submit} disabled={create.isPending}>Add</Button>}
+      </CardContent>
+    </Card>
+  );
+}
