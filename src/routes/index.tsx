@@ -45,13 +45,27 @@ function Dashboard() {
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
+      const since90 = new Date(Date.now() - 90 * 86400000).toISOString();
       const [insts, stages, activities, meetings, tasks] = await Promise.all([
-        supabase.from("institutes").select("id, name, type, current_stage_id, created_at, updated_at, next_meeting_at"),
+        supabase.from("institutes").select("id, name, type, current_stage_id, created_at, next_meeting_at"),
         supabase.from("outreach_stages").select("*").order("position"),
-        supabase.from("outreach_activities").select("*, institutes(name, type)").order("created_at", { ascending: false }).limit(50),
-        supabase.from("meetings").select("*, institutes(name, type)").order("meeting_at", { ascending: true }),
-        supabase.from("tasks").select("*, institutes(id, name, type)").order("due_at", { ascending: true, nullsFirst: false }),
+        supabase.from("outreach_activities")
+          .select("id, institute_id, created_at, institutes(name, type)")
+          .gte("created_at", since90)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase.from("meetings")
+          .select("id, institute_id, meeting_at, status, institutes(name, type)")
+          .gte("meeting_at", since90)
+          .order("meeting_at", { ascending: true })
+          .limit(200),
+        supabase.from("tasks")
+          .select("id, institute_id, status, due_at, created_at, institutes(id, name, type)")
+          .order("due_at", { ascending: true, nullsFirst: false })
+          .limit(200),
       ]);
       return {
         institutes: insts.data ?? [],
