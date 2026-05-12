@@ -26,7 +26,10 @@ import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as MeTasksRouteImport } from './routes/me.tasks'
+import { Route as MeHabitsRouteImport } from './routes/me.habits'
+import { Route as MeFocusRouteImport } from './routes/me.focus'
 import { Route as MeCalendarRouteImport } from './routes/me.calendar'
+import { Route as MeAnalyticsRouteImport } from './routes/me.analytics'
 import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
 import { Route as HrmsProductivityRouteImport } from './routes/hrms.productivity'
 import { Route as HrmsMeRouteImport } from './routes/hrms.me'
@@ -127,9 +130,24 @@ const MeTasksRoute = MeTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => MeRoute,
 } as any)
+const MeHabitsRoute = MeHabitsRouteImport.update({
+  id: '/habits',
+  path: '/habits',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeFocusRoute = MeFocusRouteImport.update({
+  id: '/focus',
+  path: '/focus',
+  getParentRoute: () => MeRoute,
+} as any)
 const MeCalendarRoute = MeCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeAnalyticsRoute = MeAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => MeRoute,
 } as any)
 const HrmsTasksRoute = HrmsTasksRouteImport.update({
@@ -218,7 +236,10 @@ export interface FileRoutesByFullPath {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/focus': typeof MeFocusRoute
+  '/me/habits': typeof MeHabitsRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -251,7 +272,10 @@ export interface FileRoutesByTo {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/focus': typeof MeFocusRoute
+  '/me/habits': typeof MeHabitsRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -286,7 +310,10 @@ export interface FileRoutesById {
   '/hrms/me': typeof HrmsMeRoute
   '/hrms/productivity': typeof HrmsProductivityRoute
   '/hrms/tasks': typeof HrmsTasksRoute
+  '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/focus': typeof MeFocusRoute
+  '/me/habits': typeof MeHabitsRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -322,7 +349,10 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/analytics'
     | '/me/calendar'
+    | '/me/focus'
+    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -355,7 +385,10 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/analytics'
     | '/me/calendar'
+    | '/me/focus'
+    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -389,7 +422,10 @@ export interface FileRouteTypes {
     | '/hrms/me'
     | '/hrms/productivity'
     | '/hrms/tasks'
+    | '/me/analytics'
     | '/me/calendar'
+    | '/me/focus'
+    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -560,11 +596,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeTasksRouteImport
       parentRoute: typeof MeRoute
     }
+    '/me/habits': {
+      id: '/me/habits'
+      path: '/habits'
+      fullPath: '/me/habits'
+      preLoaderRoute: typeof MeHabitsRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/focus': {
+      id: '/me/focus'
+      path: '/focus'
+      fullPath: '/me/focus'
+      preLoaderRoute: typeof MeFocusRouteImport
+      parentRoute: typeof MeRoute
+    }
     '/me/calendar': {
       id: '/me/calendar'
       path: '/calendar'
       fullPath: '/me/calendar'
       preLoaderRoute: typeof MeCalendarRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/analytics': {
+      id: '/me/analytics'
+      path: '/analytics'
+      fullPath: '/me/analytics'
+      preLoaderRoute: typeof MeAnalyticsRouteImport
       parentRoute: typeof MeRoute
     }
     '/hrms/tasks': {
@@ -669,13 +726,19 @@ declare module '@tanstack/react-router' {
 }
 
 interface MeRouteChildren {
+  MeAnalyticsRoute: typeof MeAnalyticsRoute
   MeCalendarRoute: typeof MeCalendarRoute
+  MeFocusRoute: typeof MeFocusRoute
+  MeHabitsRoute: typeof MeHabitsRoute
   MeTasksRoute: typeof MeTasksRoute
   MeIndexRoute: typeof MeIndexRoute
 }
 
 const MeRouteChildren: MeRouteChildren = {
+  MeAnalyticsRoute: MeAnalyticsRoute,
   MeCalendarRoute: MeCalendarRoute,
+  MeFocusRoute: MeFocusRoute,
+  MeHabitsRoute: MeHabitsRoute,
   MeTasksRoute: MeTasksRoute,
   MeIndexRoute: MeIndexRoute,
 }
