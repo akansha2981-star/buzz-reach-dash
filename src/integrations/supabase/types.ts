@@ -1488,34 +1488,49 @@ export type Database = {
       }
       user_permissions: {
         Row: {
+          can_ceo_desk: boolean
           can_coaching: boolean
           can_colleges: boolean
           can_dashboard: boolean
+          can_documents: boolean
           can_logs: boolean
           can_meetings: boolean
+          can_my_workspace: boolean
           can_stages: boolean
+          can_tasks: boolean
+          can_timeline: boolean
           can_users: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          can_ceo_desk?: boolean
           can_coaching?: boolean
           can_colleges?: boolean
           can_dashboard?: boolean
+          can_documents?: boolean
           can_logs?: boolean
           can_meetings?: boolean
+          can_my_workspace?: boolean
           can_stages?: boolean
+          can_tasks?: boolean
+          can_timeline?: boolean
           can_users?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          can_ceo_desk?: boolean
           can_coaching?: boolean
           can_colleges?: boolean
           can_dashboard?: boolean
+          can_documents?: boolean
           can_logs?: boolean
           can_meetings?: boolean
+          can_my_workspace?: boolean
           can_stages?: boolean
+          can_tasks?: boolean
+          can_timeline?: boolean
           can_users?: boolean
           updated_at?: string
           user_id?: string
