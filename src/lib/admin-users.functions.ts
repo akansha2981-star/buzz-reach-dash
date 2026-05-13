@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const PERM_KEYS = ["can_dashboard","can_colleges","can_coaching","can_meetings","can_stages","can_users","can_logs"] as const;
+const PERM_KEYS = ["can_dashboard","can_colleges","can_coaching","can_meetings","can_stages","can_users","can_logs","can_tasks","can_documents","can_my_workspace","can_ceo_desk","can_timeline"] as const;
 type PermKey = typeof PERM_KEYS[number];
 type Perms = Record<PermKey, boolean>;
 
@@ -15,11 +15,17 @@ const permsSchema = z.object({
   can_stages: z.boolean(),
   can_users: z.boolean(),
   can_logs: z.boolean(),
+  can_tasks: z.boolean(),
+  can_documents: z.boolean(),
+  can_my_workspace: z.boolean(),
+  can_ceo_desk: z.boolean(),
+  can_timeline: z.boolean(),
 });
 
 const adminAllPerms: Perms = {
   can_dashboard: true, can_colleges: true, can_coaching: true,
   can_meetings: true, can_stages: true, can_users: true, can_logs: true,
+  can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true,
 };
 
 async function assertAdmin(userId: string) {
@@ -69,6 +75,7 @@ export const listUsers = createServerFn({ method: "GET" })
         permissions: isAdmin ? adminAllPerms : (permMap.get(u.id) ?? {
           can_dashboard: true, can_colleges: false, can_coaching: false,
           can_meetings: false, can_stages: false, can_users: false, can_logs: false,
+          can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: false,
         }),
       };
     });

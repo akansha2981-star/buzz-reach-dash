@@ -8,17 +8,27 @@ export type Permissions = {
   can_stages: boolean;
   can_users: boolean;
   can_logs: boolean;
+  can_tasks: boolean;
+  can_documents: boolean;
+  can_my_workspace: boolean;
+  can_ceo_desk: boolean;
+  can_timeline: boolean;
 };
 
 export const ADMIN_PERMS: Permissions = {
   can_dashboard: true, can_colleges: true, can_coaching: true,
   can_meetings: true, can_stages: true, can_users: true, can_logs: true,
+  can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true,
 };
 
 export async function fetchMyPermissions(userId: string): Promise<Permissions> {
   const { data } = await supabase.from("user_permissions").select("*").eq("user_id", userId).maybeSingle();
   if (!data) {
-    return { can_dashboard: true, can_colleges: true, can_coaching: true, can_meetings: true, can_stages: false, can_users: false, can_logs: false };
+    return {
+      can_dashboard: true, can_colleges: true, can_coaching: true, can_meetings: true,
+      can_stages: false, can_users: false, can_logs: false,
+      can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true,
+    };
   }
   return data as Permissions;
 }
