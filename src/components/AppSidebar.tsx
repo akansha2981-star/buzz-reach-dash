@@ -133,6 +133,12 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={path.startsWith("/me")}>
+                  <Link to="/me"><Sparkles /><span>My Workspace</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
                   <Link to="/ceo-desk">
                     <Crown />
