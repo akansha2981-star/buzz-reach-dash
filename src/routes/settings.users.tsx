@@ -148,20 +148,39 @@ function UserRow({ user }: { user: any }) {
 }
 
 function PermsGrid({ value, onChange, disabled }: { value: any; onChange: (v: any) => void; disabled?: boolean }) {
+  const groups = Array.from(new Set(PERM_OPTIONS.map((p) => p.group)));
+  const allOn = PERM_OPTIONS.every((p) => value[p.key]);
+  const toggleAll = (on: boolean) => onChange(Object.fromEntries(PERM_OPTIONS.map((p) => [p.key, on])));
   return (
-    <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
-      {PERM_OPTIONS.map((p) => (
-        <label key={p.key} className="flex items-start gap-3 rounded-md p-2 hover:bg-accent">
-          <Checkbox
-            checked={!!value[p.key]} disabled={disabled}
-            onCheckedChange={(c) => onChange({ ...value, [p.key]: !!c })}
-            className="mt-0.5"
-          />
-          <div>
-            <p className="text-sm font-medium">{p.label}</p>
-            <p className="text-xs text-muted-foreground">{p.desc}</p>
+    <div className="space-y-3 rounded-lg border p-3">
+      {!disabled && (
+        <div className="flex items-center justify-between border-b pb-2">
+          <p className="text-xs text-muted-foreground">{PERM_OPTIONS.filter((p) => value[p.key]).length} of {PERM_OPTIONS.length} sections enabled</p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="ghost" onClick={() => toggleAll(true)} disabled={allOn}>Select all</Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => toggleAll(false)}>Clear</Button>
           </div>
-        </label>
+        </div>
+      )}
+      {groups.map((g) => (
+        <div key={g} className="space-y-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{g}</p>
+          <div className="grid gap-1 sm:grid-cols-2">
+            {PERM_OPTIONS.filter((p) => p.group === g).map((p) => (
+              <label key={p.key} className="flex items-start gap-3 rounded-md p-2 hover:bg-accent">
+                <Checkbox
+                  checked={!!value[p.key]} disabled={disabled}
+                  onCheckedChange={(c) => onChange({ ...value, [p.key]: !!c })}
+                  className="mt-0.5"
+                />
+                <div>
+                  <p className="text-sm font-medium">{p.label}</p>
+                  <p className="text-xs text-muted-foreground">{p.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );
