@@ -112,45 +112,53 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/tasks")}>
-                  <Link to="/tasks">
-                    <ListChecks />
-                    <span>Tasks</span>
-                    {pendingCount > 0 && !collapsed && (
-                      <Badge variant={overdueCount > 0 ? "destructive" : "secondary"} className="ml-auto h-5 px-1.5 text-[10px]">
-                        {pendingCount}
-                      </Badge>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {can("can_tasks") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/tasks")}>
+                    <Link to="/tasks">
+                      <ListChecks />
+                      <span>Tasks</span>
+                      {pendingCount > 0 && !collapsed && (
+                        <Badge variant={overdueCount > 0 ? "destructive" : "secondary"} className="ml-auto h-5 px-1.5 text-[10px]">
+                          {pendingCount}
+                        </Badge>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/documents")}>
-                  <Link to="/documents"><FolderOpen /><span>Documents</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {can("can_documents") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/documents")}>
+                    <Link to="/documents"><FolderOpen /><span>Documents</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={path.startsWith("/me")}>
-                  <Link to="/me"><Sparkles /><span>My Workspace</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {can("can_my_workspace") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith("/me")}>
+                    <Link to="/me"><Sparkles /><span>My Workspace</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
-                  <Link to="/ceo-desk">
-                    <Crown />
-                    <span>{isAdmin ? "CEO Desk" : "My CEO Requests"}</span>
-                    {ceoOpen > 0 && !collapsed && (
-                      <Badge variant="default" className="ml-auto h-5 bg-amber-500 px-1.5 text-[10px] hover:bg-amber-500">
-                        {ceoOpen}
-                      </Badge>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {can("can_ceo_desk") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
+                    <Link to="/ceo-desk">
+                      <Crown />
+                      <span>{isAdmin ? "CEO Desk" : "My CEO Requests"}</span>
+                      {ceoOpen > 0 && !collapsed && (
+                        <Badge variant="default" className="ml-auto h-5 bg-amber-500 px-1.5 text-[10px] hover:bg-amber-500">
+                          {ceoOpen}
+                        </Badge>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
