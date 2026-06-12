@@ -100,7 +100,7 @@ function AuthPage() {
 
           <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
             <div className="mb-7 space-y-1.5">
-              <h1 className="font-display text-2xl font-bold tracking-tight">Sign in to your workspace</h1>
+              <h1 className="font-display text-2xl font-bold tracking-tight">Login at Work's</h1>
               <p className="text-sm text-muted-foreground">Enter the credentials provided by your administrator.</p>
             </div>
 
