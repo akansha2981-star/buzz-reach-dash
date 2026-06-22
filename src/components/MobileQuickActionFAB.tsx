@@ -4,10 +4,12 @@ import { Plus, GraduationCap, BookOpen, Calendar, ListChecks, Crown, Search, X }
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
+import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export function MobileQuickActionFAB() {
+
   const [open, setOpen] = useState(false);
   const { isAdmin, perms } = useAuth();
   const can = (k: keyof typeof perms) => isAdmin || perms[k];
@@ -62,6 +64,19 @@ export function MobileQuickActionFAB() {
                   </Button>
                 }
               />
+              <NewTaskDialog
+                trigger={
+                  <Button
+                    onClick={close}
+                    variant="outline"
+                    className="h-auto justify-start gap-2 py-3"
+                  >
+                    <ListChecks className="h-4 w-4 text-primary" />
+                    <span className="text-sm">New Task</span>
+                  </Button>
+                }
+              />
+
               <Link to="/outreach/colleges" onClick={close}>
                 <Button variant="outline" className="h-auto w-full justify-start gap-2 py-3">
                   <GraduationCap className="h-4 w-4" />

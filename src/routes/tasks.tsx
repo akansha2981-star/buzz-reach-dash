@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isPast, isToday, isFuture, isWithinInterval, addDays, format } from "date-fns";
-import { ListChecks, AlertTriangle, Calendar as CalendarIcon, CheckCircle2, Filter, X, Search } from "lucide-react";
+import { ListChecks, AlertTriangle, Calendar as CalendarIcon, CheckCircle2, Filter, X, Search, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskRow } from "@/components/TasksSection";
+import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { fetchTasksWithInstitutes } from "@/lib/tasks";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -20,17 +21,20 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/tasks")({ component: TasksPage });
 
+
 type DueKey = "all" | "overdue" | "today" | "week" | "month" | "nodate";
 type TypeKey = "all" | "college" | "coaching";
 type SortKey = "due_asc" | "due_desc" | "recent" | "title";
 
 function TasksPage() {
   useRealtime("tasks", [["tasks-all"]]);
-  const { user } = useAuth();
+  const { user, isAdmin, perms } = useAuth();
+  const can = (k: keyof typeof perms) => isAdmin || perms[k];
   const qc = useQueryClient();
   const { data: tasks = [] } = useQuery({ queryKey: ["tasks-all"], queryFn: fetchTasksWithInstitutes });
 
   const [q, setQ] = useState("");
+
   const [due, setDue] = useState<DueKey>("all");
   const [typeFilter, setTypeFilter] = useState<TypeKey>("all");
   const [instFilter, setInstFilter] = useState<string>("all");
@@ -118,12 +122,26 @@ function TasksPage() {
     <RequireAuth>
       <AppShell title="Tasks">
         <div className="space-y-6">
-          <div>
-            <h2 className="font-display text-2xl font-bold">Tasks</h2>
-            <p className="text-sm text-muted-foreground">All to-dos across colleges and coaching</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-bold">Tasks</h2>
+              <p className="text-sm text-muted-foreground">All to-dos across colleges and coaching</p>
+            </div>
+            {can("can_tasks") && (
+              <NewTaskDialog
+                trigger={
+                  <Button size="sm" className="gap-1.5 self-start sm:self-auto">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add task</span>
+                    <span className="sm:hidden">Add</span>
+                  </Button>
+                }
+              />
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+
             <SummaryCard icon={<AlertTriangle className="h-4 w-4 text-destructive" />} label="Overdue" value={overdue.length} tone="destructive" />
             <SummaryCard icon={<CalendarIcon className="h-4 w-4 text-amber-600" />} label="Today" value={today.length} tone="amber" />
             <SummaryCard icon={<ListChecks className="h-4 w-4 text-primary" />} label="Upcoming" value={upcoming.length} />
