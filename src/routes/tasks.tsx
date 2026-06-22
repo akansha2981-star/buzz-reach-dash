@@ -122,10 +122,24 @@ function TasksPage() {
     <RequireAuth>
       <AppShell title="Tasks">
         <div className="space-y-6">
-          <div>
-            <h2 className="font-display text-2xl font-bold">Tasks</h2>
-            <p className="text-sm text-muted-foreground">All to-dos across colleges and coaching</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-bold">Tasks</h2>
+              <p className="text-sm text-muted-foreground">All to-dos across colleges and coaching</p>
+            </div>
+            {can("can_tasks") && (
+              <NewTaskDialog
+                trigger={
+                  <Button size="sm" className="gap-1.5 self-start sm:self-auto">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add task</span>
+                    <span className="sm:hidden">Add</span>
+                  </Button>
+                }
+              />
+            )}
           </div>
+
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <SummaryCard icon={<AlertTriangle className="h-4 w-4 text-destructive" />} label="Overdue" value={overdue.length} tone="destructive" />
