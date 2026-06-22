@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isPast, isToday, isFuture, isWithinInterval, addDays, format } from "date-fns";
-import { ListChecks, AlertTriangle, Calendar as CalendarIcon, CheckCircle2, Filter, X, Search } from "lucide-react";
+import { ListChecks, AlertTriangle, Calendar as CalendarIcon, CheckCircle2, Filter, X, Search, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskRow } from "@/components/TasksSection";
+import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { fetchTasksWithInstitutes } from "@/lib/tasks";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/tasks")({ component: TasksPage });
 
