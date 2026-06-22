@@ -140,8 +140,8 @@ function TasksPage() {
             )}
           </div>
 
-
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+
             <SummaryCard icon={<AlertTriangle className="h-4 w-4 text-destructive" />} label="Overdue" value={overdue.length} tone="destructive" />
             <SummaryCard icon={<CalendarIcon className="h-4 w-4 text-amber-600" />} label="Today" value={today.length} tone="amber" />
             <SummaryCard icon={<ListChecks className="h-4 w-4 text-primary" />} label="Upcoming" value={upcoming.length} />
