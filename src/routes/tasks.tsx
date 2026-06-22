@@ -19,8 +19,8 @@ import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
 
-
 export const Route = createFileRoute("/tasks")({ component: TasksPage });
+
 
 type DueKey = "all" | "overdue" | "today" | "week" | "month" | "nodate";
 type TypeKey = "all" | "college" | "coaching";
