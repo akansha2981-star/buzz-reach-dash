@@ -33,8 +33,8 @@ function TasksPage() {
   const qc = useQueryClient();
   const { data: tasks = [] } = useQuery({ queryKey: ["tasks-all"], queryFn: fetchTasksWithInstitutes });
 
-
   const [q, setQ] = useState("");
+
   const [due, setDue] = useState<DueKey>("all");
   const [typeFilter, setTypeFilter] = useState<TypeKey>("all");
   const [instFilter, setInstFilter] = useState<string>("all");
