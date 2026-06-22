@@ -8,8 +8,8 @@ import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-
 export function MobileQuickActionFAB() {
+
   const [open, setOpen] = useState(false);
   const { isAdmin, perms } = useAuth();
   const can = (k: keyof typeof perms) => isAdmin || perms[k];
