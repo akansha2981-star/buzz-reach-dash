@@ -28,9 +28,11 @@ type SortKey = "due_asc" | "due_desc" | "recent" | "title";
 
 function TasksPage() {
   useRealtime("tasks", [["tasks-all"]]);
-  const { user } = useAuth();
+  const { user, isAdmin, perms } = useAuth();
+  const can = (k: keyof typeof perms) => isAdmin || perms[k];
   const qc = useQueryClient();
   const { data: tasks = [] } = useQuery({ queryKey: ["tasks-all"], queryFn: fetchTasksWithInstitutes });
+
 
   const [q, setQ] = useState("");
   const [due, setDue] = useState<DueKey>("all");
