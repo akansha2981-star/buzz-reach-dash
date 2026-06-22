@@ -4,8 +4,10 @@ import { Plus, GraduationCap, BookOpen, Calendar, ListChecks, Crown, Search, X }
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
+import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+
 
 export function MobileQuickActionFAB() {
   const [open, setOpen] = useState(false);
