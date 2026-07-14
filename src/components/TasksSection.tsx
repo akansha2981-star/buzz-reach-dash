@@ -55,6 +55,7 @@ export function TasksSection({ instituteId, instituteName }: { instituteId: stri
         completed_by: newStatus === "done" ? user?.id ?? null : null,
       }).eq("id", t.id);
       if (error) throw error;
+      if (newStatus === "done") await spawnNextOccurrence(t);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks", instituteId] });
