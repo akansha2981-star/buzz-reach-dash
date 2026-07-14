@@ -151,6 +151,27 @@ export function NewTaskDialog({ trigger }: Props) {
               </Select>
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Repeat</Label>
+              <Select value={recurFreq} onValueChange={(v) => setRecurFreq(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Does not repeat</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {recurFreq !== "none" && (
+              <div>
+                <Label>Every</Label>
+                <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} />
+              </div>
+            )}
+          </div>
           <label className="flex items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs">
             <Checkbox checked={pushCEO} onCheckedChange={(c) => setPushCEO(!!c)} />
             <Crown className="h-3.5 w-3.5 text-amber-600" />
