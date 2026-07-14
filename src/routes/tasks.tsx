@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskRow } from "@/components/TasksSection";
 import { NewTaskDialog } from "@/components/NewTaskDialog";
-import { fetchTasksWithInstitutes } from "@/lib/tasks";
+import { fetchTasksWithInstitutes, spawnNextOccurrence } from "@/lib/tasks";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -86,6 +86,7 @@ function TasksPage() {
         completed_by: newStatus === "done" ? user?.id ?? null : null,
       }).eq("id", t.id);
       if (error) throw error;
+      if (newStatus === "done") await spawnNextOccurrence(t);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks-all"] }),
   });

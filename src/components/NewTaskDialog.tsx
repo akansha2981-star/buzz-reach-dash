@@ -27,6 +27,8 @@ export function NewTaskDialog({ trigger }: Props) {
   const [dueAt, setDueAt] = useState("");
   const [priority, setPriority] = useState("normal");
   const [pushCEO, setPushCEO] = useState(false);
+  const [recurFreq, setRecurFreq] = useState<"none" | "daily" | "weekly" | "monthly" | "yearly">("none");
+  const [recurInterval, setRecurInterval] = useState("1");
   const [busy, setBusy] = useState(false);
 
   const { data: colleges = [] } = useQuery({ queryKey: ["institutes", "college"], queryFn: () => fetchInstitutes("college") });
@@ -34,6 +36,9 @@ export function NewTaskDialog({ trigger }: Props) {
 
   const submit = async () => {
     if (!user || !title.trim() || !instituteId) return;
+    if (recurFreq !== "none" && !dueAt) {
+      return toast.error("Set a due date for a recurring task");
+    }
     setBusy(true);
     const { data: t, error } = await supabase.from("tasks").insert({
       institute_id: instituteId,
@@ -41,6 +46,7 @@ export function NewTaskDialog({ trigger }: Props) {
       description: description.trim() || null,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       created_by: user.id,
+      recurrence_rule: recurFreq !== "none" ? { freq: recurFreq, interval: Math.max(1, Number(recurInterval) || 1) } : null,
     }).select("id").single();
 
     if (error) {
@@ -78,6 +84,8 @@ export function NewTaskDialog({ trigger }: Props) {
     setDueAt("");
     setPriority("normal");
     setPushCEO(false);
+    setRecurFreq("none");
+    setRecurInterval("1");
     setBusy(false);
   };
 
@@ -142,6 +150,27 @@ export function NewTaskDialog({ trigger }: Props) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Repeat</Label>
+              <Select value={recurFreq} onValueChange={(v) => setRecurFreq(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Does not repeat</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {recurFreq !== "none" && (
+              <div>
+                <Label>Every</Label>
+                <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} />
+              </div>
+            )}
           </div>
           <label className="flex items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs">
             <Checkbox checked={pushCEO} onCheckedChange={(c) => setPushCEO(!!c)} />

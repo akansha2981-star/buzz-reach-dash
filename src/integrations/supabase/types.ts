@@ -1446,6 +1446,8 @@ export type Database = {
           due_at: string | null
           id: string
           institute_id: string | null
+          recurrence_parent_id: string | null
+          recurrence_rule: Json | null
           status: string
           title: string
           updated_at: string
@@ -1459,6 +1461,8 @@ export type Database = {
           due_at?: string | null
           id?: string
           institute_id?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
           status?: string
           title: string
           updated_at?: string
@@ -1472,6 +1476,8 @@ export type Database = {
           due_at?: string | null
           id?: string
           institute_id?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
           status?: string
           title?: string
           updated_at?: string
