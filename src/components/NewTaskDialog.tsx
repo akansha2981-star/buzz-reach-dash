@@ -84,6 +84,8 @@ export function NewTaskDialog({ trigger }: Props) {
     setDueAt("");
     setPriority("normal");
     setPushCEO(false);
+    setRecurFreq("none");
+    setRecurInterval("1");
     setBusy(false);
   };
 
