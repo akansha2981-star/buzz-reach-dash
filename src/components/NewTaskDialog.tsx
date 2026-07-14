@@ -36,6 +36,9 @@ export function NewTaskDialog({ trigger }: Props) {
 
   const submit = async () => {
     if (!user || !title.trim() || !instituteId) return;
+    if (recurFreq !== "none" && !dueAt) {
+      return toast.error("Set a due date for a recurring task");
+    }
     setBusy(true);
     const { data: t, error } = await supabase.from("tasks").insert({
       institute_id: instituteId,
@@ -43,6 +46,7 @@ export function NewTaskDialog({ trigger }: Props) {
       description: description.trim() || null,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       created_by: user.id,
+      recurrence_rule: recurFreq !== "none" ? { freq: recurFreq, interval: Math.max(1, Number(recurInterval) || 1) } : null,
     }).select("id").single();
 
     if (error) {
