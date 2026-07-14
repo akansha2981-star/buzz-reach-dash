@@ -27,6 +27,8 @@ export function NewTaskDialog({ trigger }: Props) {
   const [dueAt, setDueAt] = useState("");
   const [priority, setPriority] = useState("normal");
   const [pushCEO, setPushCEO] = useState(false);
+  const [recurFreq, setRecurFreq] = useState<"none" | "daily" | "weekly" | "monthly" | "yearly">("none");
+  const [recurInterval, setRecurInterval] = useState("1");
   const [busy, setBusy] = useState(false);
 
   const { data: colleges = [] } = useQuery({ queryKey: ["institutes", "college"], queryFn: () => fetchInstitutes("college") });
