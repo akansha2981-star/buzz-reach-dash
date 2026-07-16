@@ -116,14 +116,44 @@ function TasksPage() {
               <SelectItem value="overdue">Overdue</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={cat} onValueChange={setCat}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="__none__">Uncategorized</SelectItem>
+              {categories.map((c) => {
+                const Icon = iconFor(c.icon);
+                return (
+                  <SelectItem key={c.id} value={c.name}>
+                    <span className="flex items-center gap-2">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-sm" style={{ backgroundColor: `${c.color}30`, color: c.color }}>
+                        <Icon className="h-3 w-3" />
+                      </span>
+                      {c.name}
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="due">Due date</SelectItem>
               <SelectItem value="priority">Priority</SelectItem>
+              <SelectItem value="category">Category</SelectItem>
               <SelectItem value="title">Title</SelectItem>
             </SelectContent>
           </Select>
+          <CategoryManager
+            trigger={
+              <Button variant="outline" size="sm" className="h-9">
+                <TagIcon className="mr-1 h-4 w-4" /> Categories
+              </Button>
+            }
+          />
           <div className="flex rounded-lg border p-0.5">
             <Button size="sm" variant={view === "list" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setView("list")}>
               <ListIcon className="h-4 w-4" />
