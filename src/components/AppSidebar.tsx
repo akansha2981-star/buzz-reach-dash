@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -148,6 +148,14 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path.startsWith("/habits")}>
                     <Link to="/habits"><Target /><span>Habits</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {can("can_my_workspace") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith("/me/confidential")}>
+                    <Link to="/me/confidential"><ShieldCheck /><span>Confidential</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
