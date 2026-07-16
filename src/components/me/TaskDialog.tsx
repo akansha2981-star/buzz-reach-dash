@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask, useUpdateTask, useDeleteTask, type MeTask, type MeTaskPriority, type RecurrenceFreq } from "@/lib/me";
-import { ME_CATEGORY_DEFS, getCategoryDef } from "@/lib/me-categories";
+import { useMyCategories, iconFor, toneStyle } from "@/lib/me-categories";
+import { CategoryManager } from "./CategoryManager";
 import { Trash2, Sparkles, Flag, CalendarClock, Bell, Tag as TagIcon, Timer, Repeat, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
