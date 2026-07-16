@@ -48,6 +48,7 @@ export function HabitDialog({
   const [customDays, setCustomDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [reminders, setReminders] = useState<string[]>([]);
   const [reminderDraft, setReminderDraft] = useState("");
+  const [notifEnabled, setNotifEnabled] = useState(true);
   const [notes, setNotes] = useState("");
   const [fields, setFields] = useState<FieldDraft[]>([]);
 
