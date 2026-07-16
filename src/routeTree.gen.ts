@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
+import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
@@ -97,6 +98,11 @@ const HrmsIndexRoute = HrmsIndexRouteImport.update({
   id: '/hrms/',
   path: '/hrms/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsIndexRoute = HabitsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HabitsRoute,
 } as any)
 const SettingsUsersRoute = SettingsUsersRouteImport.update({
   id: '/settings/users',
@@ -244,7 +250,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
-  '/habits': typeof HabitsRoute
+  '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -284,7 +291,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
-  '/habits': typeof HabitsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
@@ -307,6 +313,7 @@ export interface FileRoutesByTo {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits': typeof HabitsIndexRoute
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -324,7 +331,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
-  '/habits': typeof HabitsRoute
+  '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
@@ -348,6 +355,7 @@ export interface FileRoutesById {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -390,6 +398,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits/'
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
@@ -406,7 +415,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
-    | '/habits'
     | '/meetings'
     | '/tasks'
     | '/hrms/announcements'
@@ -429,6 +437,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits'
     | '/hrms'
     | '/me'
     | '/api/public/bootstrap-admin'
@@ -469,6 +478,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits/'
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
@@ -486,7 +496,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CeoDeskRoute: typeof CeoDeskRoute
   DocumentsRoute: typeof DocumentsRoute
-  HabitsRoute: typeof HabitsRoute
+  HabitsRoute: typeof HabitsRouteWithChildren
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
   TasksRoute: typeof TasksRoute
@@ -583,6 +593,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hrms/'
       preLoaderRoute: typeof HrmsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/habits/': {
+      id: '/habits/'
+      path: '/'
+      fullPath: '/habits/'
+      preLoaderRoute: typeof HabitsIndexRouteImport
+      parentRoute: typeof HabitsRoute
     }
     '/settings/users': {
       id: '/settings/users'
@@ -783,6 +800,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface HabitsRouteChildren {
+  HabitsIndexRoute: typeof HabitsIndexRoute
+}
+
+const HabitsRouteChildren: HabitsRouteChildren = {
+  HabitsIndexRoute: HabitsIndexRoute,
+}
+
+const HabitsRouteWithChildren =
+  HabitsRoute._addFileChildren(HabitsRouteChildren)
+
 interface MeHabitsRouteChildren {
   MeHabitsHabitIdRoute: typeof MeHabitsHabitIdRoute
 }
@@ -846,7 +874,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CeoDeskRoute: CeoDeskRoute,
   DocumentsRoute: DocumentsRoute,
-  HabitsRoute: HabitsRoute,
+  HabitsRoute: HabitsRouteWithChildren,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
   TasksRoute: TasksRoute,
