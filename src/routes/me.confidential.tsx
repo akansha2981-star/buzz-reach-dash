@@ -8,7 +8,7 @@ export const Route = createFileRoute("/me/confidential")({
 
 function ConfidentialPage() {
   return (
-    <MeShell title="Confidential Vault" subtitle="Private documents, passwords, and API keys. Only you can see them.">
+    <MeShell hideAddTask title="Confidential Vault" subtitle="Private documents, passwords, and API keys. Only you can see them.">
       <ConfidentialSection />
     </MeShell>
   );
