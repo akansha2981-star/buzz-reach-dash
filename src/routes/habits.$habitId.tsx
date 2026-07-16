@@ -35,7 +35,7 @@ function HabitDetail() {
 
   if (!habit) {
     return (
-      <MeShell title="Habit">
+      <MeShell hideAddTask title="Habit">
         <p className="text-sm text-muted-foreground">Loading…</p>
       </MeShell>
     );
