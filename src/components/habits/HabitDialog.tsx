@@ -299,60 +299,83 @@ export function HabitDialog({
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="grid grid-cols-12 gap-2 rounded-lg border border-border/60 bg-background/50 p-2"
+                      className="rounded-lg border border-border/60 bg-background/50 p-2.5"
                     >
-                      <Input
-                        className="col-span-4 h-8 text-xs"
-                        placeholder="Label (e.g. Calories)"
-                        value={f.label || ""}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setFields((fs) => fs.map((x, i) => i === idx ? { ...x, label: v } : x));
-                        }}
-                      />
-                      <Select
-                        value={f.type as string}
-                        onValueChange={(v) => {
-                          const t = v as HabitFieldType;
-                          setFields((fs) => fs.map((x, i) => i === idx ? { ...x, type: t, unit: FIELD_TYPE_META[t].unit } : x));
-                        }}
-                      >
-                        <SelectTrigger className="col-span-3 h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(FIELD_TYPE_META).map(([k, m]) => (
-                            <SelectItem key={k} value={k}>{m.icon} {m.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        className="col-span-2 h-8 text-xs"
-                        placeholder="Unit"
-                        value={f.unit ?? ""}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setFields((fs) => fs.map((x, i) => i === idx ? { ...x, unit: v } : x));
-                        }}
-                      />
-                      <Input
-                        className="col-span-2 h-8 text-xs"
-                        placeholder="Target"
-                        type="number"
-                        value={f.target_value ?? ""}
-                        onChange={(e) => {
-                          const v = e.target.value ? Number(e.target.value) : null;
-                          setFields((fs) => fs.map((x, i) => i === idx ? { ...x, target_value: v } : x));
-                        }}
-                      />
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="col-span-1 h-8 w-8 text-destructive"
-                        onClick={() => setFields((fs) => fs.map((x, i) => i === idx ? { ...x, _delete: true } : x))}
-                      ><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Field {idx + 1}
+                        </span>
+                        <div className="ml-auto">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => setFields((fs) => fs.map((x, i) => i === idx ? { ...x, _delete: true } : x))}
+                          ><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-12">
+                        <div className="col-span-2 sm:col-span-5">
+                          <Label className="mb-1 block text-[10px] text-muted-foreground">Label</Label>
+                          <Input
+                            className="h-9 text-sm"
+                            placeholder="e.g. Calories"
+                            value={f.label || ""}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setFields((fs) => fs.map((x, i) => i === idx ? { ...x, label: v } : x));
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-2 sm:col-span-3">
+                          <Label className="mb-1 block text-[10px] text-muted-foreground">Type</Label>
+                          <Select
+                            value={f.type as string}
+                            onValueChange={(v) => {
+                              const t = v as HabitFieldType;
+                              setFields((fs) => fs.map((x, i) => i === idx ? { ...x, type: t, unit: FIELD_TYPE_META[t].unit } : x));
+                            }}
+                          >
+                            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(FIELD_TYPE_META).map(([k, m]) => (
+                                <SelectItem key={k} value={k}>{m.icon} {m.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                          <Label className="mb-1 block text-[10px] text-muted-foreground">Unit</Label>
+                          <Input
+                            className="h-9 text-sm"
+                            placeholder="kg"
+                            value={f.unit ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setFields((fs) => fs.map((x, i) => i === idx ? { ...x, unit: v } : x));
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                          <Label className="mb-1 block text-[10px] text-muted-foreground">Target</Label>
+                          <Input
+                            className="h-9 text-sm"
+                            placeholder="0"
+                            type="number"
+                            inputMode="decimal"
+                            value={f.target_value ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value ? Number(e.target.value) : null;
+                              setFields((fs) => fs.map((x, i) => i === idx ? { ...x, target_value: v } : x));
+                            }}
+                          />
+                        </div>
+                      </div>
                     </motion.div>
                   )
                 )}
               </AnimatePresence>
+
             </div>
           </div>
 
