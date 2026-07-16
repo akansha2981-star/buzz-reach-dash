@@ -68,7 +68,7 @@ function HabitDetail() {
   }, [longest]);
 
   return (
-    <MeShell title={`${habit.icon || "✨"} ${habit.title}`} subtitle={`${habit.category ?? "Habit summary"} · ${habit.frequency}`}>
+    <MeShell hideAddTask title={`${habit.icon || "✨"} ${habit.title}`} subtitle={`${habit.category ?? "Habit summary"} · ${habit.frequency}`}>
       <div className="flex items-center justify-between">
         <Button asChild variant="ghost" size="sm" className="gap-1">
           <Link to="/habits"><ArrowLeft className="h-4 w-4" /> Back</Link>
