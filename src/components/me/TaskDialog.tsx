@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask, useUpdateTask, useDeleteTask, type MeTask, type MeTaskPriority, type RecurrenceFreq } from "@/lib/me";
-import { ME_CATEGORIES, CATEGORY_TONES } from "@/lib/me-categories";
-import { Trash2 } from "lucide-react";
+import { ME_CATEGORY_DEFS, getCategoryDef } from "@/lib/me-categories";
+import { Trash2, Sparkles, Flag, CalendarClock, Bell, Tag as TagIcon, Timer, Repeat, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const PRIORITY_META: Record<MeTaskPriority, { label: string; gradient: string; ring: string; icon: string }> = {
+  low:    { label: "Low",    gradient: "from-slate-400 to-slate-500",   ring: "ring-slate-400/40",  icon: "◦" },
+  medium: { label: "Medium", gradient: "from-sky-500 to-blue-500",      ring: "ring-sky-500/40",    icon: "◉" },
+  high:   { label: "High",   gradient: "from-amber-500 to-orange-500",  ring: "ring-amber-500/40",  icon: "▲" },
+  urgent: { label: "Urgent", gradient: "from-rose-500 to-red-600",      ring: "ring-rose-500/40",   icon: "⚡" },
+};
 
 type Props = {
   open: boolean;
@@ -70,77 +78,181 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
     onOpenChange(false);
   };
 
+  const activeCat = getCategoryDef(category);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit task" : "New task"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="t-title">Title</Label>
-            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" autoFocus />
+      <DialogContent className="max-w-2xl overflow-hidden p-0">
+        {/* Header with gradient accent */}
+        <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-primary/10 via-background to-background px-6 pt-6 pb-4">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+          {activeCat && (
+            <div
+              className={cn(
+                "pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-90 transition-all",
+                activeCat.gradient
+              )}
+            />
+          )}
+          <DialogHeader className="relative">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <Sparkles className="h-5 w-5 text-primary" />
+              {isEdit ? "Edit task" : "Create a new task"}
+            </DialogTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Organize with categories, priority, and reminders.
+            </p>
+          </DialogHeader>
+        </div>
+
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-5">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="t-title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title</Label>
+            <Input
+              id="t-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What needs to be done?"
+              autoFocus
+              className="h-11 border-border/60 bg-background/60 text-base font-medium shadow-sm"
+            />
           </div>
-          <div>
-            <Label htmlFor="t-desc">Notes</Label>
-            <Textarea id="t-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Optional details" />
+
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <Label htmlFor="t-desc" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</Label>
+            <Textarea
+              id="t-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder="Optional details…"
+              className="resize-none border-border/60 bg-background/60 shadow-sm"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Priority</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as MeTaskPriority)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
+
+          {/* Category — advanced chip grid */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <TagIcon className="h-3.5 w-3.5" /> Category
+              </Label>
+              {activeCat && (
+                <button
+                  type="button"
+                  onClick={() => setCategory("")}
+                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  Clear
+                </button>
+              )}
             </div>
-            <div>
-              <Label>Category</Label>
-              <Select value={category || "__none__"} onValueChange={(v) => setCategory(v === "__none__" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
-                  {ME_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      <span className="flex items-center gap-2">
-                        <span className={cn("inline-block h-2.5 w-2.5 rounded-full border", CATEGORY_TONES[c])} />
-                        {c}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
+              {ME_CATEGORY_DEFS.map((c) => {
+                const Icon = c.icon;
+                const active = category === c.key;
+                return (
+                  <motion.button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setCategory(active ? "" : c.key)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className={cn(
+                      "group relative flex items-center gap-1.5 overflow-hidden rounded-xl border px-2.5 py-2 text-left text-xs font-semibold transition-all",
+                      active
+                        ? "border-transparent text-white shadow-md ring-2 ring-offset-1 ring-offset-background"
+                        : "border-border/70 bg-background/40 text-foreground hover:border-border hover:bg-muted/50",
+                      active && c.ring
+                    )}
+                  >
+                    {active && (
+                      <span className={cn("absolute inset-0 bg-gradient-to-br", c.gradient)} aria-hidden />
+                    )}
+                    {!active && (
+                      <span
+                        className={cn("absolute left-0 top-0 h-full w-1 bg-gradient-to-b transition-opacity group-hover:opacity-100 opacity-80", c.gradient)}
+                        aria-hidden
+                      />
+                    )}
+                    <Icon className={cn("relative h-3.5 w-3.5 shrink-0", active ? "text-white" : "")} style={active ? undefined : { color: c.dot }} />
+                    <span className="relative truncate">{c.label}</span>
+                    {active && <Check className="relative ml-auto h-3.5 w-3.5" />}
+                  </motion.button>
+                );
+              })}
             </div>
-            <div>
-              <Label>Due date</Label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+
+          {/* Priority — segmented control */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Flag className="h-3.5 w-3.5" /> Priority
+            </Label>
+            <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-border/60 bg-muted/30 p-1">
+              {(Object.keys(PRIORITY_META) as MeTaskPriority[]).map((p) => {
+                const meta = PRIORITY_META[p];
+                const active = priority === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPriority(p)}
+                    className={cn(
+                      "relative overflow-hidden rounded-lg px-2 py-1.5 text-xs font-semibold transition-all",
+                      active ? "text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="priority-active"
+                        className={cn("absolute inset-0 bg-gradient-to-br", meta.gradient)}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center gap-1">
+                      <span aria-hidden>{meta.icon}</span> {meta.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <div>
-              <Label>Due time</Label>
-              <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+          </div>
+
+          {/* Schedule row */}
+          <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+            <div className="col-span-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" /> Schedule
             </div>
-            <div className="col-span-2">
-              <Label>Reminder</Label>
-              <Input type="datetime-local" value={reminderAt} onChange={(e) => setReminderAt(e.target.value)} />
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Due date</Label>
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 bg-background/70" />
             </div>
-            <div>
-              <Label>Tags</Label>
-              <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="comma, separated" />
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Due time</Label>
+              <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} className="h-9 bg-background/70" />
             </div>
-            <div>
-              <Label>Est. minutes</Label>
-              <Input type="number" value={estimated} onChange={(e) => setEstimated(e.target.value)} />
+            <div className="col-span-2 space-y-1">
+              <Label className="flex items-center gap-1 text-[11px] text-muted-foreground"><Bell className="h-3 w-3" /> Reminder</Label>
+              <Input type="datetime-local" value={reminderAt} onChange={(e) => setReminderAt(e.target.value)} className="h-9 bg-background/70" />
             </div>
-            <div>
-              <Label>Repeat</Label>
+          </div>
+
+          {/* Meta row */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><TagIcon className="h-3 w-3" /> Tags</Label>
+              <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="comma, separated" className="h-9" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Timer className="h-3 w-3" /> Est. min</Label>
+              <Input type="number" value={estimated} onChange={(e) => setEstimated(e.target.value)} placeholder="30" className="h-9" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Repeat className="h-3 w-3" /> Repeat</Label>
               <Select value={recurFreq} onValueChange={(v) => setRecurFreq(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   <SelectItem value="daily">Daily</SelectItem>
@@ -150,23 +262,36 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                 </SelectContent>
               </Select>
             </div>
-            {recurFreq !== "none" && (
-              <div>
-                <Label>Every N</Label>
-                <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} />
-              </div>
-            )}
+            <AnimatePresence>
+              {recurFreq !== "none" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-1.5"
+                >
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Every N</Label>
+                  <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-9" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-        <DialogFooter className="gap-2">
+
+        <DialogFooter className="gap-2 border-t border-border/60 bg-muted/20 px-6 py-3">
           {isEdit && (
-            <Button variant="ghost" className="mr-auto text-rose-600" onClick={async () => { await del.mutateAsync(task!.id); onOpenChange(false); }}>
+            <Button variant="ghost" className="mr-auto text-rose-600 hover:bg-rose-500/10 hover:text-rose-700" onClick={async () => { await del.mutateAsync(task!.id); onOpenChange(false); }}>
               <Trash2 className="mr-1 h-4 w-4" /> Delete
             </Button>
           )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={!title.trim() || create.isPending || update.isPending}>
-            {isEdit ? "Save" : "Add task"}
+          <Button
+            onClick={submit}
+            disabled={!title.trim() || create.isPending || update.isPending}
+            className="bg-gradient-to-br from-primary to-primary/80 shadow-md hover:shadow-lg"
+          >
+            <Sparkles className="mr-1 h-4 w-4" />
+            {isEdit ? "Save changes" : "Create task"}
           </Button>
         </DialogFooter>
       </DialogContent>
