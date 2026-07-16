@@ -1274,6 +1274,7 @@ export type Database = {
           icon: string | null
           id: string
           notes: string | null
+          notifications_enabled: boolean
           reminder_times: string[] | null
           start_date: string | null
           target_per_week: number
@@ -1292,6 +1293,7 @@ export type Database = {
           icon?: string | null
           id?: string
           notes?: string | null
+          notifications_enabled?: boolean
           reminder_times?: string[] | null
           start_date?: string | null
           target_per_week?: number
@@ -1310,6 +1312,7 @@ export type Database = {
           icon?: string | null
           id?: string
           notes?: string | null
+          notifications_enabled?: boolean
           reminder_times?: string[] | null
           start_date?: string | null
           target_per_week?: number

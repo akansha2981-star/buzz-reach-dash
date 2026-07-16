@@ -31,6 +31,7 @@ export interface Habit {
   archived: boolean;
   notes: string | null;
   active: boolean;
+  notifications_enabled: boolean;
   created_at: string;
 }
 

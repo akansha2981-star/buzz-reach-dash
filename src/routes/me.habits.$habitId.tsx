@@ -18,6 +18,7 @@ import {
 } from "@/lib/habits";
 import { CheckInDialog } from "@/components/habits/CheckInDialog";
 import { HabitDialog } from "@/components/habits/HabitDialog";
+import { HabitCalendar } from "@/components/habits/HabitCalendar";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/me/habits/$habitId")({
@@ -192,6 +193,9 @@ function HabitDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Calendar view */}
+      <HabitCalendar habit={habit} logs={logs} />
 
       {/* History */}
       <Card>

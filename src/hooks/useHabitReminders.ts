@@ -27,6 +27,7 @@ export function useHabitReminders(habits: Habit[]) {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (const h of habits) {
+      if (h.notifications_enabled === false) continue;
       if (!isDueOn(h, now)) continue;
       const times = h.reminder_times ?? [];
       for (const t of times) {

@@ -1,0 +1,1 @@
+ALTER TABLE public.me_habits ADD COLUMN IF NOT EXISTS notifications_enabled boolean NOT NULL DEFAULT true;
