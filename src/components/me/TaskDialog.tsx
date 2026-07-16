@@ -78,13 +78,6 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
     onOpenChange(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit task" : "New task"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
   const activeCat = getCategoryDef(category);
 
   return (
