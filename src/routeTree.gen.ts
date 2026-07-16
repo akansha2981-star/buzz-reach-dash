@@ -28,6 +28,7 @@ import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as MeTasksRouteImport } from './routes/me.tasks'
 import { Route as MeHabitsRouteImport } from './routes/me.habits'
 import { Route as MeFocusRouteImport } from './routes/me.focus'
+import { Route as MeConfidentialRouteImport } from './routes/me.confidential'
 import { Route as MeCalendarRouteImport } from './routes/me.calendar'
 import { Route as MeAnalyticsRouteImport } from './routes/me.analytics'
 import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
@@ -141,6 +142,11 @@ const MeFocusRoute = MeFocusRouteImport.update({
   path: '/focus',
   getParentRoute: () => MeRoute,
 } as any)
+const MeConfidentialRoute = MeConfidentialRouteImport.update({
+  id: '/confidential',
+  path: '/confidential',
+  getParentRoute: () => MeRoute,
+} as any)
 const MeCalendarRoute = MeCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/hrms/tasks': typeof HrmsTasksRoute
   '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
   '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/hrms/tasks': typeof HrmsTasksRoute
   '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
   '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/hrms/tasks': typeof HrmsTasksRoute
   '/me/analytics': typeof MeAnalyticsRoute
   '/me/calendar': typeof MeCalendarRoute
+  '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
   '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/hrms/tasks'
     | '/me/analytics'
     | '/me/calendar'
+    | '/me/confidential'
     | '/me/focus'
     | '/me/habits'
     | '/me/tasks'
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/hrms/tasks'
     | '/me/analytics'
     | '/me/calendar'
+    | '/me/confidential'
     | '/me/focus'
     | '/me/habits'
     | '/me/tasks'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/hrms/tasks'
     | '/me/analytics'
     | '/me/calendar'
+    | '/me/confidential'
     | '/me/focus'
     | '/me/habits'
     | '/me/tasks'
@@ -622,6 +634,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeFocusRouteImport
       parentRoute: typeof MeRoute
     }
+    '/me/confidential': {
+      id: '/me/confidential'
+      path: '/confidential'
+      fullPath: '/me/confidential'
+      preLoaderRoute: typeof MeConfidentialRouteImport
+      parentRoute: typeof MeRoute
+    }
     '/me/calendar': {
       id: '/me/calendar'
       path: '/calendar'
@@ -759,6 +778,7 @@ const MeHabitsRouteWithChildren = MeHabitsRoute._addFileChildren(
 interface MeRouteChildren {
   MeAnalyticsRoute: typeof MeAnalyticsRoute
   MeCalendarRoute: typeof MeCalendarRoute
+  MeConfidentialRoute: typeof MeConfidentialRoute
   MeFocusRoute: typeof MeFocusRoute
   MeHabitsRoute: typeof MeHabitsRouteWithChildren
   MeTasksRoute: typeof MeTasksRoute
@@ -768,6 +788,7 @@ interface MeRouteChildren {
 const MeRouteChildren: MeRouteChildren = {
   MeAnalyticsRoute: MeAnalyticsRoute,
   MeCalendarRoute: MeCalendarRoute,
+  MeConfidentialRoute: MeConfidentialRoute,
   MeFocusRoute: MeFocusRoute,
   MeHabitsRoute: MeHabitsRouteWithChildren,
   MeTasksRoute: MeTasksRoute,
