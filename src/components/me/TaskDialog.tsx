@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask, useUpdateTask, useDeleteTask, type MeTask, type MeTaskPriority, type RecurrenceFreq } from "@/lib/me";
+import { ME_CATEGORIES, CATEGORY_TONES } from "@/lib/me-categories";
 import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -98,7 +100,22 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
             </div>
             <div>
               <Label>Category</Label>
-              <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Work" />
+              <Select value={category || "__none__"} onValueChange={(v) => setCategory(v === "__none__" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None</SelectItem>
+                  {ME_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn("inline-block h-2.5 w-2.5 rounded-full border", CATEGORY_TONES[c])} />
+                        {c}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Due date</Label>
