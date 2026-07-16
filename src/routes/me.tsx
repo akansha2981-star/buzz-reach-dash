@@ -13,7 +13,6 @@ const TABS = [
   { to: "/me/tasks", label: "Tasks", icon: ListChecks },
   { to: "/me/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/me/focus", label: "Focus", icon: Timer },
-  { to: "/me/habits", label: "Habits", icon: Target },
   { to: "/me/confidential", label: "Vault", icon: ShieldCheck },
   { to: "/me/analytics", label: "Analytics", icon: BarChart3 },
 ];
