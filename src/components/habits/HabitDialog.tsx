@@ -104,9 +104,10 @@ export function HabitDialog({
         frequency,
         custom_days: frequency === "custom" ? customDays : [],
         reminder_times: reminders,
+        notifications_enabled: notifEnabled,
         notes: notes || null,
         color: "hsl(var(--primary))",
-      },
+      } as any,
       fields: fields.map((f, i) => ({
         id: (existing.find((e) => e.id === f._tmpId)?.id) ?? undefined,
         key: (f.label || `field_${i}`).toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 32),
