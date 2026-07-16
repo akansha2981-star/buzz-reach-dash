@@ -9,7 +9,7 @@ import { TaskDialog } from "./TaskDialog";
 import { useTaskReminderEngine } from "@/hooks/useTaskReminderEngine";
 import { cn } from "@/lib/utils";
 
-export function MeShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
+export function MeShell({ children, title, subtitle, hideAddTask = false }: { children: ReactNode; title: string; subtitle?: string; hideAddTask?: boolean }) {
   useTaskReminderEngine();
   const [quickOpen, setQuickOpen] = useState(false);
 
