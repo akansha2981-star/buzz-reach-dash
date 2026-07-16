@@ -213,7 +213,31 @@ export function HabitDialog({
 
           {/* Reminders */}
           <div>
-            <Label className="mb-1 block text-xs flex items-center gap-1"><Bell className="h-3 w-3" /> Reminder times</Label>
+            <div className="mb-1 flex items-center justify-between">
+              <Label className="flex items-center gap-1 text-xs"><Bell className="h-3 w-3" /> Reminder times</Label>
+              <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+                <span>Notifications</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = !notifEnabled;
+                    setNotifEnabled(next);
+                    if (next && typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+                      try { await Notification.requestPermission(); } catch {}
+                    }
+                  }}
+                  className={cn(
+                    "relative h-5 w-9 rounded-full transition-colors",
+                    notifEnabled ? "bg-primary" : "bg-muted-foreground/30"
+                  )}
+                >
+                  <span className={cn(
+                    "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
+                    notifEnabled ? "left-4" : "left-0.5"
+                  )} />
+                </button>
+              </label>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               <AnimatePresence>
                 {reminders.map((t) => (
