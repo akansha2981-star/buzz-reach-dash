@@ -30,12 +30,14 @@ export function MeShell({ children, title, subtitle, hideAddTask = false }: { ch
           </div>
           <div className="flex items-center gap-2">
             <BellPopover />
-            <Button
-              onClick={() => setQuickOpen(true)}
-              className="hidden gap-1.5 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-md hover:shadow-lg sm:inline-flex"
-            >
-              <Plus className="h-4 w-4" /> New task
-            </Button>
+            {!hideAddTask && (
+              <Button
+                onClick={() => setQuickOpen(true)}
+                className="hidden gap-1.5 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-md hover:shadow-lg sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" /> New task
+              </Button>
+            )}
           </div>
         </div>
       </div>
