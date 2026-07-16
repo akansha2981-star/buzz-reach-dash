@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
