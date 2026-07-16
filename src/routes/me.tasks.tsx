@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, LayoutGrid, List as ListIcon, Plus, CheckCircle2, Clock, AlertCircle, Flame } from "lucide-react";
+import { Search, LayoutGrid, List as ListIcon, Plus, CheckCircle2, Clock, AlertCircle, Flame, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
+import { CategoryManager } from "@/components/me/CategoryManager";
 import { useMyTasks, useCreateTask, deriveStatus, useUpdateTask, type MeTask, type MeTaskStatus, type MeTaskPriority } from "@/lib/me";
+import { useMyCategories, iconFor } from "@/lib/me-categories";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 
@@ -25,30 +27,48 @@ const KANBAN_COLS: { key: MeTaskStatus; label: string; tone: string }[] = [
 
 function TasksPage() {
   const { data: tasks = [] } = useMyTasks();
+  const { data: categories = [] } = useMyCategories();
   const [view, setView] = useState<"list" | "kanban">("list");
   const [q, setQ] = useState("");
   const [pri, setPri] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [cat, setCat] = useState<string>("all");
   const [sort, setSort] = useState<string>("due");
+
+  const catOrder = useMemo(() => {
+    const m = new Map<string, number>();
+    categories.forEach((c, i) => m.set(c.name, i));
+    return m;
+  }, [categories]);
 
   const filtered = useMemo(() => {
     const r = tasks.filter((t) => {
       if (q && !(`${t.title} ${t.description ?? ""} ${(t.tags ?? []).join(" ")} ${t.category ?? ""}`).toLowerCase().includes(q.toLowerCase())) return false;
       if (pri !== "all" && t.priority !== pri) return false;
       if (status !== "all" && deriveStatus(t) !== status) return false;
+      if (cat !== "all") {
+        if (cat === "__none__") { if (t.category) return false; }
+        else if (t.category !== cat) return false;
+      }
       return true;
     });
     const PRI_ORDER: Record<MeTaskPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
     r.sort((a, b) => {
       if (sort === "priority") return PRI_ORDER[a.priority] - PRI_ORDER[b.priority];
       if (sort === "title") return a.title.localeCompare(b.title);
+      if (sort === "category") {
+        const ao = a.category ? (catOrder.get(a.category) ?? 999) : 1000;
+        const bo = b.category ? (catOrder.get(b.category) ?? 999) : 1000;
+        if (ao !== bo) return ao - bo;
+        return (a.category ?? "").localeCompare(b.category ?? "");
+      }
       // due
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
       return a.due_date.localeCompare(b.due_date);
     });
     return r;
-  }, [tasks, q, pri, status, sort]);
+  }, [tasks, q, pri, status, cat, sort, catOrder]);
 
   const stats = useMemo(() => {
     const s = { total: tasks.length, completed: 0, pending: 0, overdue: 0, urgent: 0 };
