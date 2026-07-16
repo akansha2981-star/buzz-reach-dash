@@ -12,7 +12,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToggleComplete, useDeleteTask, deriveStatus, PRIORITY_TONES, STATUS_TONES, type MeTask } from "@/lib/me";
-import { categoryTone } from "@/lib/me-categories";
+import { useMyCategories, iconFor, toneStyle } from "@/lib/me-categories";
 import { TaskDialog } from "./TaskDialog";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
