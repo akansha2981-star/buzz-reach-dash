@@ -1063,27 +1063,89 @@ export type Database = {
         }
         Relationships: []
       }
+      me_habit_fields: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          key: string
+          label: string
+          sort_order: number
+          target_period: string | null
+          target_value: number | null
+          type: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id?: string
+          key: string
+          label: string
+          sort_order?: number
+          target_period?: string | null
+          target_value?: number | null
+          type: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          key?: string
+          label?: string
+          sort_order?: number
+          target_period?: string | null
+          target_value?: number | null
+          type?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "me_habit_fields_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "me_habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       me_habit_logs: {
         Row: {
           done: boolean
           habit_id: string
           id: string
           log_date: string
+          notes: string | null
+          updated_at: string
           user_id: string
+          values: Json
         }
         Insert: {
           done?: boolean
           habit_id: string
           id?: string
           log_date: string
+          notes?: string | null
+          updated_at?: string
           user_id: string
+          values?: Json
         }
         Update: {
           done?: boolean
           habit_id?: string
           id?: string
           log_date?: string
+          notes?: string | null
+          updated_at?: string
           user_id?: string
+          values?: Json
         }
         Relationships: [
           {
@@ -1098,29 +1160,56 @@ export type Database = {
       me_habits: {
         Row: {
           active: boolean
+          archived: boolean
+          category: string | null
           color: string
           created_at: string
+          custom_days: number[] | null
+          frequency: string
+          icon: string | null
           id: string
+          notes: string | null
+          reminder_times: string[] | null
+          start_date: string | null
           target_per_week: number
           title: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           active?: boolean
+          archived?: boolean
+          category?: string | null
           color?: string
           created_at?: string
+          custom_days?: number[] | null
+          frequency?: string
+          icon?: string | null
           id?: string
+          notes?: string | null
+          reminder_times?: string[] | null
+          start_date?: string | null
           target_per_week?: number
           title: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           active?: boolean
+          archived?: boolean
+          category?: string | null
           color?: string
           created_at?: string
+          custom_days?: number[] | null
+          frequency?: string
+          icon?: string | null
           id?: string
+          notes?: string | null
+          reminder_times?: string[] | null
+          start_date?: string | null
           target_per_week?: number
           title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
