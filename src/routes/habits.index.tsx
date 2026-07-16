@@ -14,7 +14,7 @@ export const Route = createFileRoute("/habits/")({
 
 function HabitsPage() {
   return (
-    <MeShell title="Habit Tracker" subtitle="Track anything, build streaks, achieve targets.">
+    <MeShell hideAddTask title="Habit Tracker" subtitle="Track anything, build streaks, achieve targets.">
       <HabitsSection />
     </MeShell>
   );
