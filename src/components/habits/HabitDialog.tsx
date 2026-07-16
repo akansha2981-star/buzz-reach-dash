@@ -66,10 +66,11 @@ export function HabitDialog({
       setFrequency(habit.frequency);
       setCustomDays(habit.custom_days ?? []);
       setReminders(habit.reminder_times ?? []);
+      setNotifEnabled(habit.notifications_enabled !== false);
       setNotes(habit.notes ?? "");
     } else {
       setTitle(""); setIcon("✨"); setCategory(""); setStartDate(new Date().toISOString().slice(0, 10));
-      setFrequency("daily"); setCustomDays([1,2,3,4,5]); setReminders([]); setNotes(""); setFields([]);
+      setFrequency("daily"); setCustomDays([1,2,3,4,5]); setReminders([]); setNotifEnabled(true); setNotes(""); setFields([]);
     }
   }, [open, habit?.id]);
 
