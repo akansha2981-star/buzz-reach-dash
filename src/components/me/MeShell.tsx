@@ -44,17 +44,21 @@ export function MeShell({ children, title, subtitle, hideAddTask = false }: { ch
 
       {children}
 
-      {/* Mobile floating add */}
-      <Button
-        onClick={() => setQuickOpen(true)}
-        size="icon"
-        aria-label="New task"
-        className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary-glow shadow-2xl ring-4 ring-background sm:hidden"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {!hideAddTask && (
+        <>
+          {/* Mobile floating add */}
+          <Button
+            onClick={() => setQuickOpen(true)}
+            size="icon"
+            aria-label="New task"
+            className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary-glow shadow-2xl ring-4 ring-background sm:hidden"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
 
-      <TaskDialog open={quickOpen} onOpenChange={setQuickOpen} />
+          <TaskDialog open={quickOpen} onOpenChange={setQuickOpen} />
+        </>
+      )}
     </div>
   );
 }
