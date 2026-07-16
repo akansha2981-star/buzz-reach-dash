@@ -1,62 +1,184 @@
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 import {
-  Megaphone,
-  Settings2,
-  TrendingUp,
-  Wallet,
-  Users,
-  Package,
-  Palette,
-  Code2,
-  ClipboardList,
-  Heart,
-  Video,
-  FlaskConical,
-  Sparkles,
+  Megaphone, Settings2, TrendingUp, Wallet, Users, Package, Palette,
+  Code2, ClipboardList, Heart, Video, FlaskConical, Sparkles, Tag,
   type LucideIcon,
 } from "lucide-react";
 
-export type MeCategoryDef = {
-  key: string;
-  label: string;
-  icon: LucideIcon;
-  /** Solid gradient used for the active pill */
-  gradient: string;
-  /** Soft tone used for badges on cards */
-  tone: string;
-  /** Ring color used for focus/hover */
-  ring: string;
-  /** Hex dot for select fallback */
-  dot: string;
+export type MeCategory = {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 };
 
-export const ME_CATEGORY_DEFS: MeCategoryDef[] = [
-  { key: "Marketing",   label: "Marketing",   icon: Megaphone,     gradient: "from-pink-500 to-rose-500",         tone: "bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/40",         ring: "ring-pink-500/40",       dot: "#ec4899" },
-  { key: "Operations",  label: "Operations",  icon: Settings2,     gradient: "from-blue-500 to-indigo-500",       tone: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/40",         ring: "ring-blue-500/40",       dot: "#3b82f6" },
-  { key: "Sales",       label: "Sales",       icon: TrendingUp,    gradient: "from-emerald-500 to-green-500",     tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40", ring: "ring-emerald-500/40", dot: "#10b981" },
-  { key: "Finance",     label: "Finance",     icon: Wallet,        gradient: "from-amber-500 to-orange-500",      tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40",     ring: "ring-amber-500/40",      dot: "#f59e0b" },
-  { key: "HR",          label: "HR",          icon: Users,         gradient: "from-purple-500 to-violet-500",     tone: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/40", ring: "ring-purple-500/40",     dot: "#a855f7" },
-  { key: "Product",     label: "Product",     icon: Package,       gradient: "from-indigo-500 to-blue-600",       tone: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/40", ring: "ring-indigo-500/40",     dot: "#6366f1" },
-  { key: "Design",      label: "Design",      icon: Palette,       gradient: "from-fuchsia-500 to-pink-500",      tone: "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/40", ring: "ring-fuchsia-500/40", dot: "#d946ef" },
-  { key: "Engineering", label: "Engineering", icon: Code2,         gradient: "from-cyan-500 to-sky-500",          tone: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/40",         ring: "ring-cyan-500/40",       dot: "#06b6d4" },
-  { key: "Admin",       label: "Admin",       icon: ClipboardList, gradient: "from-slate-500 to-zinc-600",        tone: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/40",     ring: "ring-slate-500/40",      dot: "#64748b" },
-  { key: "Personal",    label: "Personal",    icon: Heart,         gradient: "from-teal-500 to-emerald-500",      tone: "bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/40",         ring: "ring-teal-500/40",       dot: "#14b8a6" },
-  { key: "Meetings",    label: "Meetings",    icon: Video,         gradient: "from-orange-500 to-red-500",        tone: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/40", ring: "ring-orange-500/40",     dot: "#f97316" },
-  { key: "Research",    label: "Research",    icon: FlaskConical,  gradient: "from-violet-500 to-purple-600",     tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/40", ring: "ring-violet-500/40",     dot: "#8b5cf6" },
-  { key: "Other",       label: "Other",       icon: Sparkles,      gradient: "from-gray-400 to-gray-500",         tone: "bg-muted text-muted-foreground border-border",                               ring: "ring-muted-foreground/30", dot: "#9ca3af" },
+// Preset color palette for the picker
+export const CATEGORY_COLORS = [
+  "#ec4899", "#f43f5e", "#f97316", "#f59e0b", "#eab308",
+  "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4",
+  "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7",
+  "#d946ef", "#64748b", "#78716c",
 ];
 
-export const ME_CATEGORIES = ME_CATEGORY_DEFS.map((c) => c.key);
+// Icon registry — keys stored in db, resolved to component here
+export const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  megaphone: Megaphone,
+  settings: Settings2,
+  trending: TrendingUp,
+  wallet: Wallet,
+  users: Users,
+  package: Package,
+  palette: Palette,
+  code: Code2,
+  clipboard: ClipboardList,
+  heart: Heart,
+  video: Video,
+  flask: FlaskConical,
+  sparkles: Sparkles,
+  tag: Tag,
+};
 
-export const CATEGORY_TONES: Record<string, string> = Object.fromEntries(
-  ME_CATEGORY_DEFS.map((c) => [c.key, c.tone])
-);
+export const CATEGORY_ICON_KEYS = Object.keys(CATEGORY_ICONS);
 
-export function getCategoryDef(cat?: string | null): MeCategoryDef | undefined {
-  if (!cat) return undefined;
-  return ME_CATEGORY_DEFS.find((c) => c.key === cat);
+export function iconFor(key?: string | null): LucideIcon {
+  if (!key) return Tag;
+  return CATEGORY_ICONS[key] ?? Tag;
 }
 
-export function categoryTone(cat?: string | null) {
-  const def = getCategoryDef(cat);
-  return def?.tone ?? "bg-muted text-muted-foreground border-border";
+// Default categories seeded into DB the first time a user opens the manager
+export const DEFAULT_CATEGORIES: Array<Omit<MeCategory, "id" | "user_id" | "created_at" | "updated_at">> = [
+  { name: "Marketing",   color: "#ec4899", icon: "megaphone",  sort_order: 0 },
+  { name: "Operations",  color: "#3b82f6", icon: "settings",   sort_order: 1 },
+  { name: "Sales",       color: "#10b981", icon: "trending",   sort_order: 2 },
+  { name: "Finance",     color: "#f59e0b", icon: "wallet",     sort_order: 3 },
+  { name: "HR",          color: "#a855f7", icon: "users",      sort_order: 4 },
+  { name: "Product",     color: "#6366f1", icon: "package",    sort_order: 5 },
+  { name: "Design",      color: "#d946ef", icon: "palette",    sort_order: 6 },
+  { name: "Engineering", color: "#06b6d4", icon: "code",       sort_order: 7 },
+  { name: "Personal",    color: "#14b8a6", icon: "heart",      sort_order: 8 },
+  { name: "Meetings",    color: "#f97316", icon: "video",      sort_order: 9 },
+];
+
+// Tone helper (soft badge style) from hex color
+export function toneStyle(color?: string | null): React.CSSProperties {
+  const c = color || "#64748b";
+  return {
+    backgroundColor: `${c}22`,
+    color: c,
+    borderColor: `${c}55`,
+  };
+}
+
+export function useMyCategories() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: ["me-categories", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("me_categories")
+        .select("*")
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      let rows = (data ?? []) as MeCategory[];
+      // Seed defaults on first use
+      if (rows.length === 0 && user) {
+        const payload = DEFAULT_CATEGORIES.map((d) => ({ ...d, user_id: user.id }));
+        const { data: inserted, error: insErr } = await supabase
+          .from("me_categories")
+          .insert(payload)
+          .select("*");
+        if (insErr) {
+          // If seeding failed (duplicate name race, etc.), silently return whatever's there
+          const { data: retry } = await supabase.from("me_categories").select("*").order("sort_order");
+          rows = (retry ?? []) as MeCategory[];
+        } else {
+          rows = (inserted ?? []) as MeCategory[];
+          qc.invalidateQueries({ queryKey: ["me-categories", user.id] });
+        }
+      }
+      return rows;
+    },
+  });
+}
+
+export function useCreateCategory() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (input: { name: string; color: string; icon?: string | null }) => {
+      const name = input.name.trim();
+      if (!name) throw new Error("Name required");
+      const { data, error } = await supabase
+        .from("me_categories")
+        .insert({ user_id: user!.id, name, color: input.color, icon: input.icon ?? "tag" })
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data as MeCategory;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me-categories", user?.id] });
+      toast.success("Category created");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useUpdateCategory() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, patch, previousName }: { id: string; patch: Partial<MeCategory>; previousName?: string }) => {
+      const { data, error } = await supabase
+        .from("me_categories")
+        .update(patch as any)
+        .eq("id", id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      // If renamed, cascade to tasks using the old name
+      if (patch.name && previousName && patch.name !== previousName && user) {
+        await supabase.from("me_tasks").update({ category: patch.name }).eq("user_id", user.id).eq("category", previousName);
+      }
+      return data as MeCategory;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me-categories", user?.id] });
+      qc.invalidateQueries({ queryKey: ["me-tasks", user?.id] });
+      toast.success("Category updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useDeleteCategory() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from("me_categories").delete().eq("id", id);
+      if (error) throw error;
+      // Clear the category on tasks that referenced it
+      if (user) {
+        await supabase.from("me_tasks").update({ category: null }).eq("user_id", user.id).eq("category", name);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me-categories", user?.id] });
+      qc.invalidateQueries({ queryKey: ["me-tasks", user?.id] });
+      toast.success("Category deleted");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 }
