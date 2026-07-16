@@ -79,7 +79,8 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
     onOpenChange(false);
   };
 
-  const activeCat = getCategoryDef(category);
+  const { data: categories = [] } = useMyCategories();
+  const activeCat = categories.find((c) => c.name === category) ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,10 +90,8 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
           {activeCat && (
             <div
-              className={cn(
-                "pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-90 transition-all",
-                activeCat.gradient
-              )}
+              className="pointer-events-none absolute inset-x-0 top-0 h-1 opacity-90 transition-all"
+              style={{ backgroundColor: activeCat.color }}
             />
           )}
           <DialogHeader className="relative">
@@ -139,51 +138,67 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
               <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <TagIcon className="h-3.5 w-3.5" /> Category
               </Label>
-              {activeCat && (
-                <button
-                  type="button"
-                  onClick={() => setCategory("")}
-                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
-              {ME_CATEGORY_DEFS.map((c) => {
-                const Icon = c.icon;
-                const active = category === c.key;
-                return (
-                  <motion.button
-                    key={c.key}
+              <div className="flex items-center gap-2">
+                {activeCat && (
+                  <button
                     type="button"
-                    onClick={() => setCategory(active ? "" : c.key)}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    className={cn(
-                      "group relative flex items-center gap-1.5 overflow-hidden rounded-xl border px-2.5 py-2 text-left text-xs font-semibold transition-all",
-                      active
-                        ? "border-transparent text-white shadow-md ring-2 ring-offset-1 ring-offset-background"
-                        : "border-border/70 bg-background/40 text-foreground hover:border-border hover:bg-muted/50",
-                      active && c.ring
-                    )}
+                    onClick={() => setCategory("")}
+                    className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                   >
-                    {active && (
-                      <span className={cn("absolute inset-0 bg-gradient-to-br", c.gradient)} aria-hidden />
-                    )}
-                    {!active && (
-                      <span
-                        className={cn("absolute left-0 top-0 h-full w-1 bg-gradient-to-b transition-opacity group-hover:opacity-100 opacity-80", c.gradient)}
-                        aria-hidden
-                      />
-                    )}
-                    <Icon className={cn("relative h-3.5 w-3.5 shrink-0", active ? "text-white" : "")} style={active ? undefined : { color: c.dot }} />
-                    <span className="relative truncate">{c.label}</span>
-                    {active && <Check className="relative ml-auto h-3.5 w-3.5" />}
-                  </motion.button>
-                );
-              })}
+                    Clear
+                  </button>
+                )}
+                <CategoryManager
+                  trigger={
+                    <button type="button" className="text-[11px] font-medium text-primary underline-offset-2 hover:underline">
+                      Manage
+                    </button>
+                  }
+                />
+              </div>
             </div>
+            {categories.length === 0 ? (
+              <p className="rounded-lg border border-dashed py-4 text-center text-xs text-muted-foreground">
+                No categories yet — click <span className="font-medium text-primary">Manage</span> to add one.
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
+                {categories.map((c) => {
+                  const Icon = iconFor(c.icon);
+                  const active = category === c.name;
+                  return (
+                    <motion.button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCategory(active ? "" : c.name)}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.96 }}
+                      className={cn(
+                        "group relative flex items-center gap-1.5 overflow-hidden rounded-xl border px-2.5 py-2 text-left text-xs font-semibold transition-all",
+                        active
+                          ? "border-transparent text-white shadow-md ring-2 ring-offset-1 ring-offset-background"
+                          : "border-border/70 bg-background/40 text-foreground hover:border-border hover:bg-muted/50"
+                      )}
+                      style={active ? { backgroundColor: c.color, boxShadow: `0 0 0 2px ${c.color}55` } : undefined}
+                    >
+                      {!active && (
+                        <span
+                          className="absolute left-0 top-0 h-full w-1"
+                          style={{ backgroundColor: c.color }}
+                          aria-hidden
+                        />
+                      )}
+                      <Icon
+                        className={cn("relative h-3.5 w-3.5 shrink-0")}
+                        style={active ? undefined : { color: c.color }}
+                      />
+                      <span className="relative truncate">{c.name}</span>
+                      {active && <Check className="relative ml-auto h-3.5 w-3.5" />}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Priority — segmented control */}
