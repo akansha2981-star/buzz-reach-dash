@@ -33,9 +33,11 @@ export function MeShell({ children, title, subtitle, hideAddTask = false }: { ch
             {!hideAddTask && (
               <Button
                 onClick={() => setQuickOpen(true)}
-                className="hidden gap-1.5 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-md hover:shadow-lg sm:inline-flex"
+                size="sm"
+                className="gap-1.5 rounded-xl bg-gradient-to-br from-primary to-primary-glow px-3 shadow-md hover:shadow-lg sm:size-default sm:px-4"
               >
-                <Plus className="h-4 w-4" /> New task
+                <Plus className="h-4 w-4" />
+                <span>New task</span>
               </Button>
             )}
           </div>
@@ -45,19 +47,7 @@ export function MeShell({ children, title, subtitle, hideAddTask = false }: { ch
       {children}
 
       {!hideAddTask && (
-        <>
-          {/* Mobile floating add */}
-          <Button
-            onClick={() => setQuickOpen(true)}
-            size="icon"
-            aria-label="New task"
-            className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary-glow shadow-2xl ring-4 ring-background sm:hidden"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-
-          <TaskDialog open={quickOpen} onOpenChange={setQuickOpen} />
-        </>
+        <TaskDialog open={quickOpen} onOpenChange={setQuickOpen} />
       )}
     </div>
   );
