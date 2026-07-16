@@ -12,6 +12,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToggleComplete, useDeleteTask, deriveStatus, PRIORITY_TONES, STATUS_TONES, type MeTask } from "@/lib/me";
+import { categoryTone } from "@/lib/me-categories";
 import { TaskDialog } from "./TaskDialog";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -95,7 +96,7 @@ export function TaskCard({ task }: { task: MeTask }) {
                     </span>
                   )}
                   {task.category && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    <span className={cn("inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium", categoryTone(task.category))}>
                       <Tag className="h-3 w-3" /> {task.category}
                     </span>
                   )}
