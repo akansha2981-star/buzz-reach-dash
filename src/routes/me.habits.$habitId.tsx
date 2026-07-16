@@ -194,6 +194,9 @@ function HabitDetail() {
         </Card>
       )}
 
+      {/* Calendar view */}
+      <HabitCalendar habit={habit} logs={logs} />
+
       {/* History */}
       <Card>
         <CardContent className="p-4">
