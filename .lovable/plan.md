@@ -1,109 +1,58 @@
-# Personal To-Do & Productivity Dashboard
 
-A private workspace at `/me`, auto-active for every logged-in user. v1 covers MVP + productivity tools (Pomodoro, Habits, Streaks, Goals, Badges). AI features deferred to v2.
+# Habit Tracker — Plan
 
-## Scope (v1)
+Add a full-featured Habit Tracker as a new section directly below "My Workspace" on the workspace page. It integrates with the existing Lovable Cloud backend and does not touch current features.
 
-**In:** Tasks CRUD, priorities, due date/time, statuses, recurring (daily/weekly/monthly/custom), List/Kanban/Calendar views, dashboard widgets, in-app bell + toast notifications, real-time sync, analytics, Pomodoro, Focus mode, Habit tracker, Daily goals, Streaks, Badges, dark/light mode, drag-and-drop, search/filter/sort.
+## 1. Database (new tables, RLS-scoped to `auth.uid()`)
 
-**Deferred to v2:** Timeline view, file attachments, browser push, email, AI prioritization, voice-to-task, team sharing.
+I'll reuse the existing `me_habits` / `me_habit_logs` if suitable, but they lack the fields required here (custom tracking fields, targets, reminders, frequency, per-log values). I'll extend the schema with a compatible migration:
 
-## Routes (under new `/me` sidebar group "My Workspace")
+- `me_habits` — add columns: `icon` (emoji), `category`, `start_date`, `reminder_times text[]`, `frequency` (`daily`|`weekly`|`custom`), `custom_days int[]` (0–6), `color`, `archived boolean`.
+- `me_habit_fields` — one row per custom tracking field on a habit:
+  - `habit_id`, `key`, `label`, `type` (`number`|`decimal`|`time`|`duration`|`distance`|`weight`|`calories`|`water`|`custom`), `unit`, `target_value`, `target_period` (`day`|`week`|`month`), `sort_order`.
+- `me_habit_logs` — extend with: `log_date`, `completed boolean`, `values jsonb` (map of field_key → value), `notes`. Unique on `(habit_id, log_date)`.
 
-```
-/me                  Today dashboard (widgets + Quick Add)
-/me/tasks            All tasks (List / Kanban toggle, search/filter/sort)
-/me/calendar         Month calendar view (drag-and-drop scheduling)
-/me/focus            Pomodoro timer + Focus mode
-/me/habits           Habit tracker + Daily goals + Streaks + Badges
-/me/analytics        Productivity score, completion graphs, heatmap, insights
-```
+All tables: `authenticated` GRANTs + `service_role` GRANT, RLS enabled, policies scoped to `auth.uid() = user_id`, `updated_at` trigger.
 
-Each route is private (RequireAuth). Data is filtered by `auth.uid()` via RLS — no admin sees others' data.
+## 2. Backend access
 
-## Database (new tables, RLS = owner-only)
+- Client-side reads/writes via the browser Supabase client (RLS handles auth). No server functions needed — matches how `me_tasks` is used today.
 
-- **`me_tasks`** — title, description, status (`pending|in_progress|completed|delayed|overdue`), priority (`low|medium|high|urgent`), due_date, due_time, reminder_at, category, tags[], estimated_minutes, completed_at, recurrence_rule (jsonb: freq + interval + byDay), recurrence_parent_id, position (for kanban order), user_id
-- **`me_subtasks`** — task_id, title, done, position
-- **`me_task_notes`** — task_id, body
-- **`me_habits`** — title, color, target_per_week, active, user_id
-- **`me_habit_logs`** — habit_id, log_date, done — unique(habit_id,log_date)
-- **`me_goals`** — title, target_date, progress, status, user_id
-- **`me_focus_sessions`** — task_id (nullable), started_at, ended_at, duration_minutes, type (`pomodoro|short_break|long_break|focus`), completed
-- **`me_badges`** — code, earned_at — unique(user_id,code)
-- **`me_notifications`** — type, title, body, task_id, read_at, scheduled_for, user_id
+## 3. UI — new section on the workspace page
 
-All tables: `user_id uuid not null` + RLS policy `user_id = auth.uid()` for select/insert/update/delete. Realtime enabled on `me_tasks` and `me_notifications`.
+Placed directly under the existing My Workspace tasks section. Design matches the current polished dark-glass theme (gradient cards, framer-motion, lucide icons, semantic tokens).
 
-**Auto-activation for new users:** No seeding needed — the dashboard renders empty-state cards with onboarding tips. RLS means a brand-new user's first visit naturally returns zero rows.
+Components (`src/components/habits/`):
+- `HabitsSection.tsx` — header ("Habit Tracker" + subtitle), "New Habit" button, filter chips (All / Today / Category), grid of `HabitCard`s, and an inline `HabitAnalytics` strip.
+- `HabitCard.tsx` — emoji, name, category chip, current streak, today's completion ring, quick "Complete" one-tap button, mini 7-day dots, click → summary page.
+- `HabitDialog.tsx` — create/edit habit: name, emoji picker, category (uses `me_categories`), start date, frequency (Daily/Weekly/Custom days with day toggles), reminder times (add multiple), and a **Custom Fields** builder (add field → pick type from the list above → label + unit + optional target + period). Uses framer-motion transitions and chip-style selectors like the task dialog.
+- `CheckInDialog.tsx` — opens on "Complete". Shows only that habit's fields with the right input widgets (number/decimal/time picker/duration mm:ss/distance/weight/calories/water/custom-unit). Includes **"Same as yesterday"** button (fetches last log, prefills values, user can edit). Saves to `me_habit_logs` with `completed=true` and `values` jsonb.
+- `HabitSummary.tsx` (route `/_authenticated/habits/$habitId`) — dedicated summary page: current streak, longest streak, total completions, target achievement %, avg / best / cumulative per field, historical line/bar charts (recharts), calendar heatmap, milestone badges, and an editable **History** list (tap a past day to edit its values).
+- `HabitAnalytics.tsx` — dashboard strip on the workspace: overall completion rate, weekly and monthly trend sparklines, active streaks, and today's pending count.
 
-**Recurring regeneration:** Server function `completeTask` — when a task with `recurrence_rule` is marked complete, it inserts the next occurrence (next due_date computed from rule) carrying the same template fields and `recurrence_parent_id`.
+Shared helpers (`src/lib/habits.ts`):
+- CRUD wrappers, streak calculation, completion-rate math, target-achievement math, "due today?" logic based on frequency + custom days, and a `getYesterdayValues(habitId)` helper.
 
-**Status auto-roll:** Lightweight client-side derivation on read — if `due_date < today` and status is `pending|in_progress`, present as `overdue`. A nightly pg_cron also flips persisted status to `delayed`/`overdue` and writes a notification row.
+## 4. Notifications / reminders
 
-## UI architecture
+Client-side reminders using the Notifications API + `setTimeout` scheduled from reminder times for habits due today. If a reminder time has passed and the habit is still pending, we show a "Pending" pulse badge on the card and a summary count in the analytics strip. (No push infra — pure in-app, works while the tab is open. If you want true push later, we can add a service worker.)
 
-- **Design language:** Premium minimal — soft glass cards, generous spacing, OKLCH tokens already in `src/styles.css`. Add `--me-accent`, `--gradient-me`, `--shadow-glass` tokens. Distinct from existing CRM look so the personal space feels its own product.
-- **Animations:** `framer-motion` (already used) for card mount, status transitions, kanban drag, badge unlock, streak pulse.
-- **Drag-and-drop:** `@dnd-kit/core` + `@dnd-kit/sortable` for kanban columns and calendar day cells.
-- **Calendar:** custom grid built on `date-fns` (already a dep) — no heavy calendar library.
-- **Charts:** `recharts` (already in shadcn `chart.tsx`) for completion graphs + weekly bars; custom CSS heatmap for daily activity.
+## 5. UX
 
-### Reusable components (`src/components/me/`)
-`MeShell.tsx` (header w/ bell + quick-add), `TaskCard`, `TaskRow`, `TaskDialog` (create/edit), `QuickAddPopover`, `KanbanBoard`, `CalendarMonth`, `BellPopover` (unread + mark all read), `PomodoroTimer`, `HabitGrid`, `StreakBadge`, `ProductivityScoreCard`, `WidgetGrid`.
+- Framer-motion enter animations, hover-scale cards, one-tap complete, optimistic updates via TanStack Query with cache invalidation, mobile-first responsive grid (1 / 2 / 3 columns), and semantic tokens only (no hardcoded colors).
+- Zero changes to existing task, category, or workspace code beyond mounting the new `<HabitsSection />` below the tasks section on the workspace route.
 
-### Today dashboard widgets
-Today's Tasks · Upcoming Deadlines (next 7 days) · Pending Work · Completed Today · Productivity Score (% of due-today done) · Current Streak · Quick Add.
+## Technical Details
 
-## Notifications (in-app)
+- Migration: `ALTER TABLE me_habits ADD COLUMN ...` (nullable / defaulted so existing rows keep working) + new `me_habit_fields` table + `ALTER TABLE me_habit_logs ADD COLUMN log_date date, values jsonb, completed boolean, notes text` with a unique index on `(habit_id, log_date)`.
+- Charts: reuse `recharts` (already in the project).
+- Route: new file `src/routes/_authenticated/habits.$habitId.tsx` for the summary page. Section on existing workspace route.
+- Types: regenerated after migration approval before wiring the UI.
 
-- Bell icon in `MeShell` header → popover lists unread `me_notifications`, red badge count.
-- Realtime subscription on `me_notifications` triggers a `sonner` toast for new rows.
-- Reminder generator (pg_cron, every 5 min): inserts notification rows for tasks with `reminder_at` between now and now+5min, and for newly overdue items.
-- Browser tab title updates with unread count.
+## Order of execution
 
-## Productivity tools
-
-- **Pomodoro:** 25/5/15 default, configurable, ties session to optional task, logs to `me_focus_sessions`. Persists across route changes via Zustand store.
-- **Focus mode:** full-screen overlay hiding sidebar, timer + current task only, ESC to exit.
-- **Habit tracker:** weekly grid (7 days × habits), tap to toggle, computes streak.
-- **Daily goals:** small list pinned to Today.
-- **Badges:** rules engine on the client (`first_task`, `7_day_streak`, `100_completed`, `pomodoro_pro_10`, `early_bird`) → inserts row into `me_badges` once and shows celebration toast.
-
-## Sidebar integration
-
-Add a new collapsible group "My Workspace" in `AppSidebar.tsx` (above HR), visible to every authenticated user. Items: Today, Tasks, Calendar, Focus, Habits, Analytics. Bell badge shown next to "Today".
-
-## Files to create
-
-```
-src/routes/me.tsx                 (layout with <Outlet/>)
-src/routes/me.index.tsx           (Today dashboard)
-src/routes/me.tasks.tsx
-src/routes/me.calendar.tsx
-src/routes/me.focus.tsx
-src/routes/me.habits.tsx
-src/routes/me.analytics.tsx
-src/lib/me.ts                     (hooks: useMyTasks, useTodayTasks, useHabits, etc.)
-src/lib/me-recurrence.ts          (next-occurrence calculator)
-src/lib/me-badges.ts              (rules engine)
-src/components/me/*                (components listed above)
-src/stores/pomodoro.ts            (Zustand)
-supabase/migrations/<ts>_me_workspace.sql
-```
-
-## Files to edit
-
-- `src/components/AppSidebar.tsx` — add "My Workspace" group + bell badge.
-- `src/styles.css` — add `--me-*` tokens.
-- `src/router.tsx` — no manual edits (file-based routing handles it).
-
-## Dependencies to add
-
-`@dnd-kit/core`, `@dnd-kit/sortable`, `zustand`, `rrule` (recurrence rule parser).
-
-## Out of scope reminders
-
-I'll add visible "Coming soon" stubs for AI helpers, attachments, voice-to-task, browser push, and team sharing so the v2 path is obvious without shipping half-built features.
-
-After approval I'll ship the migration first, then build screens top-down (Today → Tasks → Kanban/Calendar → Focus/Habits → Analytics).
+1. Migration (schema + GRANTs + RLS + policies + trigger). ← awaits your approval
+2. `src/lib/habits.ts` helpers.
+3. Habit UI components + mount under My Workspace.
+4. Summary route + analytics.
+5. Reminders + pending badges.
