@@ -144,6 +144,14 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
+              {can("can_my_workspace") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith("/habits")}>
+                    <Link to="/habits"><Target /><span>Habits</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {can("can_ceo_desk") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/ceo-desk")}>
