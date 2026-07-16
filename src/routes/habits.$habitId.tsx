@@ -21,7 +21,7 @@ import { HabitDialog } from "@/components/habits/HabitDialog";
 import { HabitCalendar } from "@/components/habits/HabitCalendar";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/me/habits/$habitId")({
+export const Route = createFileRoute("/habits/$habitId")({
   component: HabitDetail,
 });
 
@@ -71,7 +71,7 @@ function HabitDetail() {
     <MeShell title={`${habit.icon || "✨"} ${habit.title}`} subtitle={`${habit.category ?? "Habit summary"} · ${habit.frequency}`}>
       <div className="flex items-center justify-between">
         <Button asChild variant="ghost" size="sm" className="gap-1">
-          <Link to="/me/habits"><ArrowLeft className="h-4 w-4" /> Back</Link>
+          <Link to="/habits"><ArrowLeft className="h-4 w-4" /> Back</Link>
         </Button>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setEdit(true)} className="gap-1.5">

@@ -52,7 +52,7 @@ export function HabitCard({ habit, logs }: { habit: Habit; logs: HabitLog[] }) {
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-2">
               <Link
-                to="/me/habits/$habitId"
+                to="/habits/$habitId"
                 params={{ habitId: habit.id }}
                 className="flex min-w-0 flex-1 items-center gap-3"
               >

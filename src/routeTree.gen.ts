@@ -12,12 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
+import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
@@ -26,7 +28,6 @@ import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as MeTasksRouteImport } from './routes/me.tasks'
-import { Route as MeHabitsRouteImport } from './routes/me.habits'
 import { Route as MeFocusRouteImport } from './routes/me.focus'
 import { Route as MeConfidentialRouteImport } from './routes/me.confidential'
 import { Route as MeCalendarRouteImport } from './routes/me.calendar'
@@ -38,8 +39,8 @@ import { Route as HrmsLeavesRouteImport } from './routes/hrms.leaves'
 import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
 import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
 import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcements'
+import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
-import { Route as MeHabitsHabitIdRouteImport } from './routes/me.habits.$habitId'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
 import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
@@ -60,6 +61,11 @@ const MeetingsRoute = MeetingsRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsRoute = HabitsRouteImport.update({
+  id: '/habits',
+  path: '/habits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -91,6 +97,11 @@ const HrmsIndexRoute = HrmsIndexRouteImport.update({
   id: '/hrms/',
   path: '/hrms/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsIndexRoute = HabitsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HabitsRoute,
 } as any)
 const SettingsUsersRoute = SettingsUsersRouteImport.update({
   id: '/settings/users',
@@ -130,11 +141,6 @@ const OutreachTypeRoute = OutreachTypeRouteImport.update({
 const MeTasksRoute = MeTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeHabitsRoute = MeHabitsRouteImport.update({
-  id: '/habits',
-  path: '/habits',
   getParentRoute: () => MeRoute,
 } as any)
 const MeFocusRoute = MeFocusRouteImport.update({
@@ -192,15 +198,15 @@ const HrmsAnnouncementsRoute = HrmsAnnouncementsRouteImport.update({
   path: '/hrms/announcements',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
+  id: '/$habitId',
+  path: '/$habitId',
+  getParentRoute: () => HabitsRoute,
+} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => OutreachTypeRoute,
-} as any)
-const MeHabitsHabitIdRoute = MeHabitsHabitIdRouteImport.update({
-  id: '/$habitId',
-  path: '/$habitId',
-  getParentRoute: () => MeHabitsRoute,
 } as any)
 const HrmsEmployeesIdRoute = HrmsEmployeesIdRouteImport.update({
   id: '/$id',
@@ -238,9 +244,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
+  '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
@@ -252,7 +260,6 @@ export interface FileRoutesByFullPath {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
-  '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -269,7 +277,6 @@ export interface FileRoutesByFullPath {
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
-  '/me/habits/$habitId': typeof MeHabitsHabitIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesByTo {
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
@@ -290,7 +298,6 @@ export interface FileRoutesByTo {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
-  '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits': typeof HabitsIndexRoute
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -307,7 +315,6 @@ export interface FileRoutesByTo {
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
-  '/me/habits/$habitId': typeof MeHabitsHabitIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRoutesById {
@@ -316,9 +323,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
+  '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
   '/hrms/employees': typeof HrmsEmployeesRouteWithChildren
@@ -330,7 +339,6 @@ export interface FileRoutesById {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
-  '/me/habits': typeof MeHabitsRouteWithChildren
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
@@ -347,7 +356,6 @@ export interface FileRoutesById {
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
   '/hrms/admin/leaves': typeof HrmsAdminLeavesRoute
   '/hrms/employees/$id': typeof HrmsEmployeesIdRoute
-  '/me/habits/$habitId': typeof MeHabitsHabitIdRoute
   '/outreach/$type/$id': typeof OutreachTypeIdRoute
 }
 export interface FileRouteTypes {
@@ -357,9 +365,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
+    | '/habits'
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
     | '/hrms/employees'
@@ -371,7 +381,6 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
-    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits/'
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
@@ -388,7 +398,6 @@ export interface FileRouteTypes {
     | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
-    | '/me/habits/$habitId'
     | '/outreach/$type/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/meetings'
     | '/tasks'
+    | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
     | '/hrms/employees'
@@ -409,7 +419,6 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
-    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits'
     | '/hrms'
     | '/me'
     | '/api/public/bootstrap-admin'
@@ -426,7 +436,6 @@ export interface FileRouteTypes {
     | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
-    | '/me/habits/$habitId'
     | '/outreach/$type/$id'
   id:
     | '__root__'
@@ -434,9 +443,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
+    | '/habits'
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
     | '/hrms/employees'
@@ -448,7 +459,6 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
-    | '/me/habits'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/habits/'
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
@@ -465,7 +476,6 @@ export interface FileRouteTypes {
     | '/hrms/admin/audit'
     | '/hrms/admin/leaves'
     | '/hrms/employees/$id'
-    | '/me/habits/$habitId'
     | '/outreach/$type/$id'
   fileRoutesById: FileRoutesById
 }
@@ -474,6 +484,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CeoDeskRoute: typeof CeoDeskRoute
   DocumentsRoute: typeof DocumentsRoute
+  HabitsRoute: typeof HabitsRouteWithChildren
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
   TasksRoute: typeof TasksRoute
@@ -522,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/habits': {
+      id: '/habits'
+      path: '/habits'
+      fullPath: '/habits'
+      preLoaderRoute: typeof HabitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/documents': {
       id: '/documents'
       path: '/documents'
@@ -563,6 +581,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hrms/'
       preLoaderRoute: typeof HrmsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/habits/': {
+      id: '/habits/'
+      path: '/'
+      fullPath: '/habits/'
+      preLoaderRoute: typeof HabitsIndexRouteImport
+      parentRoute: typeof HabitsRoute
     }
     '/settings/users': {
       id: '/settings/users'
@@ -618,13 +643,6 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/me/tasks'
       preLoaderRoute: typeof MeTasksRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/habits': {
-      id: '/me/habits'
-      path: '/habits'
-      fullPath: '/me/habits'
-      preLoaderRoute: typeof MeHabitsRouteImport
       parentRoute: typeof MeRoute
     }
     '/me/focus': {
@@ -704,19 +722,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsAnnouncementsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/habits/$habitId': {
+      id: '/habits/$habitId'
+      path: '/$habitId'
+      fullPath: '/habits/$habitId'
+      preLoaderRoute: typeof HabitsHabitIdRouteImport
+      parentRoute: typeof HabitsRoute
+    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
       fullPath: '/outreach/$type/$id'
       preLoaderRoute: typeof OutreachTypeIdRouteImport
       parentRoute: typeof OutreachTypeRoute
-    }
-    '/me/habits/$habitId': {
-      id: '/me/habits/$habitId'
-      path: '/$habitId'
-      fullPath: '/me/habits/$habitId'
-      preLoaderRoute: typeof MeHabitsHabitIdRouteImport
-      parentRoute: typeof MeHabitsRoute
     }
     '/hrms/employees/$id': {
       id: '/hrms/employees/$id'
@@ -763,24 +781,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface MeHabitsRouteChildren {
-  MeHabitsHabitIdRoute: typeof MeHabitsHabitIdRoute
+interface HabitsRouteChildren {
+  HabitsHabitIdRoute: typeof HabitsHabitIdRoute
+  HabitsIndexRoute: typeof HabitsIndexRoute
 }
 
-const MeHabitsRouteChildren: MeHabitsRouteChildren = {
-  MeHabitsHabitIdRoute: MeHabitsHabitIdRoute,
+const HabitsRouteChildren: HabitsRouteChildren = {
+  HabitsHabitIdRoute: HabitsHabitIdRoute,
+  HabitsIndexRoute: HabitsIndexRoute,
 }
 
-const MeHabitsRouteWithChildren = MeHabitsRoute._addFileChildren(
-  MeHabitsRouteChildren,
-)
+const HabitsRouteWithChildren =
+  HabitsRoute._addFileChildren(HabitsRouteChildren)
 
 interface MeRouteChildren {
   MeAnalyticsRoute: typeof MeAnalyticsRoute
   MeCalendarRoute: typeof MeCalendarRoute
   MeConfidentialRoute: typeof MeConfidentialRoute
   MeFocusRoute: typeof MeFocusRoute
-  MeHabitsRoute: typeof MeHabitsRouteWithChildren
   MeTasksRoute: typeof MeTasksRoute
   MeIndexRoute: typeof MeIndexRoute
 }
@@ -790,7 +808,6 @@ const MeRouteChildren: MeRouteChildren = {
   MeCalendarRoute: MeCalendarRoute,
   MeConfidentialRoute: MeConfidentialRoute,
   MeFocusRoute: MeFocusRoute,
-  MeHabitsRoute: MeHabitsRouteWithChildren,
   MeTasksRoute: MeTasksRoute,
   MeIndexRoute: MeIndexRoute,
 }
@@ -826,6 +843,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CeoDeskRoute: CeoDeskRoute,
   DocumentsRoute: DocumentsRoute,
+  HabitsRoute: HabitsRouteWithChildren,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
   TasksRoute: TasksRoute,
