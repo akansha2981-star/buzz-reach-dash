@@ -31,6 +31,9 @@ export function TaskCard({ task }: { task: MeTask }) {
   const del = useDeleteTask();
   const status = deriveStatus(task);
   const done = status === "completed";
+  const { data: categories = [] } = useMyCategories();
+  const catDef = task.category ? categories.find((c) => c.name === task.category) : null;
+  const CatIcon = iconFor(catDef?.icon);
 
   return (
     <>
@@ -96,8 +99,11 @@ export function TaskCard({ task }: { task: MeTask }) {
                     </span>
                   )}
                   {task.category && (
-                    <span className={cn("inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium", categoryTone(task.category))}>
-                      <Tag className="h-3 w-3" /> {task.category}
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
+                      style={toneStyle(catDef?.color)}
+                    >
+                      <CatIcon className="h-3 w-3" /> {task.category}
                     </span>
                   )}
                 </div>
