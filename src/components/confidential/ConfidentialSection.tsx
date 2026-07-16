@@ -490,9 +490,8 @@ function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-// Runs `init` whenever `open` transitions to true. Keeps dialog forms tidy.
+// Runs `init` whenever `open` transitions to true.
 function useMemoInit(open: boolean, init: () => void) {
-  const [prev, setPrev] = useState(false);
-  if (open && !prev) { init(); setPrev(true); }
-  if (!open && prev) setPrev(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) init(); }, [open]);
 }
