@@ -48,6 +48,9 @@ function SchedulePage() {
   const grouped = useMemo(() => {
     const map = new Map<string, MeTask[]>();
     const undated: MeTask[] = [];
+    // Track (templateGroupId,date) that already have a concrete task, to avoid
+    // duplicating with a projected virtual occurrence.
+    const existing = new Set<string>();
     tasks.forEach((t) => {
       if (!t.due_date) {
         if (t.status !== "completed") undated.push(t);
@@ -56,7 +59,49 @@ function SchedulePage() {
       const arr = map.get(t.due_date) ?? [];
       arr.push(t);
       map.set(t.due_date, arr);
+      const gid = t.recurrence_parent_id ?? t.id;
+      existing.add(`${gid}:${t.due_date}`);
     });
+
+    // Project future recurring occurrences into every visible day so daily
+    // recurring tasks are visible on the Schedule for every day, not only today.
+    const rangeEnd = addDays(rangeStart, days - 1);
+    const groups = new Map<string, MeTask>();
+    tasks.forEach((t) => {
+      if (!t.recurrence_rule || !t.due_date) return;
+      const gid = t.recurrence_parent_id ?? t.id;
+      // Keep the earliest instance as anchor (or the template itself).
+      const cur = groups.get(gid);
+      if (!cur || (t.due_date ?? "") < (cur.due_date ?? "")) groups.set(gid, t);
+    });
+
+    groups.forEach((tpl, gid) => {
+      const rule = tpl.recurrence_rule!;
+      const interval = Math.max(1, rule.interval || 1);
+      let cur = parseISO(tpl.due_date!);
+      let safety = 800;
+      while (cur <= rangeEnd && safety-- > 0) {
+        const key = format(cur, "yyyy-MM-dd");
+        if (cur >= rangeStart && !existing.has(`${gid}:${key}`)) {
+          const virt: MeTask = {
+            ...tpl,
+            id: `virtual:${gid}:${key}`,
+            due_date: key,
+            status: "pending",
+            __virtual: true,
+          } as any;
+          const arr = map.get(key) ?? [];
+          arr.push(virt);
+          map.set(key, arr);
+          existing.add(`${gid}:${key}`);
+        }
+        if (rule.freq === "daily" || rule.freq === "custom") cur = addDays(cur, interval);
+        else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
+        else if (rule.freq === "monthly") cur = addMonths(cur, interval);
+        else cur = addDays(cur, interval);
+      }
+    });
+
     // sort each day by time then priority
     const pr = { urgent: 0, high: 1, medium: 2, low: 3 } as const;
     map.forEach((arr) =>
@@ -68,7 +113,7 @@ function SchedulePage() {
       })
     );
     return { map, undated };
-  }, [tasks]);
+  }, [tasks, rangeStart, days]);
 
   const totalInRange = dates.reduce(
     (n, d) => n + (grouped.map.get(format(d, "yyyy-MM-dd"))?.length ?? 0),
