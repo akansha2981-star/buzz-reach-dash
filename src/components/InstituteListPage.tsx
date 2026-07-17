@@ -494,7 +494,9 @@ export function InstituteListPage({
               <h2 className="truncate font-display text-xl font-bold sm:text-2xl">{title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
             </div>
-            <div className="shrink-0">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <BulkAddInstituteDialog type={type} />
+              <BulkDeleteInstituteDialog type={type} />
               <CreateInstituteDialog type={type} />
             </div>
           </div>
