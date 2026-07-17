@@ -122,7 +122,7 @@ export function BulkAddInstituteDialog({ type }: { type: InstituteType }) {
       toast.success(`Imported ${n} ${type === "college" ? "colleges" : "coaching institutes"}`);
       qc.invalidateQueries({ queryKey: ["institutes", type] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      setText(""); setOpen(false);
+      setText(""); setFileName(null); setOpen(false);
     },
     onError: (e: any) => toast.error(e.message),
   });
