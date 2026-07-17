@@ -11,6 +11,7 @@ import { useMyCategories, iconFor, toneStyle } from "@/lib/me-categories";
 import { CategoryManager } from "./CategoryManager";
 import { Trash2, Sparkles, Flag, CalendarClock, Bell, Tag as TagIcon, Timer, Repeat, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const PRIORITY_META: Record<MeTaskPriority, { label: string; gradient: string; ring: string; icon: string }> = {
   low:    { label: "Low",    gradient: "from-slate-400 to-slate-500",   ring: "ring-slate-400/40",  icon: "◦" },
@@ -62,17 +63,19 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
 
   const submit = async () => {
     if (!title.trim()) return;
+    const recurrenceRule = recurFreq !== "none" ? { freq: recurFreq, interval: Math.max(1, Number(recurInterval) || 1) } : null;
+    const normalizedDueDate = dueDate || (recurrenceRule ? format(new Date(), "yyyy-MM-dd") : null);
     const payload: any = {
       title: title.trim(),
       description: description.trim() || null,
       priority,
-      due_date: dueDate || null,
+      due_date: normalizedDueDate,
       due_time: dueTime || null,
       reminder_at: reminderAt ? new Date(reminderAt).toISOString() : null,
       category: category.trim() || null,
       tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
       estimated_minutes: estimated ? Number(estimated) : null,
-      recurrence_rule: recurFreq !== "none" ? { freq: recurFreq, interval: Number(recurInterval) || 1 } : null,
+      recurrence_rule: recurrenceRule,
     };
     if (isEdit) await update.mutateAsync({ id: task!.id, ...payload });
     else await create.mutateAsync(payload);
@@ -280,7 +283,10 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                   <button
                     key={f}
                     type="button"
-                    onClick={() => setRecurFreq(f as any)}
+                    onClick={() => {
+                      setRecurFreq(f as any);
+                      if (f !== "none" && !dueDate) setDueDate(format(new Date(), "yyyy-MM-dd"));
+                    }}
                     className={cn(
                       "rounded-lg border px-2 py-1.5 text-xs font-semibold transition-all",
                       active

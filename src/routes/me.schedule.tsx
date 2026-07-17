@@ -34,6 +34,10 @@ function labelFor(date: Date) {
   return format(date, "EEE, MMM d");
 }
 
+function anchorDateForRecurringTask(task: MeTask) {
+  return task.due_date ?? task.created_at?.slice(0, 10) ?? format(new Date(), "yyyy-MM-dd");
+}
+
 function SchedulePage() {
   const { data: tasks = [] } = useMyTasks();
   const [rangeStart, setRangeStart] = useState<Date>(startOfDay(new Date()));
@@ -53,7 +57,9 @@ function SchedulePage() {
     const existing = new Set<string>();
     tasks.forEach((t) => {
       if (!t.due_date) {
-        if (t.status !== "completed") undated.push(t);
+        // A recurring task without an explicit start date still means “start today
+        // and repeat forever”, so do not hide it under Unscheduled.
+        if (t.status !== "completed" && !t.recurrence_rule) undated.push(t);
         return;
       }
       const arr = map.get(t.due_date) ?? [];
@@ -66,19 +72,30 @@ function SchedulePage() {
     // Project future recurring occurrences into every visible day so daily
     // recurring tasks are visible on the Schedule for every day, not only today.
     const rangeEnd = addDays(rangeStart, days - 1);
-    const groups = new Map<string, MeTask>();
+    const groups = new Map<string, { anchor: string; template: MeTask }>();
     tasks.forEach((t) => {
-      if (!t.recurrence_rule || !t.due_date) return;
+      if (!t.recurrence_rule) return;
       const gid = t.recurrence_parent_id ?? t.id;
-      // Keep the earliest instance as anchor (or the template itself).
+      const anchor = anchorDateForRecurringTask(t);
       const cur = groups.get(gid);
-      if (!cur || (t.due_date ?? "") < (cur.due_date ?? "")) groups.set(gid, t);
+      if (!cur) {
+        groups.set(gid, { anchor, template: t });
+        return;
+      }
+      // Keep the earliest known date as the recurrence anchor, but use the
+      // latest concrete task as the display template so edits are reflected.
+      const latestCurrent = cur.template.due_date ?? cur.template.created_at?.slice(0, 10) ?? "";
+      const latestNext = t.due_date ?? t.created_at?.slice(0, 10) ?? "";
+      groups.set(gid, {
+        anchor: anchor < cur.anchor ? anchor : cur.anchor,
+        template: latestNext >= latestCurrent ? t : cur.template,
+      });
     });
 
-    groups.forEach((tpl, gid) => {
+    groups.forEach(({ anchor, template: tpl }, gid) => {
       const rule = tpl.recurrence_rule!;
       const interval = Math.max(1, rule.interval || 1);
-      let cur = parseISO(tpl.due_date!);
+      let cur = parseISO(anchor);
       let safety = 800;
       while (cur <= rangeEnd && safety-- > 0) {
         const key = format(cur, "yyyy-MM-dd");
@@ -87,6 +104,7 @@ function SchedulePage() {
             ...tpl,
             id: `virtual:${gid}:${key}`,
             due_date: key,
+            completed_at: null,
             status: "pending",
             __virtual: true,
           } as any;

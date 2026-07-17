@@ -113,3 +113,7 @@ export function useRecurringSpawner() {
     })();
   }, [user, qc]);
 }
+
+function getRecurringAnchorDate(task: any) {
+  return task.due_date ?? task.created_at?.slice(0, 10) ?? format(new Date(), "yyyy-MM-dd");
+}
