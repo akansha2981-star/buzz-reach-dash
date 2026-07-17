@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { CheckCircle2, Clock4, AlarmClock, TrendingUp, Sparkles, Flame, Sunrise, Sun, Sunset, Moon, CalendarClock } from "lucide-react";
+import { CheckCircle2, Clock4, AlarmClock, TrendingUp, Sparkles, Flame, Sunrise, Sun, Sunset, Moon, CalendarClock, LayoutList, ArrowUpDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
 import { useMyTasks, useTodayTasks, useUpcomingTasks, deriveStatus, type MeTask } from "@/lib/me";
@@ -39,10 +40,57 @@ function TodayPage() {
     return { completedToday, dueToday, doneOfDue, overdue, score, streak };
   }, [all, todayTasks, today]);
 
+  const [groupBy, setGroupBy] = useState<"time-of-day" | "status" | "priority" | "none">("time-of-day");
+  const [sortBy, setSortBy] = useState<"due-time" | "priority">("due-time");
+
+  const sortedToday = useMemo(() => {
+    const pr = { urgent: 0, high: 1, medium: 2, low: 3 } as const;
+    const arr = [...todayTasks];
+    arr.sort((a, b) => {
+      if (sortBy === "priority") {
+        if (pr[a.priority] !== pr[b.priority]) return pr[a.priority] - pr[b.priority];
+        return (a.due_time ?? "99:99").localeCompare(b.due_time ?? "99:99");
+      }
+      const at = a.due_time ?? "99:99";
+      const bt = b.due_time ?? "99:99";
+      if (at !== bt) return at.localeCompare(bt);
+      return pr[a.priority] - pr[b.priority];
+    });
+    return arr;
+  }, [todayTasks, sortBy]);
+
   // Timeline buckets
   const buckets = useMemo<Bucket[]>(() => {
+    if (groupBy === "none") {
+      return sortedToday.length
+        ? [{ key: "all", label: "All tasks", icon: LayoutList, hint: "Sorted", tasks: sortedToday }]
+        : [];
+    }
+    if (groupBy === "status") {
+      const map: Record<string, MeTask[]> = { overdue: [], pending: [], in_progress: [], completed: [] };
+      for (const t of sortedToday) {
+        const s = deriveStatus(t);
+        (map[s] ?? map.pending).push(t);
+      }
+      return [
+        { key: "overdue", label: "Overdue", icon: AlarmClock, hint: "Past due", tasks: map.overdue },
+        { key: "in_progress", label: "In progress", icon: Sparkles, hint: "Active", tasks: map.in_progress },
+        { key: "pending", label: "Pending", icon: CalendarClock, hint: "To do", tasks: map.pending },
+        { key: "completed", label: "Completed", icon: CheckCircle2, hint: "Done", tasks: map.completed },
+      ].filter((s) => s.tasks.length > 0);
+    }
+    if (groupBy === "priority") {
+      const map: Record<string, MeTask[]> = { urgent: [], high: [], medium: [], low: [] };
+      for (const t of sortedToday) (map[t.priority] ?? map.medium).push(t);
+      return [
+        { key: "urgent", label: "Urgent", icon: AlarmClock, hint: "Top priority", tasks: map.urgent },
+        { key: "high", label: "High", icon: Sparkles, hint: "Important", tasks: map.high },
+        { key: "medium", label: "Medium", icon: CalendarClock, hint: "Normal", tasks: map.medium },
+        { key: "low", label: "Low", icon: Moon, hint: "Whenever", tasks: map.low },
+      ].filter((s) => s.tasks.length > 0);
+    }
     const b: Record<string, MeTask[]> = { overdue: [], morning: [], afternoon: [], evening: [], night: [], anytime: [], done: [] };
-    for (const t of todayTasks) {
+    for (const t of sortedToday) {
       if (t.status === "completed") { b.done.push(t); continue; }
       if (t.due_date && t.due_date < today) { b.overdue.push(t); continue; }
       if (!t.due_time) { b.anytime.push(t); continue; }
@@ -61,7 +109,7 @@ function TodayPage() {
       { key: "anytime", label: "Anytime today", icon: CalendarClock, hint: "No specific time", tasks: b.anytime },
       { key: "done", label: "Completed today", icon: CheckCircle2, hint: "Great work", tasks: b.done },
     ].filter((s) => s.tasks.length > 0);
-  }, [todayTasks, today]);
+  }, [sortedToday, today, groupBy]);
 
   return (
     <MeShell title={`Hi 👋 — ${format(new Date(), "EEEE, MMM d")}`} subtitle="Your personal workspace. Stay focused, ship more.">
@@ -94,9 +142,35 @@ function TodayPage() {
         {/* Timeline — spans 2 cols */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-primary" /> Today's timeline
-            </CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-4 w-4 text-primary" /> Today's timeline
+              </CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
+                  <SelectTrigger className="h-8 w-[150px] text-xs">
+                    <LayoutList className="mr-1 h-3.5 w-3.5" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="time-of-day">Time of day</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="priority">Priority</SelectItem>
+                    <SelectItem value="none">No grouping</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="h-8 w-[140px] text-xs">
+                    <ArrowUpDown className="mr-1 h-3.5 w-3.5" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="due-time">Due time</SelectItem>
+                    <SelectItem value="priority">Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {todayTasks.length === 0 ? (
