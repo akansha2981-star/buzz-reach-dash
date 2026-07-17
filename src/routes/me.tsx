@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, ListChecks, Timer, BarChart3, Sparkles, ShieldCheck } from "lucide-react";
+import { CalendarDays, CalendarClock, ListChecks, Timer, BarChart3, Sparkles, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ export const Route = createFileRoute("/me")({
 
 const TABS = [
   { to: "/me", label: "Today", icon: Sparkles, exact: true },
+  { to: "/me/schedule", label: "Schedule", icon: CalendarClock },
   { to: "/me/tasks", label: "Tasks", icon: ListChecks },
   { to: "/me/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/me/focus", label: "Focus", icon: Timer },
