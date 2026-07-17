@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, Trash2, Search, Loader2 } from "lucide-react";
+import { Upload, Trash2, Search, Loader2, FileSpreadsheet, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -60,9 +60,41 @@ function parseBulk(text: string): ParsedRow[] {
 export function BulkAddInstituteDialog({ type }: { type: InstituteType }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
   const { user } = useAuth();
   const parsed = useMemo(() => parseBulk(text), [text]);
+
+  const onPickFile = async (f: File | null) => {
+    if (!f) return;
+    const okType = /\.(csv|txt|tsv)$/i.test(f.name) || f.type.includes("csv") || f.type.includes("text");
+    if (!okType) { toast.error("Please upload a CSV or TXT file"); return; }
+    if (f.size > 5 * 1024 * 1024) { toast.error("File too large (max 5MB)"); return; }
+    try {
+      let content = await f.text();
+      // Normalize TSV → CSV
+      if (/\t/.test(content) && !/,/.test(content.split(/\r?\n/)[0] ?? "")) {
+        content = content.replace(/\t/g, ",");
+      }
+      setText(content);
+      setFileName(f.name);
+      toast.success(`Loaded ${f.name}`);
+    } catch (e: any) {
+      toast.error("Could not read file");
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = "name,city,state,website,contact_person,email,phone\nExample Institute,Mumbai,MH,https://example.edu,Rajesh Sharma,contact@example.edu,+91 9876543210\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type === "college" ? "colleges" : "coachings"}-template.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const create = useMutation({
     mutationFn: async () => {
@@ -90,7 +122,7 @@ export function BulkAddInstituteDialog({ type }: { type: InstituteType }) {
       toast.success(`Imported ${n} ${type === "college" ? "colleges" : "coaching institutes"}`);
       qc.invalidateQueries({ queryKey: ["institutes", type] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      setText(""); setOpen(false);
+      setText(""); setFileName(null); setOpen(false);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -110,24 +142,59 @@ export function BulkAddInstituteDialog({ type }: { type: InstituteType }) {
         <div className="space-y-3">
           <div className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
             <p className="font-medium text-foreground">Accepted formats</p>
-            <p>• One name per line, or</p>
+            <p>• Upload a CSV/TXT file, or paste rows below</p>
             <p>• CSV columns: <code className="text-[11px]">name, city, state, website, contact_person, email, phone</code></p>
-            <p>• Header row with any of those keys (any order)</p>
+            <p>• Header row optional — one name per line also works</p>
           </div>
+
+          {/* CSV file upload */}
+          <div
+            className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/70 bg-muted/20 p-4 text-center transition-colors hover:border-primary/50 hover:bg-primary/5 sm:flex-row sm:justify-between sm:text-left"
+            onDragOver={(e) => { e.preventDefault(); }}
+            onDrop={(e) => { e.preventDefault(); onPickFile(e.dataTransfer.files?.[0] ?? null); }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <FileSpreadsheet className="h-5 w-5 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {fileName ? fileName : "Drop CSV here or choose a file"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {fileName ? `${parsed.length} rows parsed` : "Max 5MB · .csv / .txt / .tsv"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={downloadTemplate} className="gap-1.5">
+                <Download className="h-3.5 w-3.5" /> Template
+              </Button>
+              <Button type="button" size="sm" onClick={() => fileRef.current?.click()} className="gap-1.5">
+                <Upload className="h-3.5 w-3.5" /> Choose file
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,.txt,.tsv,text/csv,text/plain"
+                className="hidden"
+                onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          </div>
+
           <div>
-            <Label>Paste rows</Label>
+            <Label>Or paste rows</Label>
             <Textarea
-              rows={10}
+              rows={8}
               className="font-mono text-xs"
               placeholder={"IIT Bombay, Mumbai, MH, https://iitb.ac.in, R. Sharma, contact@iitb.ac.in, +91...\nIIM Ahmedabad, Ahmedabad, GJ"}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => { setText(e.target.value); if (fileName) setFileName(null); }}
             />
           </div>
           <div className="flex items-center justify-between text-xs">
             <Badge variant="secondary">{parsed.length} rows ready</Badge>
             {parsed.length > 0 && (
-              <span className="text-muted-foreground">Preview: {parsed.slice(0, 3).map((r) => r.name).join(", ")}{parsed.length > 3 ? "…" : ""}</span>
+              <span className="text-muted-foreground truncate max-w-[60%]">Preview: {parsed.slice(0, 3).map((r) => r.name).join(", ")}{parsed.length > 3 ? "…" : ""}</span>
             )}
           </div>
         </div>
