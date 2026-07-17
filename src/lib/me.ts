@@ -99,10 +99,25 @@ export function useMyTasks() {
 export function useTodayTasks() {
   const q = useMyTasks();
   const today = format(new Date(), "yyyy-MM-dd");
-  return {
-    ...q,
-    data: (q.data ?? []).filter((t) => t.due_date === today || (t.due_date && t.due_date < today && t.status !== "completed")),
-  };
+  // Today = due today + overdue pending + undated pending (all active work for today)
+  const data = (q.data ?? [])
+    .filter((t) => {
+      if (t.status === "completed") return t.due_date === today || (t.completed_at ?? "").slice(0, 10) === today;
+      if (!t.due_date) return true; // undated pending → show in Today
+      return t.due_date <= today; // due today or overdue
+    })
+    .sort((a, b) => {
+      // Order: overdue first, then by due_time asc (nulls last), then by priority
+      const aOver = a.due_date && a.due_date < today ? 0 : 1;
+      const bOver = b.due_date && b.due_date < today ? 0 : 1;
+      if (aOver !== bOver) return aOver - bOver;
+      const at = a.due_time ?? "99:99";
+      const bt = b.due_time ?? "99:99";
+      if (at !== bt) return at.localeCompare(bt);
+      const pr = { urgent: 0, high: 1, medium: 2, low: 3 } as const;
+      return pr[a.priority] - pr[b.priority];
+    });
+  return { ...q, data };
 }
 
 export function useUpcomingTasks(days = 7) {
