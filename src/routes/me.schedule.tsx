@@ -94,7 +94,7 @@ function SchedulePage() {
 
     groups.forEach(({ anchor, template: tpl }, gid) => {
       const rule = tpl.recurrence_rule!;
-      const interval = Math.max(1, rule.interval || 1);
+      const interval = rule.freq === "daily" ? 1 : Math.max(1, rule.interval || 1);
       let cur = parseISO(anchor);
       let safety = 800;
       while (cur <= rangeEnd && safety-- > 0) {
@@ -113,7 +113,8 @@ function SchedulePage() {
           map.set(key, arr);
           existing.add(`${gid}:${key}`);
         }
-        if (rule.freq === "daily" || rule.freq === "custom") cur = addDays(cur, interval);
+        if (rule.freq === "daily") cur = addDays(cur, 1);
+        else if (rule.freq === "custom") cur = addDays(cur, interval);
         else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
         else if (rule.freq === "monthly") cur = addMonths(cur, interval);
         else cur = addDays(cur, interval);

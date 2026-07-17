@@ -63,7 +63,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
 
   const submit = async () => {
     if (!title.trim()) return;
-    const recurrenceRule = recurFreq !== "none" ? { freq: recurFreq, interval: Math.max(1, Number(recurInterval) || 1) } : null;
+    const recurrenceRule = recurFreq !== "none" ? { freq: recurFreq, interval: recurFreq === "daily" ? 1 : Math.max(1, Number(recurInterval) || 1) } : null;
     const normalizedDueDate = dueDate || (recurrenceRule ? format(new Date(), "yyyy-MM-dd") : null);
     const payload: any = {
       title: title.trim(),
@@ -308,7 +308,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                   className="flex items-center gap-2 pt-1"
                 >
                   <Label className="text-[11px] text-muted-foreground">Every</Label>
-                  <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-8 w-20" />
+                  <Input type="number" min={1} value={recurFreq === "daily" ? "1" : recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-8 w-20" disabled={recurFreq === "daily"} />
                   <span className="text-[11px] text-muted-foreground">
                     {recurFreq === "daily" && (Number(recurInterval) === 1 ? "day — repeats daily" : "day(s)")}
                     {recurFreq === "weekly" && (Number(recurInterval) === 1 ? "week — repeats weekly" : "week(s)")}

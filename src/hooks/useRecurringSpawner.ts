@@ -64,16 +64,15 @@ export function useRecurringSpawner() {
         if (items.some((t) => t.due_date === today)) continue;
 
         // Find the most recent instance to use as the template
-        const sorted = [...items].sort((a, b) => (b.due_date ?? "").localeCompare(a.due_date ?? ""));
+        const sorted = [...items].sort((a, b) => getRecurringAnchorDate(b).localeCompare(getRecurringAnchorDate(a)));
         const template = sorted[0];
         const rule = template.recurrence_rule as RecurrenceRule | null;
         if (!rule) continue;
-        if (!template.due_date) continue;
 
         // Walk occurrences forward from the template's due_date until we reach or pass today
-        let cur = parseISO(template.due_date);
+        let cur = parseISO(getRecurringAnchorDate(template));
         const todayD = parseISO(today);
-        const interval = Math.max(1, rule.interval || 1);
+        const interval = rule.freq === "daily" ? 1 : Math.max(1, rule.interval || 1);
         let safety = 400;
         let matched = false;
         while (cur <= todayD && safety-- > 0) {
@@ -81,13 +80,13 @@ export function useRecurringSpawner() {
             matched = true;
             break;
           }
-          if (rule.freq === "daily") cur = addDays(cur, interval);
+          if (rule.freq === "daily") cur = addDays(cur, 1);
           else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
           else if (rule.freq === "monthly") cur = addMonths(cur, interval);
           else cur = addDays(cur, interval);
         }
-        // For daily rules with interval=1, always spawn today
-        if (!matched && rule.freq === "daily" && interval === 1) matched = true;
+        // Daily means every calendar day, regardless of any old interval value.
+        if (!matched && rule.freq === "daily") matched = true;
         if (!matched) continue;
 
         const { error: insErr } = await supabase.from("me_tasks").insert({

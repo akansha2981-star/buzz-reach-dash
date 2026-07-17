@@ -84,7 +84,7 @@ export function deriveStatus(t: Pick<MeTask, "status" | "due_date" | "due_time">
 
 export function nextOccurrence(rule: RecurrenceRule, from: Date): Date {
   const i = Math.max(1, rule.interval || 1);
-  if (rule.freq === "daily") return addDays(from, i);
+  if (rule.freq === "daily") return addDays(from, 1);
   if (rule.freq === "weekly") return addWeeks(from, i);
   if (rule.freq === "monthly") return addMonths(from, i);
   return addDays(from, i);
