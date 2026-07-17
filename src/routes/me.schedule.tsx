@@ -241,9 +241,25 @@ function SchedulePage() {
                 </button>
               ) : (
                 <div className="space-y-2">
-                  {list.map((t) => (
-                    <TaskCard key={t.id} task={t} />
-                  ))}
+                  {list.map((t) =>
+                    (t as any).__virtual ? (
+                      <div
+                        key={t.id}
+                        className="flex items-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm"
+                      >
+                        <Repeat className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                        {t.due_time && (
+                          <span className="text-[11px] text-muted-foreground">{t.due_time}</span>
+                        )}
+                        <Badge variant="outline" className="h-5 shrink-0 border-primary/30 px-1.5 text-[10px] uppercase text-primary">
+                          Recurring
+                        </Badge>
+                      </div>
+                    ) : (
+                      <TaskCard key={t.id} task={t} />
+                    )
+                  )}
                 </div>
               )}
             </section>
