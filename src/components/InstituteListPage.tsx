@@ -496,6 +496,7 @@ export function InstituteListPage({
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               <BulkAddInstituteDialog type={type} />
+              <BulkResetInstituteDialog type={type} />
               <BulkDeleteInstituteDialog type={type} />
               <CreateInstituteDialog type={type} />
             </div>
