@@ -7,11 +7,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { TaskDialog } from "./TaskDialog";
 import { useTaskReminderEngine } from "@/hooks/useTaskReminderEngine";
+import { useRecurringSpawner } from "@/hooks/useRecurringSpawner";
 import { cn } from "@/lib/utils";
 
 export function MeShell({ children, title, subtitle, hideAddTask = false }: { children: ReactNode; title: string; subtitle?: string; hideAddTask?: boolean }) {
   useTaskReminderEngine();
+  useRecurringSpawner();
   const [quickOpen, setQuickOpen] = useState(false);
+
 
   return (
     <div className="space-y-5 pb-24 sm:pb-5">
