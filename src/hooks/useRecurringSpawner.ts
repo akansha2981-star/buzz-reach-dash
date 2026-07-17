@@ -24,6 +24,24 @@ export function useRecurringSpawner() {
 
     (async () => {
       const today = format(new Date(), "yyyy-MM-dd");
+
+      // ── 1. Roll over incomplete non-recurring tasks whose due_date is in the past.
+      //    Their due_date is bumped to today so they appear in Today automatically
+      //    and keep shifting forward each day until the user completes or deletes them.
+      const { data: overdue } = await supabase
+        .from("me_tasks")
+        .select("id")
+        .lt("due_date", today)
+        .is("recurrence_rule", null)
+        .neq("status", "completed");
+      if (overdue && overdue.length > 0) {
+        await supabase
+          .from("me_tasks")
+          .update({ due_date: today })
+          .in("id", overdue.map((t: any) => t.id));
+      }
+
+
       // Fetch all tasks with a recurrence rule for this user
       const { data, error } = await supabase
         .from("me_tasks")
