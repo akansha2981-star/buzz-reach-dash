@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, Trash2, Search, Loader2, FileSpreadsheet, Download } from "lucide-react";
+import { Upload, Trash2, Search, Loader2, FileSpreadsheet, Download, RotateCcw, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -331,6 +331,150 @@ export function BulkDeleteInstituteDialog({ type }: { type: InstituteType }) {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={() => del.mutate()} disabled={del.isPending}>
                   {del.isPending ? "Deleting…" : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function BulkResetInstituteDialog({ type }: { type: InstituteType }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const qc = useQueryClient();
+
+  const { data: list = [] } = useQuery({
+    queryKey: ["institutes", type],
+    queryFn: () => fetchInstitutes(type),
+    enabled: open,
+  });
+
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return list;
+    return list.filter((i: any) =>
+      [i.name, i.city, i.state, i.contact_person].filter(Boolean).some((v: string) => v.toLowerCase().includes(t))
+    );
+  }, [list, q]);
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((i: any) => selected.has(i.id));
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (allVisibleSelected) filtered.forEach((i: any) => n.delete(i.id));
+      else filtered.forEach((i: any) => n.add(i.id));
+      return n;
+    });
+  };
+
+  const reset = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selected);
+      if (!ids.length) throw new Error("Nothing selected");
+      // Wipe activities, tasks, meetings — keep institute record itself
+      await supabase.from("outreach_activities").delete().in("institute_id", ids);
+      await supabase.from("tasks").delete().in("institute_id", ids);
+      await supabase.from("meetings").delete().in("institute_id", ids);
+      // Reset progress fields so the institute is "fresh"
+      const { error } = await supabase
+        .from("institutes")
+        .update({ current_stage_id: null, next_meeting_at: null, notes: null })
+        .in("id", ids);
+      if (error) throw error;
+      await logAction({ action: "institute.bulk_reset", entity_type: "institute", details: { type, count: ids.length } });
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`Reset ${n} ${n === 1 ? "profile" : "profiles"} — all activities cleared`);
+      qc.invalidateQueries({ queryKey: ["institutes", type] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["outreach-activities"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["meetings"] });
+      setSelected(new Set()); setOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setSelected(new Set()); setQ(""); } }}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5">
+          <RotateCcw className="h-4 w-4" /> Bulk reset
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Reset {type === "college" ? "colleges" : "coaching institutes"} to fresh
+          </DialogTitle>
+          <DialogDescription>
+            Select profiles to clear. All their <strong>activities, tasks, meetings</strong> and current stage will be removed — the profile itself stays. Use this to start fresh outreach.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2">
+              <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAll} />
+              <span className="text-muted-foreground">Select all visible ({filtered.length})</span>
+            </label>
+            <Badge variant={selected.size ? "default" : "secondary"}>{selected.size} selected</Badge>
+          </div>
+          <ScrollArea className="h-[360px] rounded-md border">
+            <ul className="divide-y">
+              {filtered.length === 0 && <li className="p-6 text-center text-sm text-muted-foreground">No matches</li>}
+              {filtered.map((i: any) => (
+                <li key={i.id} className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/40">
+                  <Checkbox checked={selected.has(i.id)} onCheckedChange={() => toggle(i.id)} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{i.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {[i.city, i.state].filter(Boolean).join(", ") || "—"}
+                      {i.contact_person ? ` · ${i.contact_person}` : ""}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={!selected.size || reset.isPending} className="gap-1.5">
+                <RotateCcw className="h-4 w-4" /> Reset {selected.size || ""}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset {selected.size} {selected.size === 1 ? "profile" : "profiles"}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently removes all activities, tasks, meetings and the current outreach stage on the selected {type === "college" ? "colleges" : "coaching institutes"}. The profiles themselves stay so you can start fresh. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => reset.mutate()} disabled={reset.isPending}>
+                  {reset.isPending ? "Resetting…" : "Reset"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
