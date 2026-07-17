@@ -21,6 +21,8 @@ export type Institute = {
   current_stage_id: string | null;
   notes: string | null;
   next_meeting_at: string | null;
+  priority: number | null;
+  sort_order: number | null;
   created_at: string;
   updated_at: string;
 };

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchStages, type InstituteType } from "@/lib/data";
 import { logAction } from "@/lib/access";
+import { PRIORITY_OPTIONS, PRIORITY_META } from "@/lib/priority";
 import { toast } from "sonner";
 
 export function EditInstituteDialog({ institute, type }: { institute: any; type: InstituteType }) {
@@ -26,6 +27,8 @@ export function EditInstituteDialog({ institute, type }: { institute: any; type:
     contact_designation: institute.contact_designation ?? "",
     notes: institute.notes ?? "",
     current_stage_id: institute.current_stage_id ?? "",
+    priority: institute.priority ? String(institute.priority) : "",
+    sort_order: institute.sort_order != null ? String(institute.sort_order) : "",
   });
 
   const upd = useMutation({
@@ -39,6 +42,8 @@ export function EditInstituteDialog({ institute, type }: { institute: any; type:
         contact_designation: form.contact_designation || null,
         notes: form.notes || null,
         current_stage_id: form.current_stage_id || null,
+        priority: form.priority ? Number(form.priority) : null,
+        sort_order: form.sort_order ? Number(form.sort_order) : 0,
       }).eq("id", institute.id);
       if (error) throw error;
       await logAction({ action: "institute.updated", entity_type: "institute", entity_id: institute.id, entity_label: form.name });
@@ -72,12 +77,34 @@ export function EditInstituteDialog({ institute, type }: { institute: any; type:
             <div><Label>Contact person</Label><Input value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} /></div>
             <div><Label>Designation</Label><Input value={form.contact_designation} onChange={(e) => setForm({ ...form, contact_designation: e.target.value })} /></div>
           </div>
-          <div>
-            <Label>Outreach stage</Label>
-            <Select value={form.current_stage_id} onValueChange={(v) => setForm({ ...form, current_stage_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Select stage" /></SelectTrigger>
-              <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label>Outreach stage</Label>
+              <Select value={form.current_stage_id} onValueChange={(v) => setForm({ ...form, current_stage_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select stage" /></SelectTrigger>
+                <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
+                <SelectTrigger><SelectValue placeholder="No priority" /></SelectTrigger>
+                <SelectContent>
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={String(p)}>
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ background: PRIORITY_META[p].color }} />
+                        {PRIORITY_META[p].label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Sort order</Label>
+              <Input type="number" placeholder="0" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
+            </div>
           </div>
           <div><Label>Notes</Label><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           <DialogFooter>

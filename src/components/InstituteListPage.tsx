@@ -69,6 +69,7 @@ import { InstituteTimelineDialog } from "@/components/InstituteTimelineDialog";
 import { AddTaskPopover } from "@/components/AddTaskPopover";
 import { EditInstituteDialog, DeleteInstituteButton } from "@/components/EditInstituteDialog";
 import { QuickDocUploadPopover } from "@/components/QuickDocUploadPopover";
+import { PRIORITY_OPTIONS, PRIORITY_META } from "@/lib/priority";
 
 type ViewMode = "grid" | "list" | "table" | "compact";
 type InstituteWithMeta = Institute & {
@@ -122,7 +123,8 @@ export function InstituteListPage({
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"recent" | "name" | "stage" | "meeting">("recent");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"recent" | "name" | "stage" | "meeting" | "priority" | "sort_order">("recent");
   const [view, setView] = useState<ViewMode>(() => {
     if (typeof window === "undefined") return "grid";
     return (localStorage.getItem(`institute-view:${type}`) as ViewMode) || "grid";
@@ -242,6 +244,8 @@ export function InstituteListPage({
         return false;
       if (cityFilter !== "all" && i.city !== cityFilter) return false;
       if (stateFilter !== "all" && i.state !== stateFilter) return false;
+      if (priorityFilter === "none" && i.priority) return false;
+      if (priorityFilter !== "all" && priorityFilter !== "none" && String(i.priority ?? "") !== priorityFilter) return false;
       if (!m) return true;
       return [i.name, i.city, i.state, i.contact_person, i.contact_designation].some((v) =>
         v?.toLowerCase().includes(m),
@@ -262,6 +266,18 @@ export function InstituteListPage({
         const bt = b.next_meeting_at ? +new Date(b.next_meeting_at) : Infinity;
         return at - bt;
       }
+      if (sortBy === "priority") {
+        const ap = a.priority ?? 999;
+        const bp = b.priority ?? 999;
+        if (ap !== bp) return ap - bp;
+        return a.name.localeCompare(b.name);
+      }
+      if (sortBy === "sort_order") {
+        const ao = a.sort_order ?? 0;
+        const bo = b.sort_order ?? 0;
+        if (ao !== bo) return ao - bo;
+        return a.name.localeCompare(b.name);
+      }
       return +new Date(b.updated_at ?? b.created_at) - +new Date(a.updated_at ?? a.created_at);
     });
     return out.map((i): InstituteWithMeta => {
@@ -280,16 +296,17 @@ export function InstituteListPage({
         accent: stage?.color ?? "var(--primary)",
       };
     });
-  }, [list, q, stageFilter, cityFilter, stateFilter, sortBy, stages, lastActivityMap]);
+  }, [list, q, stageFilter, cityFilter, stateFilter, priorityFilter, sortBy, stages, lastActivityMap]);
 
   const staleCount = useMemo(() => list.filter(isStale).length, [list, lastActivityMap]);
-  const activeFilterCount = [stageFilter, cityFilter, stateFilter].filter(
+  const activeFilterCount = [stageFilter, cityFilter, stateFilter, priorityFilter].filter(
     (v) => v !== "all",
   ).length;
   const clearFilters = () => {
     setStageFilter("all");
     setCityFilter("all");
     setStateFilter("all");
+    setPriorityFilter("all");
     setQ("");
   };
 
@@ -300,7 +317,22 @@ export function InstituteListPage({
     setStageNote("");
   };
 
+  const PriorityBadge = ({ i }: { i: InstituteWithMeta }) => {
+    if (!i.priority) return null;
+    const meta = PRIORITY_META[i.priority];
+    return (
+      <Badge
+        variant="outline"
+        className="shrink-0 gap-1 px-1.5 py-0 text-[10px] font-semibold"
+        style={{ background: meta.bg, color: meta.color, borderColor: meta.border }}
+      >
+        P{i.priority}
+      </Badge>
+    );
+  };
+
   const StageBadge = ({ i }: { i: InstituteWithMeta }) =>
+
     i.stage ? (
       <Badge
         style={{
@@ -522,11 +554,13 @@ export function InstituteListPage({
                   <SelectItem value="name">Name (A–Z)</SelectItem>
                   <SelectItem value="stage">Stage (latest)</SelectItem>
                   <SelectItem value="meeting">Next meeting</SelectItem>
+                  <SelectItem value="priority">Priority (P1 → P5)</SelectItem>
+                  <SelectItem value="sort_order">Sort order (manual)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-[150px_150px_150px_1fr_auto] lg:items-center">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-[140px_140px_140px_140px_1fr_auto] lg:items-center">
               <Select value={stageFilter} onValueChange={setStageFilter}>
                 <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
@@ -563,6 +597,23 @@ export function InstituteListPage({
                   {states.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All priorities</SelectItem>
+                  <SelectItem value="none">No priority</SelectItem>
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={String(p)}>
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ background: PRIORITY_META[p].color }} />
+                        {PRIORITY_META[p].label}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -665,9 +716,12 @@ export function InstituteListPage({
                         params={{ type: i.typePath, id: i.id }}
                         className="min-w-0 flex-1 hover:text-primary"
                       >
-                        <h3 className="line-clamp-2 font-display text-base font-semibold leading-tight sm:text-lg">
-                          {i.name}
-                        </h3>
+                        <div className="flex min-w-0 items-start gap-2">
+                          <PriorityBadge i={i} />
+                          <h3 className="line-clamp-2 font-display text-base font-semibold leading-tight sm:text-lg">
+                            {i.name}
+                          </h3>
+                        </div>
                         <MetaLine i={i} />
                       </Link>
                       <div className="flex shrink-0 items-center gap-0.5">
@@ -721,6 +775,7 @@ export function InstituteListPage({
                           {i.stale && (
                             <AlertTriangle className="mt-1 h-3.5 w-3.5 shrink-0 animate-pulse text-destructive" />
                           )}
+                          <PriorityBadge i={i} />
                           <h3 className="line-clamp-2 font-display text-base font-semibold">
                             {i.name}
                           </h3>
@@ -764,9 +819,12 @@ export function InstituteListPage({
                           params={{ type: i.typePath, id: i.id }}
                           className="min-w-0 hover:text-primary"
                         >
-                          <h3 className="line-clamp-2 font-display text-base font-semibold">
-                            {i.name}
-                          </h3>
+                          <div className="flex min-w-0 items-start gap-2">
+                            <PriorityBadge i={i} />
+                            <h3 className="line-clamp-2 font-display text-base font-semibold">
+                              {i.name}
+                            </h3>
+                          </div>
                           <MetaLine i={i} />
                         </Link>
                         <StageBadge i={i} />
@@ -816,6 +874,7 @@ export function InstituteListPage({
                                 {i.stale && (
                                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 animate-pulse text-destructive" />
                                 )}
+                                <PriorityBadge i={i} />
                                 <span className="line-clamp-1">{i.name}</span>
                               </span>
                             </Link>
@@ -882,7 +941,10 @@ export function InstituteListPage({
                       params={{ type: i.typePath, id: i.id }}
                       className="min-w-0 flex-1 hover:text-primary"
                     >
-                      <span className="line-clamp-1 text-sm font-medium">{i.name}</span>
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <PriorityBadge i={i} />
+                        <span className="line-clamp-1 text-sm font-medium">{i.name}</span>
+                      </span>
                       <MetaLine i={i} />
                     </Link>
                   </div>

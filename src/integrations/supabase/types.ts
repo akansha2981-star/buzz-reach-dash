@@ -891,6 +891,8 @@ export type Database = {
           name: string
           next_meeting_at: string | null
           notes: string | null
+          priority: number | null
+          sort_order: number
           state: string | null
           type: Database["public"]["Enums"]["institute_type"]
           updated_at: string
@@ -907,6 +909,8 @@ export type Database = {
           name: string
           next_meeting_at?: string | null
           notes?: string | null
+          priority?: number | null
+          sort_order?: number
           state?: string | null
           type: Database["public"]["Enums"]["institute_type"]
           updated_at?: string
@@ -923,6 +927,8 @@ export type Database = {
           name?: string
           next_meeting_at?: string | null
           notes?: string | null
+          priority?: number | null
+          sort_order?: number
           state?: string | null
           type?: Database["public"]["Enums"]["institute_type"]
           updated_at?: string
