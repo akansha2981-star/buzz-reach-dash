@@ -18,7 +18,7 @@ export type RecurrenceRule = {
 
 export function normalizeRecurrenceFreq(rule: RecurrenceRule | null | undefined | any): RecurrenceFreq | null {
   const raw = String(rule?.freq ?? rule?.frequency ?? rule?.repeat ?? rule?.type ?? "").toLowerCase();
-  if (raw.includes("daily") || raw === "day") return "daily";
+  if (raw.includes("daily") || raw.includes("everyday") || raw.includes("every_day") || raw.includes("day")) return "daily";
   if (raw.includes("weekly") || raw === "week") return "weekly";
   if (raw.includes("monthly") || raw === "month") return "monthly";
   if (raw.includes("custom")) return "custom";
