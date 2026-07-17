@@ -304,12 +304,12 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                   <Label className="text-[11px] text-muted-foreground">Every</Label>
                   <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-8 w-20" />
                   <span className="text-[11px] text-muted-foreground">
-                    {recurFreq === "daily" && "day(s)"}
-                    {recurFreq === "weekly" && "week(s)"}
-                    {recurFreq === "monthly" && "month(s)"}
+                    {recurFreq === "daily" && (Number(recurInterval) === 1 ? "day — repeats daily" : "day(s)")}
+                    {recurFreq === "weekly" && (Number(recurInterval) === 1 ? "week — repeats weekly" : "week(s)")}
+                    {recurFreq === "monthly" && (Number(recurInterval) === 1 ? "month — repeats monthly" : "month(s)")}
                     {recurFreq === "custom" && "day(s)"}
                   </span>
-                  <span className="ml-auto text-[10px] text-muted-foreground">Auto-added to Today each cycle</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground">Repeats forever · no end date</span>
                 </motion.div>
               )}
             </AnimatePresence>
