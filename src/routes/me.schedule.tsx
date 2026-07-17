@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   addDays,
+  addMonths,
+  addWeeks,
   differenceInCalendarDays,
   format,
   isSameDay,
@@ -9,7 +11,7 @@ import {
   startOfDay,
   startOfWeek,
 } from "date-fns";
-import { CalendarDays, ChevronLeft, ChevronRight, Inbox, Plus } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Inbox, Plus, Repeat } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
