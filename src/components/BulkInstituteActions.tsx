@@ -60,9 +60,41 @@ function parseBulk(text: string): ParsedRow[] {
 export function BulkAddInstituteDialog({ type }: { type: InstituteType }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
   const { user } = useAuth();
   const parsed = useMemo(() => parseBulk(text), [text]);
+
+  const onPickFile = async (f: File | null) => {
+    if (!f) return;
+    const okType = /\.(csv|txt|tsv)$/i.test(f.name) || f.type.includes("csv") || f.type.includes("text");
+    if (!okType) { toast.error("Please upload a CSV or TXT file"); return; }
+    if (f.size > 5 * 1024 * 1024) { toast.error("File too large (max 5MB)"); return; }
+    try {
+      let content = await f.text();
+      // Normalize TSV → CSV
+      if (/\t/.test(content) && !/,/.test(content.split(/\r?\n/)[0] ?? "")) {
+        content = content.replace(/\t/g, ",");
+      }
+      setText(content);
+      setFileName(f.name);
+      toast.success(`Loaded ${f.name}`);
+    } catch (e: any) {
+      toast.error("Could not read file");
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = "name,city,state,website,contact_person,email,phone\nExample Institute,Mumbai,MH,https://example.edu,Rajesh Sharma,contact@example.edu,+91 9876543210\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type === "college" ? "colleges" : "coachings"}-template.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const create = useMutation({
     mutationFn: async () => {
