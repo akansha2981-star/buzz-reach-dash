@@ -256,7 +256,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
           </div>
 
           {/* Meta row */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><TagIcon className="h-3 w-3" /> Tags</Label>
               <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="comma, separated" className="h-9" />
@@ -265,18 +265,33 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
               <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Timer className="h-3 w-3" /> Est. min</Label>
               <Input type="number" value={estimated} onChange={(e) => setEstimated(e.target.value)} placeholder="30" className="h-9" />
             </div>
-            <div className="space-y-1.5">
-              <Label className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Repeat className="h-3 w-3" /> Repeat</Label>
-              <Select value={recurFreq} onValueChange={(v) => setRecurFreq(v as any)}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
+          </div>
+
+          {/* Repeat — own prominent row */}
+          <div className="space-y-2 rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 to-transparent p-3">
+            <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Repeat className="h-3.5 w-3.5" /> Repeat this task
+            </Label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {(["none","daily","weekly","monthly","custom"] as const).map((f) => {
+                const active = recurFreq === f;
+                const labels: Record<string,string> = { none:"Off", daily:"Daily", weekly:"Weekly", monthly:"Monthly", custom:"Custom" };
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setRecurFreq(f as any)}
+                    className={cn(
+                      "rounded-lg border px-2 py-1.5 text-xs font-semibold transition-all",
+                      active
+                        ? "border-transparent bg-gradient-to-br from-primary to-primary/80 text-white shadow-sm"
+                        : "border-border/70 bg-background/60 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {labels[f]}
+                  </button>
+                );
+              })}
             </div>
             <AnimatePresence>
               {recurFreq !== "none" && (
@@ -284,14 +299,22 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-1.5"
+                  className="flex items-center gap-2 pt-1"
                 >
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Every N</Label>
-                  <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-9" />
+                  <Label className="text-[11px] text-muted-foreground">Every</Label>
+                  <Input type="number" min={1} value={recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-8 w-20" />
+                  <span className="text-[11px] text-muted-foreground">
+                    {recurFreq === "daily" && "day(s)"}
+                    {recurFreq === "weekly" && "week(s)"}
+                    {recurFreq === "monthly" && "month(s)"}
+                    {recurFreq === "custom" && "day(s)"}
+                  </span>
+                  <span className="ml-auto text-[10px] text-muted-foreground">Auto-added to Today each cycle</span>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
+
         </div>
 
         <DialogFooter className="gap-2 border-t border-border/60 bg-muted/20 px-6 py-3">

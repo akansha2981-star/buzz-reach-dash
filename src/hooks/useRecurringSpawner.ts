@@ -1,0 +1,97 @@
+import { useEffect, useRef } from "react";
+import { addDays, addMonths, addWeeks, format, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import type { RecurrenceRule } from "@/lib/me";
+
+/**
+ * Ensures that every recurring task has an instance for today's local date.
+ * Runs once per session per user. Called from MeShell so it fires whenever
+ * the workspace opens (which effectively "runs at 12:00 AM" the next time
+ * the user visits after midnight).
+ */
+export function useRecurringSpawner() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const ran = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const key = `${user.id}:${format(new Date(), "yyyy-MM-dd")}`;
+    if (ran.current === key) return;
+    ran.current = key;
+
+    (async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      // Fetch all tasks with a recurrence rule for this user
+      const { data, error } = await supabase
+        .from("me_tasks")
+        .select("*")
+        .not("recurrence_rule", "is", null);
+      if (error || !data) return;
+
+      // Group by "template id" = recurrence_parent_id ?? id
+      const groups = new Map<string, any[]>();
+      for (const t of data) {
+        const gid = (t as any).recurrence_parent_id ?? t.id;
+        const arr = groups.get(gid) ?? [];
+        arr.push(t);
+        groups.set(gid, arr);
+      }
+
+      let spawned = 0;
+      for (const [gid, items] of groups) {
+        // Skip if any instance already exists for today
+        if (items.some((t) => t.due_date === today)) continue;
+
+        // Find the most recent instance to use as the template
+        const sorted = [...items].sort((a, b) => (b.due_date ?? "").localeCompare(a.due_date ?? ""));
+        const template = sorted[0];
+        const rule = template.recurrence_rule as RecurrenceRule | null;
+        if (!rule) continue;
+        if (!template.due_date) continue;
+
+        // Walk occurrences forward from the template's due_date until we reach or pass today
+        let cur = parseISO(template.due_date);
+        const todayD = parseISO(today);
+        const interval = Math.max(1, rule.interval || 1);
+        let safety = 400;
+        let matched = false;
+        while (cur <= todayD && safety-- > 0) {
+          if (format(cur, "yyyy-MM-dd") === today) {
+            matched = true;
+            break;
+          }
+          if (rule.freq === "daily") cur = addDays(cur, interval);
+          else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
+          else if (rule.freq === "monthly") cur = addMonths(cur, interval);
+          else cur = addDays(cur, interval);
+        }
+        // For daily rules with interval=1, always spawn today
+        if (!matched && rule.freq === "daily" && interval === 1) matched = true;
+        if (!matched) continue;
+
+        const { error: insErr } = await supabase.from("me_tasks").insert({
+          user_id: user.id,
+          title: template.title,
+          description: template.description,
+          priority: template.priority,
+          due_date: today,
+          due_time: template.due_time,
+          category: template.category,
+          tags: template.tags,
+          estimated_minutes: template.estimated_minutes,
+          recurrence_rule: template.recurrence_rule,
+          recurrence_parent_id: gid,
+          status: "pending",
+        });
+        if (!insErr) spawned++;
+      }
+
+      if (spawned > 0) {
+        qc.invalidateQueries({ queryKey: ["me-tasks", user.id] });
+      }
+    })();
+  }, [user, qc]);
+}
