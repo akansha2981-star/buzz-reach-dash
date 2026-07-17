@@ -187,7 +187,6 @@ export function useToggleComplete() {
         : { status: "pending", completed_at: null };
       const { error } = await supabase.from("me_tasks").update(patch).eq("id", task.id);
       if (error) throw error;
-      // Regenerate recurring task on completion
       if (completing && task.recurrence_rule && task.due_date) {
         const next = nextOccurrence(task.recurrence_rule, parseISO(task.due_date));
         const { error: insErr } = await supabase.from("me_tasks").insert({
@@ -206,7 +205,25 @@ export function useToggleComplete() {
         if (insErr) throw insErr;
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["me-tasks", user?.id] }),
+    onMutate: async (task: MeTask) => {
+      const key = ["me-tasks", user?.id];
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<MeTask[]>(key);
+      const completing = task.status !== "completed";
+      qc.setQueryData<MeTask[]>(key, (old) =>
+        (old ?? []).map((t) =>
+          t.id === task.id
+            ? { ...t, status: completing ? "completed" : "pending", completed_at: completing ? new Date().toISOString() : null }
+            : t
+        )
+      );
+      return { prev };
+    },
+    onError: (_e, _t, ctx: any) => {
+      if (ctx?.prev) qc.setQueryData(["me-tasks", user?.id], ctx.prev);
+      toast.error("Could not update task");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["me-tasks", user?.id] }),
   });
 }
 
