@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fetchStages, type InstituteType } from "@/lib/data";
 import { logAction } from "@/lib/access";
+import { PRIORITY_OPTIONS, PRIORITY_META } from "@/lib/priority";
 import { toast } from "sonner";
 
 export function CreateInstituteDialog({ type }: { type: InstituteType }) {
@@ -20,7 +21,7 @@ export function CreateInstituteDialog({ type }: { type: InstituteType }) {
   const { data: stages = [] } = useQuery({ queryKey: ["stages"], queryFn: fetchStages });
   const [form, setForm] = useState({
     name: "", city: "", state: "", website: "", contact_person: "", contact_designation: "",
-    notes: "", current_stage_id: "",
+    notes: "", current_stage_id: "", priority: "" as string, sort_order: "" as string,
   });
   const [emails, setEmails] = useState<string[]>([""]);
   const [phones, setPhones] = useState<string[]>([""]);
@@ -31,7 +32,10 @@ export function CreateInstituteDialog({ type }: { type: InstituteType }) {
         type, name: form.name, city: form.city || null, state: form.state || null,
         website: form.website || null, contact_person: form.contact_person || null,
         contact_designation: form.contact_designation || null, notes: form.notes || null,
-        current_stage_id: form.current_stage_id || null, created_by: user?.id ?? null,
+        current_stage_id: form.current_stage_id || null,
+        priority: form.priority ? Number(form.priority) : null,
+        sort_order: form.sort_order ? Number(form.sort_order) : 0,
+        created_by: user?.id ?? null,
       }).select().single();
       if (error) throw error;
       const cleanEmails = emails.map((e) => e.trim()).filter(Boolean).map((email) => ({ institute_id: inst.id, email }));
@@ -52,7 +56,7 @@ export function CreateInstituteDialog({ type }: { type: InstituteType }) {
       qc.invalidateQueries({ queryKey: ["institutes", type] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false);
-      setForm({ name: "", city: "", state: "", website: "", contact_person: "", contact_designation: "", notes: "", current_stage_id: "" });
+      setForm({ name: "", city: "", state: "", website: "", contact_person: "", contact_designation: "", notes: "", current_stage_id: "", priority: "", sort_order: "" });
       setEmails([""]); setPhones([""]);
     },
     onError: (e: any) => toast.error(e.message),
@@ -100,12 +104,34 @@ export function CreateInstituteDialog({ type }: { type: InstituteType }) {
             <Button type="button" variant="outline" size="sm" onClick={() => setPhones([...phones, ""])}><Plus className="mr-1 h-3 w-3" /> Add phone</Button>
           </div>
 
-          <div>
-            <Label>Initial outreach stage</Label>
-            <Select value={form.current_stage_id} onValueChange={(v) => setForm({ ...form, current_stage_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Select stage (optional)" /></SelectTrigger>
-              <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label>Initial outreach stage</Label>
+              <Select value={form.current_stage_id} onValueChange={(v) => setForm({ ...form, current_stage_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select stage (optional)" /></SelectTrigger>
+                <SelectContent>{stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
+                <SelectTrigger><SelectValue placeholder="No priority" /></SelectTrigger>
+                <SelectContent>
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={String(p)}>
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ background: PRIORITY_META[p].color }} />
+                        {PRIORITY_META[p].label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Sort order</Label>
+              <Input type="number" placeholder="0" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
+            </div>
           </div>
 
           <div><Label>Notes</Label><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
