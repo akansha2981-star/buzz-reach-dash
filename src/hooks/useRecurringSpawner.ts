@@ -70,7 +70,8 @@ export function useRecurringSpawner() {
         if (!rule) continue;
 
         // Walk occurrences forward from the template's due_date until we reach or pass today
-        let cur = parseISO(getRecurringAnchorDate(template));
+        const anchorDate = getRecurringAnchorDate(template);
+        let cur = parseISO(anchorDate);
         const todayD = parseISO(today);
         const interval = rule.freq === "daily" ? 1 : Math.max(1, rule.interval || 1);
         let safety = 400;
@@ -86,7 +87,7 @@ export function useRecurringSpawner() {
           else cur = addDays(cur, interval);
         }
         // Daily means every calendar day, regardless of any old interval value.
-        if (!matched && rule.freq === "daily") matched = true;
+        if (!matched && rule.freq === "daily" && parseISO(anchorDate) <= todayD) matched = true;
         if (!matched) continue;
 
         const { error: insErr } = await supabase.from("me_tasks").insert({
