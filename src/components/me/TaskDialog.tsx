@@ -285,6 +285,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                     type="button"
                     onClick={() => {
                       setRecurFreq(f as any);
+                      if (f === "daily") setRecurInterval("1");
                       if (f !== "none" && !dueDate) setDueDate(format(new Date(), "yyyy-MM-dd"));
                     }}
                     className={cn(
@@ -310,7 +311,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultDate }: Props) {
                   <Label className="text-[11px] text-muted-foreground">Every</Label>
                   <Input type="number" min={1} value={recurFreq === "daily" ? "1" : recurInterval} onChange={(e) => setRecurInterval(e.target.value)} className="h-8 w-20" disabled={recurFreq === "daily"} />
                   <span className="text-[11px] text-muted-foreground">
-                    {recurFreq === "daily" && (Number(recurInterval) === 1 ? "day — repeats daily" : "day(s)")}
+                    {recurFreq === "daily" && "day — repeats daily"}
                     {recurFreq === "weekly" && (Number(recurInterval) === 1 ? "week — repeats weekly" : "week(s)")}
                     {recurFreq === "monthly" && (Number(recurInterval) === 1 ? "month — repeats monthly" : "month(s)")}
                     {recurFreq === "custom" && "day(s)"}
