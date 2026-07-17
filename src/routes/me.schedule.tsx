@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
 import { TaskDialog } from "@/components/me/TaskDialog";
-import { useMyTasks, type MeTask } from "@/lib/me";
+import { normalizeRecurrenceFreq, recurrenceInterval, useMyTasks, type MeTask } from "@/lib/me";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/me/schedule")({
@@ -94,7 +94,9 @@ function SchedulePage() {
 
     groups.forEach(({ anchor, template: tpl }, gid) => {
       const rule = tpl.recurrence_rule!;
-      const interval = rule.freq === "daily" ? 1 : Math.max(1, rule.interval || 1);
+      const freq = normalizeRecurrenceFreq(rule);
+      if (!freq) return;
+      const interval = recurrenceInterval(rule);
       let cur = parseISO(anchor);
       let safety = 800;
       while (cur <= rangeEnd && safety-- > 0) {
@@ -113,10 +115,10 @@ function SchedulePage() {
           map.set(key, arr);
           existing.add(`${gid}:${key}`);
         }
-        if (rule.freq === "daily") cur = addDays(cur, 1);
-        else if (rule.freq === "custom") cur = addDays(cur, interval);
-        else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
-        else if (rule.freq === "monthly") cur = addMonths(cur, interval);
+        if (freq === "daily") cur = addDays(cur, 1);
+        else if (freq === "custom") cur = addDays(cur, interval);
+        else if (freq === "weekly") cur = addWeeks(cur, interval);
+        else if (freq === "monthly") cur = addMonths(cur, interval);
         else cur = addDays(cur, interval);
       }
     });
