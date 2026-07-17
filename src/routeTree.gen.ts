@@ -28,6 +28,7 @@ import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
 import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
 import { Route as MeTasksRouteImport } from './routes/me.tasks'
+import { Route as MeScheduleRouteImport } from './routes/me.schedule'
 import { Route as MeFocusRouteImport } from './routes/me.focus'
 import { Route as MeConfidentialRouteImport } from './routes/me.confidential'
 import { Route as MeCalendarRouteImport } from './routes/me.calendar'
@@ -141,6 +142,11 @@ const OutreachTypeRoute = OutreachTypeRouteImport.update({
 const MeTasksRoute = MeTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeScheduleRoute = MeScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => MeRoute,
 } as any)
 const MeFocusRoute = MeFocusRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
+  '/me/schedule': typeof MeScheduleRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
+  '/me/schedule': typeof MeScheduleRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/me/calendar': typeof MeCalendarRoute
   '/me/confidential': typeof MeConfidentialRoute
   '/me/focus': typeof MeFocusRoute
+  '/me/schedule': typeof MeScheduleRoute
   '/me/tasks': typeof MeTasksRoute
   '/outreach/$type': typeof OutreachTypeRouteWithChildren
   '/outreach/coaching': typeof OutreachCoachingRoute
@@ -381,6 +390,7 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
+    | '/me/schedule'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
+    | '/me/schedule'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -459,6 +470,7 @@ export interface FileRouteTypes {
     | '/me/calendar'
     | '/me/confidential'
     | '/me/focus'
+    | '/me/schedule'
     | '/me/tasks'
     | '/outreach/$type'
     | '/outreach/coaching'
@@ -645,6 +657,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeTasksRouteImport
       parentRoute: typeof MeRoute
     }
+    '/me/schedule': {
+      id: '/me/schedule'
+      path: '/schedule'
+      fullPath: '/me/schedule'
+      preLoaderRoute: typeof MeScheduleRouteImport
+      parentRoute: typeof MeRoute
+    }
     '/me/focus': {
       id: '/me/focus'
       path: '/focus'
@@ -799,6 +818,7 @@ interface MeRouteChildren {
   MeCalendarRoute: typeof MeCalendarRoute
   MeConfidentialRoute: typeof MeConfidentialRoute
   MeFocusRoute: typeof MeFocusRoute
+  MeScheduleRoute: typeof MeScheduleRoute
   MeTasksRoute: typeof MeTasksRoute
   MeIndexRoute: typeof MeIndexRoute
 }
@@ -808,6 +828,7 @@ const MeRouteChildren: MeRouteChildren = {
   MeCalendarRoute: MeCalendarRoute,
   MeConfidentialRoute: MeConfidentialRoute,
   MeFocusRoute: MeFocusRoute,
+  MeScheduleRoute: MeScheduleRoute,
   MeTasksRoute: MeTasksRoute,
   MeIndexRoute: MeIndexRoute,
 }
