@@ -93,6 +93,19 @@ export function TaskCard({ task }: { task: MeTask }) {
                       <Repeat className="h-3 w-3" /> {task.recurrence_rule.freq}
                     </span>
                   )}
+                  {(() => {
+                    if (!task.due_date || !task.created_at || task.status === "completed") return null;
+                    const today = format(new Date(), "yyyy-MM-dd");
+                    const createdDay = task.created_at.slice(0, 10);
+                    if (task.due_date !== today || createdDay >= today) return null;
+                    const days = Math.max(1, Math.floor((Date.now() - parseISO(createdDay).getTime()) / 86400000));
+                    return (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                        ↻ Carried over {days}d
+                      </span>
+                    );
+                  })()}
+
                   {task.estimated_minutes && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                       <Timer className="h-3 w-3" /> {task.estimated_minutes}m
