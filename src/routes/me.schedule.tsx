@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
 import { TaskDialog } from "@/components/me/TaskDialog";
-import { useMyTasks, type MeTask } from "@/lib/me";
+import { normalizeRecurrenceFreq, recurrenceInterval, useMyTasks, type MeTask } from "@/lib/me";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/me/schedule")({
@@ -32,6 +32,10 @@ function labelFor(date: Date) {
   if (diff === -1) return "Yesterday";
   if (diff > 1 && diff < 7) return format(date, "EEEE");
   return format(date, "EEE, MMM d");
+}
+
+function anchorDateForRecurringTask(task: MeTask) {
+  return task.due_date ?? task.created_at?.slice(0, 10) ?? format(new Date(), "yyyy-MM-dd");
 }
 
 function SchedulePage() {
@@ -53,7 +57,9 @@ function SchedulePage() {
     const existing = new Set<string>();
     tasks.forEach((t) => {
       if (!t.due_date) {
-        if (t.status !== "completed") undated.push(t);
+        // A recurring task without an explicit start date still means “start today
+        // and repeat forever”, so do not hide it under Unscheduled.
+        if (t.status !== "completed" && !t.recurrence_rule) undated.push(t);
         return;
       }
       const arr = map.get(t.due_date) ?? [];
@@ -66,19 +72,32 @@ function SchedulePage() {
     // Project future recurring occurrences into every visible day so daily
     // recurring tasks are visible on the Schedule for every day, not only today.
     const rangeEnd = addDays(rangeStart, days - 1);
-    const groups = new Map<string, MeTask>();
+    const groups = new Map<string, { anchor: string; template: MeTask }>();
     tasks.forEach((t) => {
-      if (!t.recurrence_rule || !t.due_date) return;
+      if (!t.recurrence_rule) return;
       const gid = t.recurrence_parent_id ?? t.id;
-      // Keep the earliest instance as anchor (or the template itself).
+      const anchor = anchorDateForRecurringTask(t);
       const cur = groups.get(gid);
-      if (!cur || (t.due_date ?? "") < (cur.due_date ?? "")) groups.set(gid, t);
+      if (!cur) {
+        groups.set(gid, { anchor, template: t });
+        return;
+      }
+      // Keep the earliest known date as the recurrence anchor, but use the
+      // latest concrete task as the display template so edits are reflected.
+      const latestCurrent = cur.template.due_date ?? cur.template.created_at?.slice(0, 10) ?? "";
+      const latestNext = t.due_date ?? t.created_at?.slice(0, 10) ?? "";
+      groups.set(gid, {
+        anchor: anchor < cur.anchor ? anchor : cur.anchor,
+        template: latestNext >= latestCurrent ? t : cur.template,
+      });
     });
 
-    groups.forEach((tpl, gid) => {
+    groups.forEach(({ anchor, template: tpl }, gid) => {
       const rule = tpl.recurrence_rule!;
-      const interval = Math.max(1, rule.interval || 1);
-      let cur = parseISO(tpl.due_date!);
+      const freq = normalizeRecurrenceFreq(rule);
+      if (!freq) return;
+      const interval = recurrenceInterval(rule);
+      let cur = parseISO(anchor);
       let safety = 800;
       while (cur <= rangeEnd && safety-- > 0) {
         const key = format(cur, "yyyy-MM-dd");
@@ -87,6 +106,7 @@ function SchedulePage() {
             ...tpl,
             id: `virtual:${gid}:${key}`,
             due_date: key,
+            completed_at: null,
             status: "pending",
             __virtual: true,
           } as any;
@@ -95,9 +115,10 @@ function SchedulePage() {
           map.set(key, arr);
           existing.add(`${gid}:${key}`);
         }
-        if (rule.freq === "daily" || rule.freq === "custom") cur = addDays(cur, interval);
-        else if (rule.freq === "weekly") cur = addWeeks(cur, interval);
-        else if (rule.freq === "monthly") cur = addMonths(cur, interval);
+        if (freq === "daily") cur = addDays(cur, 1);
+        else if (freq === "custom") cur = addDays(cur, interval);
+        else if (freq === "weekly") cur = addWeeks(cur, interval);
+        else if (freq === "monthly") cur = addMonths(cur, interval);
         else cur = addDays(cur, interval);
       }
     });

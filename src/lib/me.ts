@@ -16,6 +16,21 @@ export type RecurrenceRule = {
   byDay?: number[]; // 0-6 for weekly
 };
 
+export function normalizeRecurrenceFreq(rule: RecurrenceRule | null | undefined | any): RecurrenceFreq | null {
+  const raw = String(rule?.freq ?? rule?.frequency ?? rule?.repeat ?? rule?.type ?? "").toLowerCase();
+  if (raw.includes("daily") || raw.includes("everyday") || raw.includes("every_day") || raw.includes("day")) return "daily";
+  if (raw.includes("weekly") || raw === "week") return "weekly";
+  if (raw.includes("monthly") || raw === "month") return "monthly";
+  if (raw.includes("custom")) return "custom";
+  return null;
+}
+
+export function recurrenceInterval(rule: RecurrenceRule | null | undefined | any) {
+  const freq = normalizeRecurrenceFreq(rule);
+  if (freq === "daily") return 1;
+  return Math.max(1, Number(rule?.interval ?? rule?.every ?? rule?.repeat_every ?? 1) || 1);
+}
+
 export type MeTask = {
   id: string;
   user_id: string;
@@ -83,10 +98,11 @@ export function deriveStatus(t: Pick<MeTask, "status" | "due_date" | "due_time">
 
 
 export function nextOccurrence(rule: RecurrenceRule, from: Date): Date {
-  const i = Math.max(1, rule.interval || 1);
-  if (rule.freq === "daily") return addDays(from, i);
-  if (rule.freq === "weekly") return addWeeks(from, i);
-  if (rule.freq === "monthly") return addMonths(from, i);
+  const freq = normalizeRecurrenceFreq(rule);
+  const i = recurrenceInterval(rule);
+  if (freq === "daily") return addDays(from, 1);
+  if (freq === "weekly") return addWeeks(from, i);
+  if (freq === "monthly") return addMonths(from, i);
   return addDays(from, i);
 }
 
