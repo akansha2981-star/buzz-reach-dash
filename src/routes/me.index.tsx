@@ -40,10 +40,57 @@ function TodayPage() {
     return { completedToday, dueToday, doneOfDue, overdue, score, streak };
   }, [all, todayTasks, today]);
 
+  const [groupBy, setGroupBy] = useState<"time-of-day" | "status" | "priority" | "none">("time-of-day");
+  const [sortBy, setSortBy] = useState<"due-time" | "priority">("due-time");
+
+  const sortedToday = useMemo(() => {
+    const pr = { urgent: 0, high: 1, medium: 2, low: 3 } as const;
+    const arr = [...todayTasks];
+    arr.sort((a, b) => {
+      if (sortBy === "priority") {
+        if (pr[a.priority] !== pr[b.priority]) return pr[a.priority] - pr[b.priority];
+        return (a.due_time ?? "99:99").localeCompare(b.due_time ?? "99:99");
+      }
+      const at = a.due_time ?? "99:99";
+      const bt = b.due_time ?? "99:99";
+      if (at !== bt) return at.localeCompare(bt);
+      return pr[a.priority] - pr[b.priority];
+    });
+    return arr;
+  }, [todayTasks, sortBy]);
+
   // Timeline buckets
   const buckets = useMemo<Bucket[]>(() => {
+    if (groupBy === "none") {
+      return sortedToday.length
+        ? [{ key: "all", label: "All tasks", icon: LayoutList, hint: "Sorted", tasks: sortedToday }]
+        : [];
+    }
+    if (groupBy === "status") {
+      const map: Record<string, MeTask[]> = { overdue: [], pending: [], in_progress: [], completed: [] };
+      for (const t of sortedToday) {
+        const s = deriveStatus(t);
+        (map[s] ?? map.pending).push(t);
+      }
+      return [
+        { key: "overdue", label: "Overdue", icon: AlarmClock, hint: "Past due", tasks: map.overdue },
+        { key: "in_progress", label: "In progress", icon: Sparkles, hint: "Active", tasks: map.in_progress },
+        { key: "pending", label: "Pending", icon: CalendarClock, hint: "To do", tasks: map.pending },
+        { key: "completed", label: "Completed", icon: CheckCircle2, hint: "Done", tasks: map.completed },
+      ].filter((s) => s.tasks.length > 0);
+    }
+    if (groupBy === "priority") {
+      const map: Record<string, MeTask[]> = { urgent: [], high: [], medium: [], low: [] };
+      for (const t of sortedToday) (map[t.priority] ?? map.medium).push(t);
+      return [
+        { key: "urgent", label: "Urgent", icon: AlarmClock, hint: "Top priority", tasks: map.urgent },
+        { key: "high", label: "High", icon: Sparkles, hint: "Important", tasks: map.high },
+        { key: "medium", label: "Medium", icon: CalendarClock, hint: "Normal", tasks: map.medium },
+        { key: "low", label: "Low", icon: Moon, hint: "Whenever", tasks: map.low },
+      ].filter((s) => s.tasks.length > 0);
+    }
     const b: Record<string, MeTask[]> = { overdue: [], morning: [], afternoon: [], evening: [], night: [], anytime: [], done: [] };
-    for (const t of todayTasks) {
+    for (const t of sortedToday) {
       if (t.status === "completed") { b.done.push(t); continue; }
       if (t.due_date && t.due_date < today) { b.overdue.push(t); continue; }
       if (!t.due_time) { b.anytime.push(t); continue; }
@@ -62,7 +109,7 @@ function TodayPage() {
       { key: "anytime", label: "Anytime today", icon: CalendarClock, hint: "No specific time", tasks: b.anytime },
       { key: "done", label: "Completed today", icon: CheckCircle2, hint: "Great work", tasks: b.done },
     ].filter((s) => s.tasks.length > 0);
-  }, [todayTasks, today]);
+  }, [sortedToday, today, groupBy]);
 
   return (
     <MeShell title={`Hi 👋 — ${format(new Date(), "EEEE, MMM d")}`} subtitle="Your personal workspace. Stay focused, ship more.">
