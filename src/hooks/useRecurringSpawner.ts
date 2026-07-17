@@ -18,12 +18,14 @@ export function useRecurringSpawner() {
 
   useEffect(() => {
     if (!user) return;
-    const key = `${user.id}:${format(new Date(), "yyyy-MM-dd")}`;
-    if (ran.current === key) return;
-    ran.current = key;
+    let cancelled = false;
+    let midnightTimer: ReturnType<typeof setTimeout> | null = null;
 
-    (async () => {
+    const syncRecurringTasks = async () => {
       const today = format(new Date(), "yyyy-MM-dd");
+      const key = `${user.id}:${today}`;
+      if (ran.current === key) return;
+      ran.current = key;
 
       // ── 1. Roll over incomplete non-recurring tasks whose due_date is in the past.
       //    Their due_date is bumped to today so they appear in Today automatically
@@ -111,7 +113,31 @@ export function useRecurringSpawner() {
       if (spawned > 0) {
         qc.invalidateQueries({ queryKey: ["me-tasks", user.id] });
       }
-    })();
+
+      if (!cancelled) {
+        qc.invalidateQueries({ queryKey: ["me-tasks", user.id] });
+      }
+    };
+
+    const scheduleMidnightSync = () => {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setDate(now.getDate() + 1);
+      nextMidnight.setHours(0, 0, 5, 0);
+      midnightTimer = setTimeout(async () => {
+        ran.current = null;
+        await syncRecurringTasks();
+        if (!cancelled) scheduleMidnightSync();
+      }, Math.max(1000, nextMidnight.getTime() - now.getTime()));
+    };
+
+    syncRecurringTasks();
+    scheduleMidnightSync();
+
+    return () => {
+      cancelled = true;
+      if (midnightTimer) clearTimeout(midnightTimer);
+    };
   }, [user, qc]);
 }
 
