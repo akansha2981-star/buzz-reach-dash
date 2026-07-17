@@ -64,15 +64,23 @@ export const STATUS_TONES: Record<MeTaskStatus, string> = {
   overdue: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30",
 };
 
-export function deriveStatus(t: Pick<MeTask, "status" | "due_date">): MeTaskStatus {
+export function deriveStatus(t: Pick<MeTask, "status" | "due_date" | "due_time">): MeTaskStatus {
   if (t.status === "completed") return "completed";
   if (t.due_date) {
-    const d = startOfDay(parseISO(t.due_date));
     const today = startOfDay(new Date());
+    const d = startOfDay(parseISO(t.due_date));
     if (isBefore(d, today)) return "overdue";
+    // Same day: if a time is set and it has passed, mark overdue
+    if (d.getTime() === today.getTime() && t.due_time) {
+      const [h, m] = t.due_time.split(":").map(Number);
+      const dueAt = new Date();
+      dueAt.setHours(h || 0, m || 0, 0, 0);
+      if (dueAt.getTime() < Date.now()) return "overdue";
+    }
   }
   return t.status;
 }
+
 
 export function nextOccurrence(rule: RecurrenceRule, from: Date): Date {
   const i = Math.max(1, rule.interval || 1);
