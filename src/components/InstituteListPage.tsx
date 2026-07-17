@@ -19,6 +19,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { CreateInstituteDialog } from "@/components/CreateInstituteDialog";
+import { BulkAddInstituteDialog, BulkDeleteInstituteDialog } from "@/components/BulkInstituteActions";
 import { MeetingDialog } from "@/routes/meetings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
