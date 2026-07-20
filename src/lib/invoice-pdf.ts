@@ -19,6 +19,16 @@ export const COMPANY = {
 
 export type InvoiceItem = { name: string; description?: string; amount: number };
 
+export type InvoiceBank = {
+  name: string;
+  number: string;
+  ifsc?: string | null;
+  branch?: string | null;
+  branchAddress?: string | null;
+  upi?: string | null;
+  tag?: string | null;
+};
+
 export type InvoicePDFData = {
   invoice_number: string;
   issue_date: string;
@@ -32,6 +42,7 @@ export type InvoicePDFData = {
   items: InvoiceItem[];
   currency?: string;
   notes?: string | null;
+  bank?: InvoiceBank | null;
 };
 
 // Convert number to words (Indian numbering)
