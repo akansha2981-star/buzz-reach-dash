@@ -62,6 +62,53 @@ export type Database = {
         }
         Relationships: []
       }
+      accounts_invoice_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          method: string | null
+          note: string | null
+          paid_on: string
+          reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts_invoices: {
         Row: {
           amount: number
