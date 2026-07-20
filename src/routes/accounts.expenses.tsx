@@ -130,10 +130,8 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
 function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing: Expense | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Partial<Expense>>({});
-  const [key, setKey] = useState(0);
   const reset = () => setForm(editing ?? { currency: "INR", spent_on: new Date().toISOString().slice(0, 10), amount: 0 });
-  if (open && key === 0) { reset(); setKey(1); }
-  if (!open && key === 1) setKey(0);
+  useEffect(() => { if (open) reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
 
   const isEdit = !!editing;
   const save = useMutation({

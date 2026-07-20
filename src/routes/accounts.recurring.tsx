@@ -121,10 +121,8 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
 function RecDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing: Rec | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Partial<Rec>>({});
-  const [key, setKey] = useState(0);
   const reset = () => setForm(editing ?? { currency: "INR", frequency: "monthly", next_due: new Date().toISOString().slice(0, 10), amount: 0, is_active: true });
-  if (open && key === 0) { reset(); setKey(1); }
-  if (!open && key === 1) setKey(0);
+  useEffect(() => { if (open) reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
 
   const isEdit = !!editing;
   const save = useMutation({
