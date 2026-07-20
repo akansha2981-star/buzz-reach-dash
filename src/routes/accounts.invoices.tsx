@@ -176,9 +176,13 @@ function InvoicesPage() {
                       <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
                         <IndianRupee className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Payments</span>
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => setPreviewFor(inv)} title="View PDF">
+                        <Eye className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">View</span>
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
                         <Download className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">PDF</span>
                       </Button>
+
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(inv); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete invoice?")) del.mutate(inv.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
