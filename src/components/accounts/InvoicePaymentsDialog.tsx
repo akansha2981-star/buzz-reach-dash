@@ -101,7 +101,7 @@ export function InvoicePaymentsDialog({
       toast.success("Payment recorded");
       setAmount(""); setReference(""); setNote("");
       qc.invalidateQueries({ queryKey: ["invoice_payments", invoice?.id] });
-      qc.invalidateQueries({ queryKey: ["accounts_invoices"] });
+      qc.invalidateQueries({ queryKey: ["accounts_invoices"] }); qc.invalidateQueries({ queryKey: ["accounts_invoice_payments_sum"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -115,7 +115,7 @@ export function InvoicePaymentsDialog({
     onSuccess: () => {
       toast.success("Payment removed");
       qc.invalidateQueries({ queryKey: ["invoice_payments", invoice?.id] });
-      qc.invalidateQueries({ queryKey: ["accounts_invoices"] });
+      qc.invalidateQueries({ queryKey: ["accounts_invoices"] }); qc.invalidateQueries({ queryKey: ["accounts_invoice_payments_sum"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -138,7 +138,7 @@ export function InvoicePaymentsDialog({
     onSuccess: () => {
       toast.success("Invoice marked paid");
       qc.invalidateQueries({ queryKey: ["invoice_payments", invoice?.id] });
-      qc.invalidateQueries({ queryKey: ["accounts_invoices"] });
+      qc.invalidateQueries({ queryKey: ["accounts_invoices"] }); qc.invalidateQueries({ queryKey: ["accounts_invoice_payments_sum"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
