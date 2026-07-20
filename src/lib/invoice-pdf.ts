@@ -285,19 +285,31 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFillColor(...BRAND.gold);
   doc.rect(M, y, 3, bankH, "F");
 
+  const bank: InvoiceBank = {
+    name: inv.bank?.name || COMPANY.bank.name,
+    number: inv.bank?.number || COMPANY.bank.number,
+    ifsc: inv.bank?.ifsc || COMPANY.bank.ifsc,
+    branch: inv.bank?.branch || COMPANY.bank.branch,
+    branchAddress: inv.bank?.branchAddress || COMPANY.bank.branchAddress,
+    upi: inv.bank?.upi || null,
+    tag: inv.bank?.tag || null,
+  };
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...BRAND.primaryDark);
-  doc.text("BANK DETAILS FOR PAYMENT", M + 14, y + 18);
+  const bankTitle = bank.tag ? `BANK DETAILS FOR PAYMENT — ${bank.tag.toUpperCase()}` : "BANK DETAILS FOR PAYMENT";
+  doc.text(bankTitle, M + 14, y + 18);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.ink);
   const bankRows: Array<[string, string]> = [
-    ["Account Name", COMPANY.bank.name],
-    ["Account Number", COMPANY.bank.number],
-    ["IFSC Code", COMPANY.bank.ifsc],
-    ["Branch", COMPANY.bank.branch],
+    ["Account Name", bank.name],
+    ["Account Number", bank.number],
+    ["IFSC Code", bank.ifsc || "—"],
+    ["Branch", bank.branch || "—"],
   ];
+  if (bank.upi) bankRows.push(["UPI ID", bank.upi]);
   bankRows.forEach(([k, v], i) => {
     const by = y + 36 + i * 15;
     doc.setTextColor(...BRAND.mute);
@@ -309,8 +321,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   });
   doc.setFontSize(8);
   doc.setTextColor(...BRAND.mute);
-  const brAddr = doc.splitTextToSize(`Branch Address: ${COMPANY.bank.branchAddress}`, bankW - 28);
-  doc.text(brAddr, M + 14, y + bankH - 14);
+  if (bank.branchAddress) {
+    const brAddr = doc.splitTextToSize(`Branch Address: ${bank.branchAddress}`, bankW - 28);
+    doc.text(brAddr, M + 14, y + bankH - 14);
+  }
 
   // Signature card
   const sx = M + bankW + 12;
