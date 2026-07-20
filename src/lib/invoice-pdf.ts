@@ -54,168 +54,334 @@ function numberToWordsIndian(num: number): string {
   return result + " Only";
 }
 
+// Brand palette — deep indigo + gold accents (matches app primary)
+const BRAND = {
+  primary: [55, 48, 163] as [number, number, number],       // #3730A3 deep indigo
+  primaryDark: [30, 27, 90] as [number, number, number],    // #1E1B5A
+  gold: [201, 168, 76] as [number, number, number],         // #C9A84C
+  soft: [244, 243, 255] as [number, number, number],        // #F4F3FF
+  ink: [24, 24, 32] as [number, number, number],
+  mute: [110, 110, 125] as [number, number, number],
+  hair: [225, 225, 235] as [number, number, number],
+};
+
+function fmt(n: number) {
+  return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const M = 40;
-  let y = M;
+  const contentW = pageW - M * 2;
+  const currency = inv.currency || "INR";
+  const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
 
-  // Header
+  // ============ HEADER BAND ============
+  doc.setFillColor(...BRAND.primary);
+  doc.rect(0, 0, pageW, 92, "F");
+  // Gold accent stripe
+  doc.setFillColor(...BRAND.gold);
+  doc.rect(0, 92, pageW, 4, "F");
+
+  // Brand name
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(20, 20, 20);
-  doc.text(COMPANY.brand, M, y);
   doc.setFontSize(22);
-  doc.setTextColor(80, 80, 80);
-  doc.text("INVOICE", pageW - M, y, { align: "right" });
-  y += 18;
-
+  doc.setTextColor(255, 255, 255);
+  doc.text(COMPANY.brand, M, 42);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  doc.text(COMPANY.legal, M, y); y += 12;
-  doc.text(COMPANY.ids, M, y); y += 12;
-  doc.text(COMPANY.address, M, y, { maxWidth: pageW - M * 2 }); y += 18;
+  doc.setTextColor(220, 220, 245);
+  doc.text(COMPANY.legal, M, 58);
+  doc.setFontSize(8);
+  doc.text(COMPANY.ids, M, 72);
 
-  // Divider
-  doc.setDrawColor(220);
-  doc.line(M, y, pageW - M, y); y += 20;
-
-  // Billed to / Invoice details
-  const colW = (pageW - M * 2) / 2;
+  // INVOICE badge (right)
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(120);
-  doc.text("BILLED TO", M, y);
-  doc.text("INVOICE DETAILS", M + colW, y);
-  y += 14;
-  doc.setTextColor(20);
-  doc.setFontSize(11);
-  doc.text(inv.client, M, y);
+  doc.setFontSize(26);
+  doc.setTextColor(255, 255, 255);
+  doc.text("INVOICE", pageW - M, 42, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  const detailLines = [
-    ["Invoice No", inv.invoice_number],
+  doc.setTextColor(...BRAND.gold);
+  doc.text(`# ${inv.invoice_number}`, pageW - M, 62, { align: "right" });
+  doc.setTextColor(220, 220, 245);
+  doc.setFontSize(9);
+  doc.text(`Issued: ${inv.issue_date}`, pageW - M, 76, { align: "right" });
+
+  let y = 118;
+
+  // ============ BILLED TO / INVOICE INFO CARDS ============
+  const cardH = 96;
+  const cardW = (contentW - 12) / 2;
+
+  // Left card - Billed To
+  doc.setFillColor(...BRAND.soft);
+  doc.roundedRect(M, y, cardW, cardH, 6, 6, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...BRAND.primary);
+  doc.text("BILLED TO", M + 12, y + 16);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...BRAND.ink);
+  doc.text(inv.client, M + 12, y + 34, { maxWidth: cardW - 24 });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.mute);
+  let ly = y + 50;
+  if (inv.client_location) { doc.text(inv.client_location, M + 12, ly, { maxWidth: cardW - 24 }); ly += 12; }
+  if (inv.client_email) { doc.text(inv.client_email, M + 12, ly); ly += 12; }
+  if (inv.client_phone) { doc.text(inv.client_phone, M + 12, ly); ly += 12; }
+  if (inv.category) { doc.text(`Category: ${inv.category}`, M + 12, ly); }
+
+  // Right card - Invoice details
+  const rx = M + cardW + 12;
+  doc.setFillColor(...BRAND.soft);
+  doc.roundedRect(rx, y, cardW, cardH, 6, 6, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...BRAND.primary);
+  doc.text("INVOICE DETAILS", rx + 12, y + 16);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  const info: Array<[string, string]> = [
+    ["Invoice #", inv.invoice_number],
     ["Invoice Date", inv.issue_date],
     ["Due Date", inv.due_date || "As per agreement"],
     ["Payment Mode", inv.payment_mode || "Bank Transfer"],
-    ...(inv.category ? [["Category", inv.category] as [string, string]] : []),
-    ["Email", COMPANY.email],
-    ["Mobile", COMPANY.phone],
   ];
-  detailLines.forEach((row, i) => {
-    doc.text(`${row[0]}: ${row[1]}`, M + colW, y + i * 12);
+  info.forEach(([k, v], i) => {
+    const ry = y + 32 + i * 14;
+    doc.setTextColor(...BRAND.mute);
+    doc.text(k, rx + 12, ry);
+    doc.setTextColor(...BRAND.ink);
+    doc.setFont("helvetica", "bold");
+    doc.text(v, rx + cardW - 12, ry, { align: "right" });
+    doc.setFont("helvetica", "normal");
   });
-  y += 12;
-  if (inv.client_location) { doc.text(inv.client_location, M, y); y += 12; }
-  if (inv.client_email) { doc.text(inv.client_email, M, y); y += 12; }
-  if (inv.client_phone) { doc.text(inv.client_phone, M, y); y += 12; }
 
-  y = Math.max(y, M + 60 + detailLines.length * 12) + 12;
+  y += cardH + 20;
 
-  // Items table
-  const currency = inv.currency || "INR";
+  // ============ ITEMS TABLE ============
   const rows = inv.items.map((it, idx) => [
     String(idx + 1),
     it.name,
     it.description || "",
-    it.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    fmt(Number(it.amount || 0)),
   ]);
-  const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
 
   autoTable(doc, {
     startY: y,
-    head: [["#", "Service Name", "Description", `Amount (${currency})`]],
+    head: [["#", "Service", "Description", `Amount (${currency})`]],
     body: rows,
     theme: "grid",
-    headStyles: { fillColor: [30, 30, 40], textColor: 255, fontStyle: "bold" },
-    styles: { fontSize: 10, cellPadding: 8 },
+    headStyles: {
+      fillColor: BRAND.primary,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 10,
+      cellPadding: 10,
+      lineColor: BRAND.primary,
+    },
+    bodyStyles: {
+      fontSize: 10,
+      cellPadding: 10,
+      textColor: BRAND.ink,
+      lineColor: BRAND.hair,
+    },
+    alternateRowStyles: { fillColor: [250, 250, 253] },
     columnStyles: {
-      0: { cellWidth: 28, halign: "center" },
-      1: { cellWidth: 140 },
+      0: { cellWidth: 30, halign: "center", textColor: BRAND.mute },
+      1: { cellWidth: 150, fontStyle: "bold" },
       2: { cellWidth: "auto" },
-      3: { cellWidth: 90, halign: "right" },
+      3: { cellWidth: 100, halign: "right", fontStyle: "bold" },
     },
     margin: { left: M, right: M },
   });
 
   // @ts-expect-error jspdf-autotable augments lastAutoTable at runtime
-  y = (doc.lastAutoTable?.finalY ?? y) + 12;
+  y = (doc.lastAutoTable?.finalY ?? y) + 14;
 
-  // Total row
-  doc.setFillColor(245, 245, 250);
-  doc.rect(M, y, pageW - M * 2, 30, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(20);
-  doc.text("Total Payable Amount", M + 10, y + 20);
-  doc.text(
-    `${currency} ${subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    pageW - M - 10, y + 20, { align: "right" }
-  );
-  y += 44;
-
-  doc.setFont("helvetica", "italic");
+  // ============ TOTALS BLOCK (right-aligned) ============
+  const totalBoxW = 240;
+  const totalBoxX = pageW - M - totalBoxW;
+  doc.setDrawColor(...BRAND.hair);
   doc.setFontSize(10);
-  doc.setTextColor(60);
-  doc.text(`Amount in Words: ${numberToWordsIndian(subtotal)}`, M, y, { maxWidth: pageW - M * 2 });
-  y += 22;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...BRAND.mute);
+  doc.text("Subtotal", totalBoxX + 12, y + 4);
+  doc.setTextColor(...BRAND.ink);
+  doc.text(`${currency} ${fmt(subtotal)}`, totalBoxX + totalBoxW - 12, y + 4, { align: "right" });
+  y += 12;
+  doc.setDrawColor(...BRAND.hair);
+  doc.line(totalBoxX + 12, y + 2, totalBoxX + totalBoxW - 12, y + 2);
+  y += 10;
 
-  // GST declaration
-  if (inv.notes) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(80);
-    const split = doc.splitTextToSize(inv.notes, pageW - M * 2);
-    doc.text(split, M, y);
-    y += split.length * 11 + 10;
-  }
-
-  // Bank details
-  if (y > 660) { doc.addPage(); y = M; }
-  doc.setDrawColor(220);
-  doc.line(M, y, pageW - M, y); y += 16;
-
+  // Grand total (indigo band)
+  doc.setFillColor(...BRAND.primary);
+  doc.roundedRect(totalBoxX, y, totalBoxW, 40, 6, 6, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.setTextColor(20);
-  doc.text("BANK DETAILS FOR PAYMENT", M, y); y += 14;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Account Name: ${COMPANY.bank.name}`, M, y);
-  doc.text(`Branch: ${COMPANY.bank.branch}`, M + colW, y); y += 12;
-  doc.text(`Account Number: ${COMPANY.bank.number}`, M, y);
-  doc.text(`Branch Address: ${COMPANY.bank.branchAddress}`, M + colW, y, { maxWidth: colW - 10 }); y += 24;
-  doc.text(`IFSC Code: ${COMPANY.bank.ifsc}`, M, y); y += 20;
+  doc.setTextColor(...BRAND.gold);
+  doc.text("TOTAL PAYABLE", totalBoxX + 14, y + 25);
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`${currency} ${fmt(subtotal)}`, totalBoxX + totalBoxW - 14, y + 25, { align: "right" });
+
+  // Amount in words on the left, same band vertical space
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.mute);
+  const words = `Amount in words: ${numberToWordsIndian(subtotal)}`;
+  const wLines = doc.splitTextToSize(words, totalBoxX - M - 12);
+  doc.text(wLines, M, y + 16);
+
+  y += 56;
+
+  // ============ NOTES / GST DECLARATION ============
+  if (inv.notes) {
+    doc.setFillColor(255, 251, 235); // soft gold tint
+    doc.setDrawColor(...BRAND.gold);
+    const noteLines = doc.splitTextToSize(inv.notes, contentW - 24);
+    const noteH = noteLines.length * 11 + 30;
+    doc.roundedRect(M, y, contentW, noteH, 6, 6, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.primaryDark);
+    doc.text("NOTE", M + 12, y + 16);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text(noteLines, M + 12, y + 30);
+    y += noteH + 16;
+  }
+
+  // If we're close to the bottom, add a page
+  if (y > pageH - 260) { doc.addPage(); y = M + 10; }
+
+  // ============ BANK DETAILS + SIGNATURE (side by side) ============
+  const bankW = contentW * 0.62;
+  const sigW = contentW - bankW - 12;
+  const bankH = 130;
+
+  // Bank card
+  doc.setFillColor(250, 250, 253);
+  doc.setDrawColor(...BRAND.hair);
+  doc.roundedRect(M, y, bankW, bankH, 6, 6, "FD");
+  // Gold left border
+  doc.setFillColor(...BRAND.gold);
+  doc.rect(M, y, 3, bankH, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.text(`For ${COMPANY.brand} (${COMPANY.legal})`, M, y); y += 30;
-  doc.setFont("helvetica", "normal");
-  doc.text("Authorized Signatory", M, y); y += 20;
-
-  // Terms
-  if (y > 720) { doc.addPage(); y = M; }
-  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("TERMS & CONDITIONS", M, y); y += 14;
+  doc.setTextColor(...BRAND.primaryDark);
+  doc.text("BANK DETAILS FOR PAYMENT", M + 14, y + 18);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
+  doc.setTextColor(...BRAND.ink);
+  const bankRows: Array<[string, string]> = [
+    ["Account Name", COMPANY.bank.name],
+    ["Account Number", COMPANY.bank.number],
+    ["IFSC Code", COMPANY.bank.ifsc],
+    ["Branch", COMPANY.bank.branch],
+  ];
+  bankRows.forEach(([k, v], i) => {
+    const by = y + 36 + i * 15;
+    doc.setTextColor(...BRAND.mute);
+    doc.text(k, M + 14, by);
+    doc.setTextColor(...BRAND.ink);
+    doc.setFont("helvetica", "bold");
+    doc.text(v, M + 130, by);
+    doc.setFont("helvetica", "normal");
+  });
+  doc.setFontSize(8);
+  doc.setTextColor(...BRAND.mute);
+  const brAddr = doc.splitTextToSize(`Branch Address: ${COMPANY.bank.branchAddress}`, bankW - 28);
+  doc.text(brAddr, M + 14, y + bankH - 14);
+
+  // Signature card
+  const sx = M + bankW + 12;
+  doc.setFillColor(...BRAND.soft);
+  doc.roundedRect(sx, y, sigW, bankH, 6, 6, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.primary);
+  doc.text("FOR", sx + 12, y + 18);
+  doc.setFontSize(10);
+  doc.setTextColor(...BRAND.ink);
+  const forLines = doc.splitTextToSize(`${COMPANY.brand}`, sigW - 24);
+  doc.text(forLines, sx + 12, y + 34);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...BRAND.mute);
+  doc.text(`(${COMPANY.legal})`, sx + 12, y + 48);
+
+  // Signature line
+  doc.setDrawColor(...BRAND.mute);
+  doc.line(sx + 12, y + bankH - 32, sx + sigW - 12, y + bankH - 32);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.ink);
+  doc.text("Authorized Signatory", sx + 12, y + bankH - 20);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(7);
+  doc.setTextColor(...BRAND.mute);
+  doc.text("System-generated · no signature required", sx + 12, y + bankH - 10);
+
+  y += bankH + 14;
+
+  // ============ TERMS ============
+  if (y > pageH - 130) { doc.addPage(); y = M + 10; }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.primaryDark);
+  doc.text("TERMS & CONDITIONS", M, y);
+  y += 12;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 90);
   const terms = [
     "• Payment to be made as per the agreed terms mentioned in the engagement agreement.",
     "• All payments should be made to the bank account details mentioned above.",
     "• Any disputes regarding this invoice should be raised within 7 days of receipt.",
+    "• This invoice is valid without a physical signature and is generated electronically.",
   ];
-  terms.forEach((t) => { doc.text(t, M, y); y += 12; });
-  y += 8;
-  doc.setFont("helvetica", "italic");
-  doc.setTextColor(80);
-  doc.text("Thank you for your business!", M, y); y += 12;
-  doc.text(`For queries, contact: ${COMPANY.email} | ${COMPANY.phone}`, M, y); y += 12;
-  doc.setTextColor(140);
-  doc.text("This is a system-generated invoice; no signature is required.", M, y);
+  terms.forEach((t) => { doc.text(t, M, y); y += 11; });
+
+  // ============ FOOTER BAND on every page ============
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    // Thin gold rule
+    doc.setDrawColor(...BRAND.gold);
+    doc.setLineWidth(1);
+    doc.line(M, pageH - 46, pageW - M, pageH - 46);
+    doc.setLineWidth(0.2);
+
+    // Footer content
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.primary);
+    doc.text("Thank you for your business!", M, pageH - 30);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...BRAND.mute);
+    doc.text(`${COMPANY.email}  ·  ${COMPANY.phone}`, M, pageH - 18);
+    const addrLines = doc.splitTextToSize(COMPANY.address, contentW - 180);
+    doc.text(addrLines, pageW - M, pageH - 18, { align: "right" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...BRAND.ink);
+    doc.text(`Page ${p} of ${totalPages}`, pageW / 2, pageH - 8, { align: "center" });
+  }
 
   return doc;
 }
+
 
 export function downloadInvoicePDF(inv: InvoicePDFData) {
   const doc = buildInvoicePDF(inv);
