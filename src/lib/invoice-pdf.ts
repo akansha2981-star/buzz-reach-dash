@@ -310,9 +310,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...C.ink);
-  doc.text(`For ${COMPANY.brand} (${COMPANY.legal})`, M, y);
+  doc.text(`For ${co.brand} (${co.legal})`, M, y);
   y += 40;
-  doc.text("Authorized Signatory", M, y);
+  doc.text(co.signatory, M, y);
+
   y += 14;
 
   // Thin gray divider
