@@ -415,6 +415,54 @@ function InvoiceDialog({
                 </Select>
               </div>
             </div>
+
+            {/* Receive payment into */}
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <Label>Receive payment into</Label>
+                <Link to="/accounts/bank-accounts" className="text-xs text-primary hover:underline">Manage accounts →</Link>
+              </div>
+              {bankAccounts.length === 0 ? (
+                <div className="mt-1 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                  No payment accounts yet. <Link to="/accounts/bank-accounts" className="text-primary hover:underline">Add one</Link> so it appears on the invoice PDF.
+                </div>
+              ) : (
+                <>
+                  <Select
+                    value={form.bank_account_id ?? "none"}
+                    onValueChange={(v) => setForm({ ...form, bank_account_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— No account on PDF —</SelectItem>
+                      {bankAccounts.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          [{b.tag}] {b.account_holder} · {b.account_number}
+                          {b.is_default ? " ★" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {bankAccounts.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setForm({ ...form, bank_account_id: b.id })}
+                        className={cn(
+                          "text-[10px] px-2 py-0.5 rounded border transition",
+                          form.bank_account_id === b.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "hover:bg-muted",
+                        )}
+                      >
+                        {b.tag}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </section>
 
           {/* Items */}
