@@ -28,6 +28,7 @@ function RecurringPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Rec | null>(null);
+  const [historyFor, setHistoryFor] = useState<Rec | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["accounts_recurring"],
@@ -35,6 +36,15 @@ function RecurringPage() {
       const { data, error } = await supabase.from("accounts_recurring_expenses").select("*").order("next_due");
       if (error) throw error;
       return data as Rec[];
+    },
+  });
+
+  const { data: allPayments = [] } = useQuery({
+    queryKey: ["accounts_recurring_payments"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts_recurring_expense_payments").select("*").order("paid_on", { ascending: false });
+      if (error) throw error;
+      return data as any[];
     },
   });
 
@@ -54,15 +64,42 @@ function RecurringPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts_recurring"] }),
   });
 
+  const markPaid = useMutation({
+    mutationFn: async (r: Rec) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const period = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const { error } = await supabase.from("accounts_recurring_expense_payments").insert({
+        recurring_expense_id: r.id,
+        paid_on: new Date().toISOString().slice(0, 10),
+        period_month: period,
+        amount: r.amount,
+        created_by: user?.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Marked as paid");
+      qc.invalidateQueries({ queryKey: ["accounts_recurring_payments"] });
+      qc.invalidateQueries({ queryKey: ["sum_rec_payments"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const paidThisMonth = (id: string) => {
+    const key = format(startOfMonth(new Date()), "yyyy-MM");
+    return allPayments.some((p: any) => p.recurring_expense_id === id && (p.period_month || "").slice(0, 7) === key);
+  };
+
   const activeMonthly = rows.filter(r => r.is_active && r.frequency === "monthly").reduce((s, r) => s + Number(r.amount), 0);
   const activeAll = rows.filter(r => r.is_active).length;
+  const paidTotal = allPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Active recurring" value={activeAll.toString()} />
         <StatCard label="Monthly outflow" value={`₹${activeMonthly.toLocaleString()}`} tone="amber" />
-        <StatCard label="Total configured" value={rows.length.toString()} />
+        <StatCard label="Total paid (all time)" value={`₹${Math.round(paidTotal).toLocaleString()}`} tone="emerald" />
         <div className="flex items-center justify-end">
           <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />New recurring</Button>
         </div>
@@ -79,32 +116,81 @@ function RecurringPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {rows.map((r) => (
-                <div key={r.id} className={`flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between ${!r.is_active ? "opacity-60" : ""}`}>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium truncate">{r.title}</span>
-                      <Badge variant="secondary">{r.frequency}</Badge>
-                      {r.category && <Badge variant="outline">{r.category}</Badge>}
-                      {!r.is_active && <Badge className="bg-muted text-muted-foreground">paused</Badge>}
+              {rows.map((r) => {
+                const isPaid = paidThisMonth(r.id);
+                return (
+                  <div key={r.id} className={`flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between ${!r.is_active ? "opacity-60" : ""}`}>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium truncate">{r.title}</span>
+                        <Badge variant="secondary">{r.frequency}</Badge>
+                        {r.category && <Badge variant="outline">{r.category}</Badge>}
+                        {!r.is_active && <Badge className="bg-muted text-muted-foreground">paused</Badge>}
+                        {isPaid && <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">paid this month</Badge>}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">Next due · {format(new Date(r.next_due), "dd MMM yyyy")}</div>
                     </div>
-                    <div className="mt-1 text-xs text-muted-foreground">Next due · {format(new Date(r.next_due), "dd MMM yyyy")}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="font-semibold">{r.currency} {Number(r.amount).toLocaleString()}</div>
+                      <Button size="sm" variant={isPaid ? "outline" : "default"} disabled={isPaid || markPaid.isPending} onClick={() => markPaid.mutate(r)}>
+                        <CheckCircle2 className="mr-1 h-4 w-4" />{isPaid ? "Paid" : "Mark paid"}
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setHistoryFor(r)} title="Payment history"><History className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => toggle.mutate(r)} title={r.is_active ? "Pause" : "Activate"}><Power className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete?")) del.mutate(r.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="font-semibold">{r.currency} {Number(r.amount).toLocaleString()}</div>
-                    <Button size="icon" variant="ghost" onClick={() => toggle.mutate(r)} title={r.is_active ? "Pause" : "Activate"}><Power className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete?")) del.mutate(r.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
       <RecDialog open={open} onOpenChange={setOpen} editing={editing} />
+      <HistoryDialog rec={historyFor} onOpenChange={(o) => !o && setHistoryFor(null)} payments={allPayments.filter((p: any) => p.recurring_expense_id === historyFor?.id)} />
     </div>
+  );
+}
+
+function HistoryDialog({ rec, onOpenChange, payments }: { rec: Rec | null; onOpenChange: (o: boolean) => void; payments: any[] }) {
+  const qc = useQueryClient();
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("accounts_recurring_expense_payments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Removed");
+      qc.invalidateQueries({ queryKey: ["accounts_recurring_payments"] });
+      qc.invalidateQueries({ queryKey: ["sum_rec_payments"] });
+    },
+  });
+  return (
+    <Dialog open={!!rec} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Payment history · {rec?.title}</DialogTitle></DialogHeader>
+        {payments.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">No payments recorded yet.</div>
+        ) : (
+          <div className="max-h-[400px] divide-y overflow-y-auto">
+            {payments.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2 text-sm">
+                <div>
+                  <div className="font-medium">{format(new Date(p.paid_on), "dd MMM yyyy")}</div>
+                  <div className="text-xs text-muted-foreground">Period · {format(new Date(p.period_month), "MMM yyyy")}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold">₹{Number(p.amount).toLocaleString()}</div>
+                  <Button size="icon" variant="ghost" onClick={() => { if (confirm("Remove?")) remove.mutate(p.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
