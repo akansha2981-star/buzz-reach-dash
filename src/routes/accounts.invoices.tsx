@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, FileText, Download, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee } from "lucide-react";
+import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,13 +27,17 @@ type Invoice = {
   items: InvoiceItem[];
 };
 
-const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"];
+const STATUSES = ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"];
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  partially_paid: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   paid: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   overdue: "bg-red-500/10 text-red-700 dark:text-red-300",
   cancelled: "bg-zinc-500/10 text-zinc-600",
+};
+const STATUS_LABELS: Record<string, string> = {
+  partially_paid: "partially paid",
 };
 
 const DEFAULT_NOTES =
@@ -51,6 +56,7 @@ function InvoicesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Invoice | null>(null);
+  const [paymentsFor, setPaymentsFor] = useState<Invoice | null>(null);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["accounts_invoices"],
@@ -58,6 +64,20 @@ function InvoicesPage() {
       const { data, error } = await supabase.from("accounts_invoices").select("*").order("issue_date", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((d) => ({ ...d, items: toItems((d as { items?: unknown }).items) })) as Invoice[];
+    },
+  });
+
+  const { data: paidByInvoice = {} } = useQuery({
+    queryKey: ["accounts_invoice_payments_sum"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts_invoice_payments").select("invoice_id, amount");
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      for (const p of data ?? []) {
+        const row = p as { invoice_id: string; amount: number };
+        map[row.invoice_id] = (map[row.invoice_id] ?? 0) + Number(row.amount);
+      }
+      return map;
     },
   });
 
@@ -70,8 +90,10 @@ function InvoicesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const totalPaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + Number(i.total), 0);
-  const totalOutstanding = invoices.filter(i => i.status !== "paid" && i.status !== "cancelled").reduce((s, i) => s + Number(i.total), 0);
+  const totalCollected = invoices.reduce((s, i) => s + (paidByInvoice[i.id] ?? (i.status === "paid" ? Number(i.total) : 0)), 0);
+  const totalOutstanding = invoices
+    .filter(i => i.status !== "cancelled")
+    .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
   const handleDownload = (inv: Invoice) => {
     downloadInvoicePDF({
@@ -94,7 +116,7 @@ function InvoicesPage() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Total invoices" value={invoices.length.toString()} />
-        <StatCard label="Paid" value={`₹${totalPaid.toLocaleString()}`} tone="emerald" />
+        <StatCard label="Collected" value={`₹${totalCollected.toLocaleString()}`} tone="emerald" />
         <StatCard label="Outstanding" value={`₹${totalOutstanding.toLocaleString()}`} tone="amber" />
         <div className="flex items-center justify-end">
           <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />New invoice</Button>
@@ -112,41 +134,60 @@ function InvoicesPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {invoices.map((inv) => (
-                <div key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium truncate">{inv.client}</span>
-                      {inv.invoice_number && <span className="text-xs text-muted-foreground">#{inv.invoice_number}</span>}
-                      <Badge className={STATUS_COLORS[inv.status] || ""}>{inv.status}</Badge>
+              {invoices.map((inv) => {
+                const paid = paidByInvoice[inv.id] ?? 0;
+                const due = Math.max(0, Number(inv.total) - paid);
+                return (
+                  <div key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium truncate">{inv.client}</span>
+                        {inv.invoice_number && <span className="text-xs text-muted-foreground">#{inv.invoice_number}</span>}
+                        <Badge className={STATUS_COLORS[inv.status] || ""}>{STATUS_LABELS[inv.status] ?? inv.status}</Badge>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {format(new Date(inv.issue_date), "dd MMM yyyy")}
+                        {inv.due_date && <> · due {format(new Date(inv.due_date), "dd MMM")}</>}
+                        {inv.items.length > 0 && <> · {inv.items.length} item{inv.items.length > 1 ? "s" : ""}</>}
+                      </div>
+                      {paid > 0 && (
+                        <div className="mt-1 text-xs">
+                          <span className="text-emerald-600 font-medium">Paid {inv.currency} {paid.toLocaleString()}</span>
+                          {due > 0 && <span className="text-amber-600"> · Due {inv.currency} {due.toLocaleString()}</span>}
+                        </div>
+                      )}
                     </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {format(new Date(inv.issue_date), "dd MMM yyyy")}
-                      {inv.due_date && <> · due {format(new Date(inv.due_date), "dd MMM")}</>}
-                      {inv.items.length > 0 && <> · {inv.items.length} item{inv.items.length > 1 ? "s" : ""}</>}
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="text-right mr-2">
+                        <div className="font-semibold">{inv.currency} {Number(inv.total).toLocaleString()}</div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
+                        <IndianRupee className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Payments</span>
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
+                        <Download className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">PDF</span>
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => { setEditing(inv); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete invoice?")) del.mutate(inv.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <div className="text-right mr-2">
-                      <div className="font-semibold">{inv.currency} {Number(inv.total).toLocaleString()}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
-                      <Download className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">PDF</span>
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => { setEditing(inv); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete invoice?")) del.mutate(inv.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
       <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} />
+      <InvoicePaymentsDialog
+        open={!!paymentsFor}
+        onOpenChange={(o) => { if (!o) setPaymentsFor(null); }}
+        invoice={paymentsFor}
+      />
     </div>
   );
 }
+
 
 function StatCard({ label, value, tone }: { label: string; value: string; tone?: string }) {
   const toneCls = tone === "emerald" ? "text-emerald-600" : tone === "amber" ? "text-amber-600" : "text-foreground";
