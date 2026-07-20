@@ -325,9 +325,10 @@ function InvoiceDialog({
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
-      setForm(emptyForm(existingInvoices));
+      const def = bankAccounts.find((b) => b.is_default) ?? bankAccounts[0];
+      setForm({ ...emptyForm(existingInvoices), bank_account_id: def?.id ?? null });
     }
-  }, [open, editing, existingInvoices]);
+  }, [open, editing, existingInvoices, bankAccounts]);
 
   const subtotal = form.items.reduce((s, it) => s + Number(it.amount || 0), 0);
 
