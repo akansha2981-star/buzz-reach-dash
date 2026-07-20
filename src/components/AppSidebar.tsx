@@ -165,6 +165,11 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/summary")}>
+                            <Link to="/accounts/summary"><BarChart3 className="h-4 w-4" /><span>Summary</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild isActive={isActive("/accounts/invoices")}>
                             <Link to="/accounts/invoices"><FileText className="h-4 w-4" /><span>Invoice Management</span></Link>
                           </SidebarMenuSubButton>
