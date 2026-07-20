@@ -425,3 +425,174 @@ function InvoiceDialog({
     </Dialog>
   );
 }
+
+type SavedClient = {
+  id: string; name: string;
+  location: string | null; email: string | null; phone: string | null;
+  category: string | null; gstin: string | null;
+};
+
+function ClientPickerSection({
+  form, setForm,
+}: {
+  form: FormState;
+  setForm: (updater: FormState | ((prev: FormState) => FormState)) => void;
+}) {
+  const qc = useQueryClient();
+  const [mode, setMode] = useState<"saved" | "new">("saved");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const { data: clients = [], isLoading } = useQuery({
+    queryKey: ["accounts_clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("accounts_clients")
+        .select("id,name,location,email,phone,category,gstin")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as SavedClient[];
+    },
+  });
+
+  // If there are no saved clients, default to manual entry.
+  useEffect(() => {
+    if (!isLoading && clients.length === 0) setMode("new");
+  }, [isLoading, clients.length]);
+
+  const selected = useMemo(
+    () => clients.find((c) => c.id === selectedId) ?? null,
+    [clients, selectedId],
+  );
+
+  const applyClient = (c: SavedClient) => {
+    setSelectedId(c.id);
+    setForm((f) => ({
+      ...f,
+      client: c.name,
+      client_location: c.location ?? "",
+      client_email: c.email ?? "",
+      client_phone: c.phone ?? "",
+      category: c.category ?? f.category,
+    }));
+    setPickerOpen(false);
+  };
+
+  const saveToDirectory = useMutation({
+    mutationFn: async () => {
+      if (!form.client.trim()) throw new Error("Enter a client name first");
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase.from("accounts_clients").insert({
+        name: form.client.trim(),
+        location: form.client_location || null,
+        email: form.client_email || null,
+        phone: form.client_phone || null,
+        category: form.category || null,
+        created_by: userRes.user?.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Client saved to directory");
+      qc.invalidateQueries({ queryKey: ["accounts_clients"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="rounded-lg border p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">Client details</h3>
+        <div className="inline-flex rounded-md border p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setMode("saved")}
+            className={cn("px-2 py-1 rounded", mode === "saved" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+          >
+            Saved client
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode("new"); setSelectedId(null); }}
+            className={cn("px-2 py-1 rounded", mode === "new" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+          >
+            <UserPlus className="inline h-3 w-3 mr-1" />New client
+          </button>
+        </div>
+      </div>
+
+      {mode === "saved" ? (
+        <div className="space-y-2">
+          <Label>Select client</Label>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                {selected ? selected.name : (form.client || "Search saved clients…")}
+                <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search by name, email, phone…" />
+                <CommandList>
+                  <CommandEmpty>
+                    {isLoading ? "Loading…" : "No clients found. Switch to New client to add one."}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {clients.map((c) => (
+                      <CommandItem
+                        key={c.id}
+                        value={`${c.name} ${c.email ?? ""} ${c.phone ?? ""} ${c.location ?? ""}`}
+                        onSelect={() => applyClient(c)}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", selectedId === c.id ? "opacity-100" : "opacity-0")} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{c.name}</div>
+                          <div className="truncate text-xs text-muted-foreground">
+                            {[c.location, c.email, c.phone].filter(Boolean).join(" · ")}
+                          </div>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {selected && (
+            <div className="rounded-md border bg-muted/40 p-2 text-xs space-y-0.5">
+              <div><span className="text-muted-foreground">Location: </span>{selected.location || "—"}</div>
+              <div><span className="text-muted-foreground">Email: </span>{selected.email || "—"}</div>
+              <div><span className="text-muted-foreground">Phone: </span>{selected.phone || "—"}</div>
+              {selected.gstin && <div><span className="text-muted-foreground">GSTIN: </span>{selected.gstin}</div>}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          <div><Label>Client name *</Label><Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} placeholder="Ishita Knitfab Pvt Ltd" /></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div><Label>Location</Label><Input value={form.client_location} onChange={(e) => setForm({ ...form, client_location: e.target.value })} placeholder="Ludhiana, Punjab" /></div>
+            <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Textile" /></div>
+            <div><Label>Client email</Label><Input value={form.client_email} onChange={(e) => setForm({ ...form, client_email: e.target.value })} /></div>
+            <div><Label>Client phone</Label><Input value={form.client_phone} onChange={(e) => setForm({ ...form, client_phone: e.target.value })} /></div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => saveToDirectory.mutate()}
+              disabled={!form.client.trim() || saveToDirectory.isPending}
+            >
+              <Save className="h-3.5 w-3.5 mr-1" />
+              {saveToDirectory.isPending ? "Saving…" : "Save to client directory"}
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
