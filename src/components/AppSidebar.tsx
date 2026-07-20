@@ -184,8 +184,9 @@ export function AppSidebar() {
                             <Link to="/accounts/clients"><Users className="h-4 w-4" /><span>Permanent Clients</span></Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-
+                      </SidebarMenuSub>
                     </CollapsibleContent>
+
                   </SidebarMenuItem>
                 </Collapsible>
               )}
