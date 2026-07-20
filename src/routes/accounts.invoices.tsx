@@ -327,19 +327,11 @@ function InvoiceDialog({
 
         <div className="grid gap-4">
           {/* Client */}
-          <section className="rounded-lg border p-3 space-y-3">
-            <h3 className="text-sm font-semibold">Client details</h3>
-            <div><Label>Client name *</Label><Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} placeholder="Ishita Knitfab Pvt Ltd" /></div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div><Label>Location</Label><Input value={form.client_location} onChange={(e) => setForm({ ...form, client_location: e.target.value })} placeholder="Ludhiana, Punjab" /></div>
-              <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Textile" /></div>
-              <div><Label>Client email</Label><Input value={form.client_email} onChange={(e) => setForm({ ...form, client_email: e.target.value })} /></div>
-              <div><Label>Client phone</Label><Input value={form.client_phone} onChange={(e) => setForm({ ...form, client_phone: e.target.value })} /></div>
-            </div>
-          </section>
+          <ClientPickerSection form={form} setForm={setForm} />
 
           {/* Invoice meta */}
           <section className="rounded-lg border p-3 space-y-3">
+
             <h3 className="text-sm font-semibold">Invoice details</h3>
             <div className="grid gap-2 sm:grid-cols-3">
               <div><Label>Invoice #</Label><Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} /></div>
