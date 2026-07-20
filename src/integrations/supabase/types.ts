@@ -14,6 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_expenses: {
+        Row: {
+          amount: number
+          attachment_url: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          spent_on: string
+          title: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount?: number
+          attachment_url?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          spent_on?: string
+          title: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          attachment_url?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          spent_on?: string
+          title?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
+      accounts_invoices: {
+        Row: {
+          amount: number
+          attachment_url: string | null
+          client: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_number: string | null
+          issue_date: string
+          notes: string | null
+          status: string
+          tax: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          attachment_url?: string | null
+          client: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          issue_date?: string
+          notes?: string | null
+          status?: string
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          attachment_url?: string | null
+          client?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          issue_date?: string
+          notes?: string | null
+          status?: string
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      accounts_recurring_expenses: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          frequency: string
+          id: string
+          is_active: boolean
+          next_due: string
+          notes: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          next_due?: string
+          notes?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          next_due?: string
+          notes?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1730,6 +1877,7 @@ export type Database = {
       }
       user_permissions: {
         Row: {
+          can_accounts: boolean
           can_ceo_desk: boolean
           can_coaching: boolean
           can_colleges: boolean
@@ -1746,6 +1894,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          can_accounts?: boolean
           can_ceo_desk?: boolean
           can_coaching?: boolean
           can_colleges?: boolean
@@ -1762,6 +1911,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          can_accounts?: boolean
           can_ceo_desk?: boolean
           can_coaching?: boolean
           can_colleges?: boolean
@@ -1806,6 +1956,7 @@ export type Database = {
     }
     Functions: {
       current_employee_id: { Args: never; Returns: string }
+      has_accounts_access: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

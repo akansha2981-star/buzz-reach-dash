@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart, Wallet, FileText, Receipt, Repeat } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -150,6 +150,39 @@ export function AppSidebar() {
                     <Link to="/habits"><Target /><span>Habits</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+              )}
+
+              {can("can_accounts") && (
+                <Collapsible defaultOpen={path.startsWith("/accounts")} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        <Wallet />
+                        <span>Accounts</span>
+                        <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/invoices")}>
+                            <Link to="/accounts/invoices"><FileText className="h-4 w-4" /><span>Invoice Management</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/expenses")}>
+                            <Link to="/accounts/expenses"><Receipt className="h-4 w-4" /><span>Expenses</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/recurring")}>
+                            <Link to="/accounts/recurring"><Repeat className="h-4 w-4" /><span>Recurring Monthly</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
               )}
 
               {can("can_my_workspace") && (
