@@ -285,6 +285,53 @@ export type Database = {
           },
         ]
       }
+      accounts_recurring_expense_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          method: string | null
+          note: string | null
+          paid_on: string
+          period_month: string
+          recurring_expense_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          period_month: string
+          recurring_expense_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          period_month?: string
+          recurring_expense_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_recurring_expense_payments_recurring_expense_id_fkey"
+            columns: ["recurring_expense_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_recurring_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts_recurring_expenses: {
         Row: {
           amount: number
