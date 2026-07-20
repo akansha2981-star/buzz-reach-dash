@@ -136,17 +136,9 @@ function ClientDialog({
   open: boolean; onOpenChange: (o: boolean) => void; editing: AccountsClient | null;
 }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<FormState>(emptyForm());
   const isEdit = !!editing;
-
-  // Reset form whenever dialog opens / target changes
-  useState(() => form);
-  if (open && editing && form.name !== editing.name && form !== (undefined as unknown as FormState)) {
-    // no-op; real reset happens below via effect surrogate
-  }
-
-  // Simple sync using key-based reset
   const key = open ? (editing?.id ?? "new") : "closed";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
