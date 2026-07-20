@@ -110,20 +110,49 @@ function InvoicesPage() {
     .filter(i => i.status !== "cancelled")
     .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
-  const toPDFData = (inv: Invoice) => ({
-    invoice_number: inv.invoice_number || "DRAFT",
-    issue_date: inv.issue_date,
-    due_date: inv.due_date,
-    payment_mode: inv.payment_mode,
-    category: inv.category,
-    client: inv.client,
-    client_location: inv.client_location,
-    client_email: inv.client_email,
-    client_phone: inv.client_phone,
-    items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
-    currency: inv.currency,
-    notes: inv.notes || DEFAULT_NOTES,
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ["accounts_bank_accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts_bank_accounts")
+        .select("id,tag,account_holder,account_number,ifsc,bank_name,branch,branch_address,upi_id,is_default")
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as BankAccountRow[];
+    },
   });
+
+  const bankById = useMemo(() => {
+    const m: Record<string, BankAccountRow> = {};
+    for (const b of bankAccounts) m[b.id] = b;
+    return m;
+  }, [bankAccounts]);
+
+  const toPDFData = (inv: Invoice) => {
+    const b = inv.bank_account_id ? bankById[inv.bank_account_id] : bankAccounts.find(x => x.is_default);
+    return {
+      invoice_number: inv.invoice_number || "DRAFT",
+      issue_date: inv.issue_date,
+      due_date: inv.due_date,
+      payment_mode: inv.payment_mode,
+      category: inv.category,
+      client: inv.client,
+      client_location: inv.client_location,
+      client_email: inv.client_email,
+      client_phone: inv.client_phone,
+      items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
+      currency: inv.currency,
+      notes: inv.notes || DEFAULT_NOTES,
+      bank: b ? {
+        name: b.account_holder,
+        number: b.account_number,
+        ifsc: b.ifsc,
+        branch: [b.bank_name, b.branch].filter(Boolean).join(" — ") || b.branch,
+        branchAddress: b.branch_address,
+        upi: b.upi_id,
+        tag: b.tag,
+      } : null,
+    };
+  };
 
   const handleDownload = (inv: Invoice) => {
     downloadInvoicePDF(toPDFData(inv));
