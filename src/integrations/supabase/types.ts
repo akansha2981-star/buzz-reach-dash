@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_bank_accounts: {
+        Row: {
+          account_holder: string
+          account_number: string
+          bank_name: string | null
+          branch: string | null
+          branch_address: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          ifsc: string | null
+          is_default: boolean
+          notes: string | null
+          tag: string
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          account_holder: string
+          account_number: string
+          bank_name?: string | null
+          branch?: string | null
+          branch_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ifsc?: string | null
+          is_default?: boolean
+          notes?: string | null
+          tag: string
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          account_holder?: string
+          account_number?: string
+          bank_name?: string | null
+          branch?: string | null
+          branch_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ifsc?: string | null
+          is_default?: boolean
+          notes?: string | null
+          tag?: string
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: []
+      }
       accounts_clients: {
         Row: {
           category: string | null
@@ -155,6 +206,7 @@ export type Database = {
         Row: {
           amount: number
           attachment_url: string | null
+          bank_account_id: string | null
           category: string | null
           client: string
           client_email: string | null
@@ -178,6 +230,7 @@ export type Database = {
         Insert: {
           amount?: number
           attachment_url?: string | null
+          bank_account_id?: string | null
           category?: string | null
           client: string
           client_email?: string | null
@@ -201,6 +254,7 @@ export type Database = {
         Update: {
           amount?: number
           attachment_url?: string | null
+          bank_account_id?: string | null
           category?: string | null
           client?: string
           client_email?: string | null
@@ -221,7 +275,15 @@ export type Database = {
           total?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_invoices_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       accounts_recurring_expenses: {
         Row: {

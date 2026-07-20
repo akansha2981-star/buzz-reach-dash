@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart, Wallet, FileText, Receipt, Repeat } from "lucide-react";
+import { LayoutDashboard, GraduationCap, BookOpen, Settings, Sparkles, ChevronDown, Users, Calendar, ScrollText, Activity, ListChecks, Crown, FolderOpen, Clock, CalendarDays, ClipboardList, TrendingUp, Megaphone, BarChart3, Shield, ShieldCheck, UserCog, User as UserIcon, Sun, CheckSquare, Timer, Target, LineChart, Wallet, FileText, Receipt, Repeat, Landmark } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -182,6 +182,11 @@ export function AppSidebar() {
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild isActive={isActive("/accounts/clients")}>
                             <Link to="/accounts/clients"><Users className="h-4 w-4" /><span>Permanent Clients</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/bank-accounts")}>
+                            <Link to="/accounts/bank-accounts"><Landmark className="h-4 w-4" /><span>Payment Accounts</span></Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>

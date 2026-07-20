@@ -47,6 +47,7 @@ import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurri
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
 import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
 import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
+import { Route as AccountsBankAccountsRouteImport } from './routes/accounts.bank-accounts'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
@@ -245,6 +246,11 @@ const AccountsClientsRoute = AccountsClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AccountsRoute,
 } as any)
+const AccountsBankAccountsRoute = AccountsBankAccountsRouteImport.update({
+  id: '/bank-accounts',
+  path: '/bank-accounts',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/bank-accounts'
     | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/meetings'
     | '/tasks'
+    | '/accounts/bank-accounts'
     | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/bank-accounts'
     | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
@@ -861,6 +873,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsClientsRouteImport
       parentRoute: typeof AccountsRoute
     }
+    '/accounts/bank-accounts': {
+      id: '/accounts/bank-accounts'
+      path: '/bank-accounts'
+      fullPath: '/accounts/bank-accounts'
+      preLoaderRoute: typeof AccountsBankAccountsRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
@@ -914,6 +933,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AccountsRouteChildren {
+  AccountsBankAccountsRoute: typeof AccountsBankAccountsRoute
   AccountsClientsRoute: typeof AccountsClientsRoute
   AccountsExpensesRoute: typeof AccountsExpensesRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
@@ -922,6 +942,7 @@ interface AccountsRouteChildren {
 }
 
 const AccountsRouteChildren: AccountsRouteChildren = {
+  AccountsBankAccountsRoute: AccountsBankAccountsRoute,
   AccountsClientsRoute: AccountsClientsRoute,
   AccountsExpensesRoute: AccountsExpensesRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,

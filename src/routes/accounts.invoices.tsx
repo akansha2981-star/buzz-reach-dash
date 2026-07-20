@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save } from "lucide-react";
@@ -30,7 +30,14 @@ type Invoice = {
   issue_date: string; due_date: string | null; status: string; notes: string | null;
   client_location: string | null; client_email: string | null; client_phone: string | null;
   category: string | null; payment_mode: string | null;
+  bank_account_id: string | null;
   items: InvoiceItem[];
+};
+
+type BankAccountRow = {
+  id: string; tag: string; account_holder: string; account_number: string;
+  ifsc: string | null; bank_name: string | null; branch: string | null;
+  branch_address: string | null; upi_id: string | null; is_default: boolean;
 };
 
 const STATUSES = ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"];
@@ -103,20 +110,49 @@ function InvoicesPage() {
     .filter(i => i.status !== "cancelled")
     .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
-  const toPDFData = (inv: Invoice) => ({
-    invoice_number: inv.invoice_number || "DRAFT",
-    issue_date: inv.issue_date,
-    due_date: inv.due_date,
-    payment_mode: inv.payment_mode,
-    category: inv.category,
-    client: inv.client,
-    client_location: inv.client_location,
-    client_email: inv.client_email,
-    client_phone: inv.client_phone,
-    items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
-    currency: inv.currency,
-    notes: inv.notes || DEFAULT_NOTES,
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ["accounts_bank_accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts_bank_accounts")
+        .select("id,tag,account_holder,account_number,ifsc,bank_name,branch,branch_address,upi_id,is_default")
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as BankAccountRow[];
+    },
   });
+
+  const bankById = useMemo(() => {
+    const m: Record<string, BankAccountRow> = {};
+    for (const b of bankAccounts) m[b.id] = b;
+    return m;
+  }, [bankAccounts]);
+
+  const toPDFData = (inv: Invoice) => {
+    const b = inv.bank_account_id ? bankById[inv.bank_account_id] : bankAccounts.find(x => x.is_default);
+    return {
+      invoice_number: inv.invoice_number || "DRAFT",
+      issue_date: inv.issue_date,
+      due_date: inv.due_date,
+      payment_mode: inv.payment_mode,
+      category: inv.category,
+      client: inv.client,
+      client_location: inv.client_location,
+      client_email: inv.client_email,
+      client_phone: inv.client_phone,
+      items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
+      currency: inv.currency,
+      notes: inv.notes || DEFAULT_NOTES,
+      bank: b ? {
+        name: b.account_holder,
+        number: b.account_number,
+        ifsc: b.ifsc,
+        branch: [b.bank_name, b.branch].filter(Boolean).join(" — ") || b.branch,
+        branchAddress: b.branch_address,
+        upi: b.upi_id,
+        tag: b.tag,
+      } : null,
+    };
+  };
 
   const handleDownload = (inv: Invoice) => {
     downloadInvoicePDF(toPDFData(inv));
@@ -194,7 +230,7 @@ function InvoicesPage() {
         </CardContent>
       </Card>
 
-      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} />
+      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} bankAccounts={bankAccounts} />
       <InvoicePaymentsDialog
         open={!!paymentsFor}
         onOpenChange={(o) => { if (!o) setPaymentsFor(null); }}
@@ -248,6 +284,7 @@ type FormState = {
   category: string;
   payment_mode: string;
   notes: string;
+  bank_account_id: string | null;
   items: InvoiceItem[];
 };
 
@@ -257,15 +294,17 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
   issue_date: new Date().toISOString().slice(0, 10), due_date: "",
   status: "draft", category: "", payment_mode: "Bank Transfer",
   notes: DEFAULT_NOTES,
+  bank_account_id: null,
   items: [{ name: "", description: "", amount: 0 }],
 });
 
 function InvoiceDialog({
-  open, onOpenChange, editing, onDownload, existingInvoices,
+  open, onOpenChange, editing, onDownload, existingInvoices, bankAccounts,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void; editing: Invoice | null;
   onDownload: (inv: Invoice) => void;
   existingInvoices: { invoice_number: string | null }[];
+  bankAccounts: BankAccountRow[];
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<FormState>(emptyForm(existingInvoices));
@@ -282,12 +321,14 @@ function InvoiceDialog({
         due_date: editing.due_date || "", status: editing.status,
         category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
         notes: editing.notes || DEFAULT_NOTES,
+        bank_account_id: editing.bank_account_id ?? null,
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
-      setForm(emptyForm(existingInvoices));
+      const def = bankAccounts.find((b) => b.is_default) ?? bankAccounts[0];
+      setForm({ ...emptyForm(existingInvoices), bank_account_id: def?.id ?? null });
     }
-  }, [open, editing, existingInvoices]);
+  }, [open, editing, existingInvoices, bankAccounts]);
 
   const subtotal = form.items.reduce((s, it) => s + Number(it.amount || 0), 0);
 
@@ -308,6 +349,7 @@ function InvoiceDialog({
         issue_date: form.issue_date, due_date: form.due_date || null,
         status: form.status, category: form.category || null,
         payment_mode: form.payment_mode || null, notes: form.notes || null,
+        bank_account_id: form.bank_account_id,
         items: cleanItems, amount: total, tax: 0, total,
       };
       if (isEdit) {
@@ -373,6 +415,54 @@ function InvoiceDialog({
                 </Select>
               </div>
             </div>
+
+            {/* Receive payment into */}
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <Label>Receive payment into</Label>
+                <Link to="/accounts/bank-accounts" className="text-xs text-primary hover:underline">Manage accounts →</Link>
+              </div>
+              {bankAccounts.length === 0 ? (
+                <div className="mt-1 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                  No payment accounts yet. <Link to="/accounts/bank-accounts" className="text-primary hover:underline">Add one</Link> so it appears on the invoice PDF.
+                </div>
+              ) : (
+                <>
+                  <Select
+                    value={form.bank_account_id ?? "none"}
+                    onValueChange={(v) => setForm({ ...form, bank_account_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— No account on PDF —</SelectItem>
+                      {bankAccounts.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          [{b.tag}] {b.account_holder} · {b.account_number}
+                          {b.is_default ? " ★" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {bankAccounts.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setForm({ ...form, bank_account_id: b.id })}
+                        className={cn(
+                          "text-[10px] px-2 py-0.5 rounded border transition",
+                          form.bank_account_id === b.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "hover:bg-muted",
+                        )}
+                      >
+                        {b.tag}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </section>
 
           {/* Items */}
@@ -430,6 +520,7 @@ function InvoiceDialog({
               client_location: form.client_location || null, client_email: form.client_email || null,
               client_phone: form.client_phone || null, category: form.category || null,
               payment_mode: form.payment_mode || null, items: form.items,
+              bank_account_id: form.bank_account_id,
             })}
             disabled={!form.client}
           >
