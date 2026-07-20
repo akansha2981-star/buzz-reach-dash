@@ -66,7 +66,11 @@ export type Database = {
         Row: {
           amount: number
           attachment_url: string | null
+          category: string | null
           client: string
+          client_email: string | null
+          client_location: string | null
+          client_phone: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -74,7 +78,9 @@ export type Database = {
           id: string
           invoice_number: string | null
           issue_date: string
+          items: Json
           notes: string | null
+          payment_mode: string | null
           status: string
           tax: number
           total: number
@@ -83,7 +89,11 @@ export type Database = {
         Insert: {
           amount?: number
           attachment_url?: string | null
+          category?: string | null
           client: string
+          client_email?: string | null
+          client_location?: string | null
+          client_phone?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -91,7 +101,9 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issue_date?: string
+          items?: Json
           notes?: string | null
+          payment_mode?: string | null
           status?: string
           tax?: number
           total?: number
@@ -100,7 +112,11 @@ export type Database = {
         Update: {
           amount?: number
           attachment_url?: string | null
+          category?: string | null
           client?: string
+          client_email?: string | null
+          client_location?: string | null
+          client_phone?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -108,7 +124,9 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issue_date?: string
+          items?: Json
           notes?: string | null
+          payment_mode?: string | null
           status?: string
           tax?: number
           total?: number
