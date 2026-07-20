@@ -128,6 +128,21 @@ function InvoicesPage() {
     return m;
   }, [bankAccounts]);
 
+  const { data: company } = useCompanySettings();
+  const companyOverride: InvoiceCompanyOverride | null = useMemo(() => {
+    if (!company) return null;
+    return {
+      brand: company.brand,
+      legal: company.legal_name,
+      ids: buildIdString(company),
+      address: company.address ?? undefined,
+      email: company.email ?? undefined,
+      phone: company.phone ?? undefined,
+      signatory: company.signatory ?? undefined,
+      terms: (company.terms ?? "").split("\n").map((s) => s.trim()).filter(Boolean),
+    };
+  }, [company]);
+
   const toPDFData = (inv: Invoice) => {
     const b = inv.bank_account_id ? bankById[inv.bank_account_id] : bankAccounts.find(x => x.is_default);
     return {
@@ -143,6 +158,7 @@ function InvoicesPage() {
       items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
       currency: inv.currency,
       notes: inv.notes || DEFAULT_NOTES,
+      company: companyOverride,
       bank: b ? {
         name: b.account_holder,
         number: b.account_number,
@@ -154,6 +170,7 @@ function InvoicesPage() {
       } : null,
     };
   };
+
 
   const handleDownload = (inv: Invoice) => {
     downloadInvoicePDF(toPDFData(inv));
