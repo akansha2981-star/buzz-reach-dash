@@ -16,10 +16,12 @@ import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
+import { Route as AccountsIndexRouteImport } from './routes/accounts.index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
@@ -41,6 +43,9 @@ import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
 import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
 import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcements'
 import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
+import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
+import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
+import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
@@ -84,6 +89,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -103,6 +113,11 @@ const HabitsIndexRoute = HabitsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => HabitsRoute,
+} as any)
+const AccountsIndexRoute = AccountsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountsRoute,
 } as any)
 const SettingsUsersRoute = SettingsUsersRouteImport.update({
   id: '/settings/users',
@@ -209,6 +224,21 @@ const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
   path: '/$habitId',
   getParentRoute: () => HabitsRoute,
 } as any)
+const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsInvoicesRoute = AccountsInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -247,6 +277,7 @@ const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRouteWithChildren
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
@@ -254,6 +285,9 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/recurring': typeof AccountsRecurringRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -275,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/accounts/': typeof AccountsIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
@@ -293,6 +328,9 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/recurring': typeof AccountsRecurringRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -314,6 +352,7 @@ export interface FileRoutesByTo {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/accounts': typeof AccountsIndexRoute
   '/habits': typeof HabitsIndexRoute
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
@@ -328,6 +367,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRouteWithChildren
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
@@ -335,6 +375,9 @@ export interface FileRoutesById {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/recurring': typeof AccountsRecurringRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -356,6 +399,7 @@ export interface FileRoutesById {
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
+  '/accounts/': typeof AccountsIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
@@ -371,6 +415,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accounts'
     | '/auth'
     | '/ceo-desk'
     | '/documents'
@@ -378,6 +423,9 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/expenses'
+    | '/accounts/invoices'
+    | '/accounts/recurring'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -399,6 +447,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/accounts/'
     | '/habits/'
     | '/hrms/'
     | '/me/'
@@ -417,6 +466,9 @@ export interface FileRouteTypes {
     | '/documents'
     | '/meetings'
     | '/tasks'
+    | '/accounts/expenses'
+    | '/accounts/invoices'
+    | '/accounts/recurring'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -438,6 +490,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/accounts'
     | '/habits'
     | '/hrms'
     | '/me'
@@ -451,6 +504,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/accounts'
     | '/auth'
     | '/ceo-desk'
     | '/documents'
@@ -458,6 +512,9 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/expenses'
+    | '/accounts/invoices'
+    | '/accounts/recurring'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -479,6 +536,7 @@ export interface FileRouteTypes {
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
+    | '/accounts/'
     | '/habits/'
     | '/hrms/'
     | '/me/'
@@ -493,6 +551,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountsRoute: typeof AccountsRouteWithChildren
   AuthRoute: typeof AuthRoute
   CeoDeskRoute: typeof CeoDeskRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -573,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -600,6 +666,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/habits/'
       preLoaderRoute: typeof HabitsIndexRouteImport
       parentRoute: typeof HabitsRoute
+    }
+    '/accounts/': {
+      id: '/accounts/'
+      path: '/'
+      fullPath: '/accounts/'
+      preLoaderRoute: typeof AccountsIndexRouteImport
+      parentRoute: typeof AccountsRoute
     }
     '/settings/users': {
       id: '/settings/users'
@@ -748,6 +821,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HabitsHabitIdRouteImport
       parentRoute: typeof HabitsRoute
     }
+    '/accounts/recurring': {
+      id: '/accounts/recurring'
+      path: '/recurring'
+      fullPath: '/accounts/recurring'
+      preLoaderRoute: typeof AccountsRecurringRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/invoices': {
+      id: '/accounts/invoices'
+      path: '/invoices'
+      fullPath: '/accounts/invoices'
+      preLoaderRoute: typeof AccountsInvoicesRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/expenses': {
+      id: '/accounts/expenses'
+      path: '/expenses'
+      fullPath: '/accounts/expenses'
+      preLoaderRoute: typeof AccountsExpensesRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
@@ -799,6 +893,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AccountsRouteChildren {
+  AccountsExpensesRoute: typeof AccountsExpensesRoute
+  AccountsInvoicesRoute: typeof AccountsInvoicesRoute
+  AccountsRecurringRoute: typeof AccountsRecurringRoute
+  AccountsIndexRoute: typeof AccountsIndexRoute
+}
+
+const AccountsRouteChildren: AccountsRouteChildren = {
+  AccountsExpensesRoute: AccountsExpensesRoute,
+  AccountsInvoicesRoute: AccountsInvoicesRoute,
+  AccountsRecurringRoute: AccountsRecurringRoute,
+  AccountsIndexRoute: AccountsIndexRoute,
+}
+
+const AccountsRouteWithChildren = AccountsRoute._addFileChildren(
+  AccountsRouteChildren,
+)
 
 interface HabitsRouteChildren {
   HabitsHabitIdRoute: typeof HabitsHabitIdRoute
@@ -861,6 +973,7 @@ const OutreachTypeRouteWithChildren = OutreachTypeRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountsRoute: AccountsRouteWithChildren,
   AuthRoute: AuthRoute,
   CeoDeskRoute: CeoDeskRoute,
   DocumentsRoute: DocumentsRoute,
