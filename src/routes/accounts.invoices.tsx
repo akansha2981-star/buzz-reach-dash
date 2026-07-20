@@ -122,7 +122,7 @@ function InvoicesPage() {
     downloadInvoicePDF(toPDFData(inv));
   };
 
-  };
+
 
   return (
     <div className="space-y-4">
