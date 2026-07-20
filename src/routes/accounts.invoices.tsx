@@ -19,7 +19,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { downloadInvoicePDF, type InvoiceItem } from "@/lib/invoice-pdf";
+import { downloadInvoicePDF, type InvoiceItem, type InvoiceCompanyOverride } from "@/lib/invoice-pdf";
+import { useCompanySettings, buildIdString } from "@/lib/company-settings";
 
 
 export const Route = createFileRoute("/accounts/invoices")({ component: InvoicesPage });
