@@ -194,14 +194,20 @@ function InvoicesPage() {
         </CardContent>
       </Card>
 
-      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} />
+      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} toPDFData={toPDFData} />
       <InvoicePaymentsDialog
         open={!!paymentsFor}
         onOpenChange={(o) => { if (!o) setPaymentsFor(null); }}
         invoice={paymentsFor}
       />
+      <InvoicePreviewDialog
+        open={!!previewFor}
+        onOpenChange={(o) => { if (!o) setPreviewFor(null); }}
+        invoice={previewFor ? toPDFData(previewFor) : null}
+      />
     </div>
   );
+
 }
 
 
