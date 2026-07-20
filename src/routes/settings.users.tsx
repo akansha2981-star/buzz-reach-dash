@@ -36,6 +36,7 @@ const PERM_OPTIONS: { key: string; label: string; desc: string; group: string }[
   { key: "can_documents", label: "Documents", desc: "Shared document library", group: "Workspace" },
   { key: "can_my_workspace", label: "My Workspace", desc: "Personal productivity area (tasks, focus, habits)", group: "Personal" },
   { key: "can_ceo_desk", label: "CEO Desk", desc: "Submit and view CEO requests", group: "Workspace" },
+  { key: "can_accounts", label: "Accounts", desc: "Invoices, expenses & recurring expenses", group: "Workspace" },
   { key: "can_stages", label: "Stage Settings", desc: "Configure outreach pipeline stages", group: "Admin" },
   { key: "can_users", label: "User Management", desc: "Create and edit team accounts", group: "Admin" },
   { key: "can_logs", label: "Activity Logs", desc: "View full audit trail", group: "Admin" },
@@ -44,7 +45,7 @@ const PERM_OPTIONS: { key: string; label: string; desc: string; group: string }[
 const DEFAULT_PERMS = {
   can_dashboard: true, can_colleges: true, can_coaching: true,
   can_meetings: true, can_stages: false, can_users: false, can_logs: false,
-  can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true,
+  can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true, can_accounts: false,
 };
 
 function UsersPage() {
