@@ -63,6 +63,8 @@ function InvoicesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Invoice | null>(null);
   const [paymentsFor, setPaymentsFor] = useState<Invoice | null>(null);
+  const [previewFor, setPreviewFor] = useState<Invoice | null>(null);
+
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["accounts_invoices"],
