@@ -520,6 +520,7 @@ function InvoiceDialog({
               client_location: form.client_location || null, client_email: form.client_email || null,
               client_phone: form.client_phone || null, category: form.category || null,
               payment_mode: form.payment_mode || null, items: form.items,
+              bank_account_id: form.bank_account_id,
             })}
             disabled={!form.client}
           >
