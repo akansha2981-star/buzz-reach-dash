@@ -184,6 +184,11 @@ export function AppSidebar() {
                             <Link to="/accounts/clients"><Users className="h-4 w-4" /><span>Permanent Clients</span></Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/bank-accounts")}>
+                            <Link to="/accounts/bank-accounts"><Landmark className="h-4 w-4" /><span>Payment Accounts</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </CollapsibleContent>
 
