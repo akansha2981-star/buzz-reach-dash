@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, Download, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { downloadInvoicePDF, type InvoiceItem } from "@/lib/invoice-pdf";
 
 export const Route = createFileRoute("/accounts/invoices")({ component: InvoicesPage });
 
@@ -20,6 +21,9 @@ type Invoice = {
   id: string; client: string; invoice_number: string | null;
   amount: number; tax: number; total: number; currency: string;
   issue_date: string; due_date: string | null; status: string; notes: string | null;
+  client_location: string | null; client_email: string | null; client_phone: string | null;
+  category: string | null; payment_mode: string | null;
+  items: InvoiceItem[];
 };
 
 const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"];
@@ -31,6 +35,18 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-zinc-500/10 text-zinc-600",
 };
 
+const DEFAULT_NOTES =
+  "GST & BILLING DECLARATION: Please note that the GST registration for this engagement is currently under process. Until the completion of GST registration formalities, the invoice is being raised in the name of B-School Buzz, operated by Akaniya Ventures Pvt. Ltd., as per the bank details shared.";
+
+function toItems(v: unknown): InvoiceItem[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((it) => ({
+    name: String((it as Record<string, unknown>)?.name ?? ""),
+    description: String((it as Record<string, unknown>)?.description ?? ""),
+    amount: Number((it as Record<string, unknown>)?.amount ?? 0),
+  }));
+}
+
 function InvoicesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -41,7 +57,7 @@ function InvoicesPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("accounts_invoices").select("*").order("issue_date", { ascending: false });
       if (error) throw error;
-      return data as Invoice[];
+      return (data ?? []).map((d) => ({ ...d, items: toItems((d as { items?: unknown }).items) })) as Invoice[];
     },
   });
 
@@ -56,6 +72,23 @@ function InvoicesPage() {
 
   const totalPaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + Number(i.total), 0);
   const totalOutstanding = invoices.filter(i => i.status !== "paid" && i.status !== "cancelled").reduce((s, i) => s + Number(i.total), 0);
+
+  const handleDownload = (inv: Invoice) => {
+    downloadInvoicePDF({
+      invoice_number: inv.invoice_number || "DRAFT",
+      issue_date: inv.issue_date,
+      due_date: inv.due_date,
+      payment_mode: inv.payment_mode,
+      category: inv.category,
+      client: inv.client,
+      client_location: inv.client_location,
+      client_email: inv.client_email,
+      client_phone: inv.client_phone,
+      items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
+      currency: inv.currency,
+      notes: inv.notes || DEFAULT_NOTES,
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -82,7 +115,7 @@ function InvoicesPage() {
               {invoices.map((inv) => (
                 <div key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium truncate">{inv.client}</span>
                       {inv.invoice_number && <span className="text-xs text-muted-foreground">#{inv.invoice_number}</span>}
                       <Badge className={STATUS_COLORS[inv.status] || ""}>{inv.status}</Badge>
@@ -90,13 +123,16 @@ function InvoicesPage() {
                     <div className="mt-1 text-xs text-muted-foreground">
                       {format(new Date(inv.issue_date), "dd MMM yyyy")}
                       {inv.due_date && <> · due {format(new Date(inv.due_date), "dd MMM")}</>}
+                      {inv.items.length > 0 && <> · {inv.items.length} item{inv.items.length > 1 ? "s" : ""}</>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="text-right mr-2">
                       <div className="font-semibold">{inv.currency} {Number(inv.total).toLocaleString()}</div>
-                      <div className="text-[11px] text-muted-foreground">Tax {Number(inv.tax).toLocaleString()}</div>
                     </div>
+                    <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
+                      <Download className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">PDF</span>
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(inv); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete invoice?")) del.mutate(inv.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
@@ -107,7 +143,7 @@ function InvoicesPage() {
         </CardContent>
       </Card>
 
-      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} />
+      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} />
     </div>
   );
 }
@@ -122,66 +158,222 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
   );
 }
 
-function InvoiceDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing: Invoice | null }) {
+function nextInvoiceNumber(): string {
+  const year = new Date().getFullYear();
+  const rand = Math.floor(100 + Math.random() * 900);
+  return `BSB-${year}-${rand}`;
+}
+
+type FormState = {
+  client: string;
+  client_location: string;
+  client_email: string;
+  client_phone: string;
+  invoice_number: string;
+  currency: string;
+  issue_date: string;
+  due_date: string;
+  status: string;
+  category: string;
+  payment_mode: string;
+  notes: string;
+  items: InvoiceItem[];
+};
+
+const emptyForm = (): FormState => ({
+  client: "", client_location: "", client_email: "", client_phone: "",
+  invoice_number: nextInvoiceNumber(), currency: "INR",
+  issue_date: new Date().toISOString().slice(0, 10), due_date: "",
+  status: "draft", category: "", payment_mode: "Bank Transfer",
+  notes: DEFAULT_NOTES,
+  items: [{ name: "", description: "", amount: 0 }],
+});
+
+function InvoiceDialog({
+  open, onOpenChange, editing, onDownload,
+}: {
+  open: boolean; onOpenChange: (o: boolean) => void; editing: Invoice | null;
+  onDownload: (inv: Invoice) => void;
+}) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<Partial<Invoice>>({});
+  const [form, setForm] = useState<FormState>(emptyForm());
   const isEdit = !!editing;
 
-  const reset = () => setForm(editing ?? { currency: "INR", status: "draft", issue_date: new Date().toISOString().slice(0, 10), amount: 0, tax: 0 });
-  useEffect(() => { if (open) reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      setForm({
+        client: editing.client, client_location: editing.client_location || "",
+        client_email: editing.client_email || "", client_phone: editing.client_phone || "",
+        invoice_number: editing.invoice_number || nextInvoiceNumber(),
+        currency: editing.currency, issue_date: editing.issue_date,
+        due_date: editing.due_date || "", status: editing.status,
+        category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
+        notes: editing.notes || DEFAULT_NOTES,
+        items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
+      });
+    } else {
+      setForm(emptyForm());
+    }
+  }, [open, editing]);
+
+  const subtotal = form.items.reduce((s, it) => s + Number(it.amount || 0), 0);
+
+  const updateItem = (idx: number, patch: Partial<InvoiceItem>) => {
+    setForm((f) => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
+  };
+  const addItem = () => setForm((f) => ({ ...f, items: [...f.items, { name: "", description: "", amount: 0 }] }));
+  const removeItem = (idx: number) => setForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
 
   const save = useMutation({
     mutationFn: async () => {
-      const total = Number(form.amount || 0) + Number(form.tax || 0);
-      const payload: any = { ...form, total };
-      delete payload.id;
+      const cleanItems = form.items.filter((it) => it.name.trim() || Number(it.amount) > 0);
+      const total = cleanItems.reduce((s, it) => s + Number(it.amount || 0), 0);
+      const payload = {
+        client: form.client, client_location: form.client_location || null,
+        client_email: form.client_email || null, client_phone: form.client_phone || null,
+        invoice_number: form.invoice_number || null, currency: form.currency,
+        issue_date: form.issue_date, due_date: form.due_date || null,
+        status: form.status, category: form.category || null,
+        payment_mode: form.payment_mode || null, notes: form.notes || null,
+        items: cleanItems, amount: total, tax: 0, total,
+      };
       if (isEdit) {
-        const { error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing!.id);
+        const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing!.id).select("*").single();
         if (error) throw error;
+        return data;
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        const { error } = await supabase.from("accounts_invoices").insert({ ...payload, created_by: user?.id });
+        const { data: userRes } = await supabase.auth.getUser();
+        const { data, error } = await supabase.from("accounts_invoices")
+          .insert({ ...payload, created_by: userRes.user?.id }).select("*").single();
         if (error) throw error;
+        return data;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, _vars, _ctx) => {
       toast.success(isEdit ? "Invoice updated" : "Invoice created");
       qc.invalidateQueries({ queryKey: ["accounts_invoices"] });
       onOpenChange(false);
+      // Auto-download PDF right after save
+      if (data) {
+        const inv = { ...data, items: toItems((data as { items?: unknown }).items) } as Invoice;
+        onDownload(inv);
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{isEdit ? "Edit invoice" : "New invoice"}</DialogTitle></DialogHeader>
-        <div className="grid gap-3">
-          <div><Label>Client *</Label><Input value={form.client ?? ""} onChange={(e) => setForm({ ...form, client: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>Invoice #</Label><Input value={form.invoice_number ?? ""} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} /></div>
-            <div><Label>Currency</Label><Input value={form.currency ?? "INR"} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>Amount</Label><Input type="number" value={form.amount ?? 0} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} /></div>
-            <div><Label>Tax</Label><Input type="number" value={form.tax ?? 0} onChange={(e) => setForm({ ...form, tax: Number(e.target.value) })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>Issue date</Label><Input type="date" value={form.issue_date ?? ""} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} /></div>
-            <div><Label>Due date</Label><Input type="date" value={form.due_date ?? ""} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
-          </div>
-          <div>
-            <Label>Status</Label>
-            <Select value={form.status ?? "draft"} onValueChange={(v) => setForm({ ...form, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Notes</Label><Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit invoice" : "New invoice"}</DialogTitle>
+          <p className="text-xs text-muted-foreground">Company details are auto-included. Just enter client & items — PDF will download on save.</p>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          {/* Client */}
+          <section className="rounded-lg border p-3 space-y-3">
+            <h3 className="text-sm font-semibold">Client details</h3>
+            <div><Label>Client name *</Label><Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} placeholder="Ishita Knitfab Pvt Ltd" /></div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div><Label>Location</Label><Input value={form.client_location} onChange={(e) => setForm({ ...form, client_location: e.target.value })} placeholder="Ludhiana, Punjab" /></div>
+              <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Textile" /></div>
+              <div><Label>Client email</Label><Input value={form.client_email} onChange={(e) => setForm({ ...form, client_email: e.target.value })} /></div>
+              <div><Label>Client phone</Label><Input value={form.client_phone} onChange={(e) => setForm({ ...form, client_phone: e.target.value })} /></div>
+            </div>
+          </section>
+
+          {/* Invoice meta */}
+          <section className="rounded-lg border p-3 space-y-3">
+            <h3 className="text-sm font-semibold">Invoice details</h3>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div><Label>Invoice #</Label><Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} /></div>
+              <div><Label>Currency</Label><Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
+              <div>
+                <Label>Payment mode</Label>
+                <Select value={form.payment_mode} onValueChange={(v) => setForm({ ...form, payment_mode: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Bank Transfer", "UPI", "Cash", "Cheque", "Card"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Issue date</Label><Input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} /></div>
+              <div><Label>Due date</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          {/* Items */}
+          <section className="rounded-lg border p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Products / Services</h3>
+              <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add item</Button>
+            </div>
+            <div className="space-y-2">
+              {form.items.map((it, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-2 items-start rounded-md border p-2">
+                  <div className="col-span-12 sm:col-span-4">
+                    <Label className="text-xs">Name</Label>
+                    <Input value={it.name} onChange={(e) => updateItem(idx, { name: e.target.value })} placeholder="Website Development" />
+                  </div>
+                  <div className="col-span-12 sm:col-span-5">
+                    <Label className="text-xs">Description</Label>
+                    <Input value={it.description || ""} onChange={(e) => updateItem(idx, { description: e.target.value })} placeholder="Advance 50% Payment" />
+                  </div>
+                  <div className="col-span-9 sm:col-span-2">
+                    <Label className="text-xs">Amount</Label>
+                    <Input type="number" value={it.amount} onChange={(e) => updateItem(idx, { amount: Number(e.target.value) })} />
+                  </div>
+                  <div className="col-span-3 sm:col-span-1 flex items-end justify-end h-full">
+                    <Button size="icon" variant="ghost" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end pt-2 border-t">
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">Total</div>
+                <div className="text-xl font-bold">{form.currency} {subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-lg border p-3 space-y-2">
+            <Label>Notes / Declaration</Label>
+            <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          </section>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="gap-2 flex-col sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={!form.client || save.isPending}>{save.isPending ? "Saving…" : "Save"}</Button>
+          <Button
+            variant="secondary"
+            onClick={() => onDownload({
+              id: "preview", status: form.status, amount: subtotal, tax: 0, total: subtotal,
+              client: form.client || "Client", invoice_number: form.invoice_number,
+              currency: form.currency, issue_date: form.issue_date,
+              due_date: form.due_date || null, notes: form.notes,
+              client_location: form.client_location || null, client_email: form.client_email || null,
+              client_phone: form.client_phone || null, category: form.category || null,
+              payment_mode: form.payment_mode || null, items: form.items,
+            })}
+            disabled={!form.client}
+          >
+            <Eye className="h-4 w-4 mr-1" />Preview PDF
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={!form.client || save.isPending}>
+            <Download className="h-4 w-4 mr-1" />{save.isPending ? "Saving…" : "Save & Download PDF"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
