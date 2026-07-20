@@ -103,21 +103,25 @@ function InvoicesPage() {
     .filter(i => i.status !== "cancelled")
     .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
+  const toPDFData = (inv: Invoice) => ({
+    invoice_number: inv.invoice_number || "DRAFT",
+    issue_date: inv.issue_date,
+    due_date: inv.due_date,
+    payment_mode: inv.payment_mode,
+    category: inv.category,
+    client: inv.client,
+    client_location: inv.client_location,
+    client_email: inv.client_email,
+    client_phone: inv.client_phone,
+    items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
+    currency: inv.currency,
+    notes: inv.notes || DEFAULT_NOTES,
+  });
+
   const handleDownload = (inv: Invoice) => {
-    downloadInvoicePDF({
-      invoice_number: inv.invoice_number || "DRAFT",
-      issue_date: inv.issue_date,
-      due_date: inv.due_date,
-      payment_mode: inv.payment_mode,
-      category: inv.category,
-      client: inv.client,
-      client_location: inv.client_location,
-      client_email: inv.client_email,
-      client_phone: inv.client_phone,
-      items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
-      currency: inv.currency,
-      notes: inv.notes || DEFAULT_NOTES,
-    });
+    downloadInvoicePDF(toPDFData(inv));
+  };
+
   };
 
   return (
