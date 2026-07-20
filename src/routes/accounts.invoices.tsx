@@ -299,11 +299,12 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
 });
 
 function InvoiceDialog({
-  open, onOpenChange, editing, onDownload, existingInvoices,
+  open, onOpenChange, editing, onDownload, existingInvoices, bankAccounts,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void; editing: Invoice | null;
   onDownload: (inv: Invoice) => void;
   existingInvoices: { invoice_number: string | null }[];
+  bankAccounts: BankAccountRow[];
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<FormState>(emptyForm(existingInvoices));
