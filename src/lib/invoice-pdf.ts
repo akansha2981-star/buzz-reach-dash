@@ -346,7 +346,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   y += 14;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...C.ink);
-  doc.text(`For queries, contact: ${COMPANY.email} | ${COMPANY.phone}`, M, y);
+  doc.text(`For queries, contact: ${co.email} | ${co.phone}`, M, y);
   y += 13;
   doc.text("This is a system-generated invoice; no signature is required.", M, y);
 
