@@ -158,10 +158,18 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
   );
 }
 
-function nextInvoiceNumber(): string {
+const INVOICE_START_SEQ = 400;
+function nextInvoiceNumber(existing: { invoice_number: string | null }[] = []): string {
   const year = new Date().getFullYear();
-  const rand = Math.floor(100 + Math.random() * 900);
-  return `BSB-${year}-${rand}`;
+  const prefix = `BSB-${year}-`;
+  let max = INVOICE_START_SEQ - 1;
+  for (const inv of existing) {
+    const n = inv.invoice_number;
+    if (!n || !n.startsWith(prefix)) continue;
+    const num = parseInt(n.slice(prefix.length), 10);
+    if (!isNaN(num) && num > max) max = num;
+  }
+  return `${prefix}${max + 1}`;
 }
 
 type FormState = {
