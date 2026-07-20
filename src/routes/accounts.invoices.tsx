@@ -349,6 +349,7 @@ function InvoiceDialog({
         issue_date: form.issue_date, due_date: form.due_date || null,
         status: form.status, category: form.category || null,
         payment_mode: form.payment_mode || null, notes: form.notes || null,
+        bank_account_id: form.bank_account_id,
         items: cleanItems, amount: total, tax: 0, total,
       };
       if (isEdit) {
