@@ -30,7 +30,14 @@ type Invoice = {
   issue_date: string; due_date: string | null; status: string; notes: string | null;
   client_location: string | null; client_email: string | null; client_phone: string | null;
   category: string | null; payment_mode: string | null;
+  bank_account_id: string | null;
   items: InvoiceItem[];
+};
+
+type BankAccountRow = {
+  id: string; tag: string; account_holder: string; account_number: string;
+  ifsc: string | null; bank_name: string | null; branch: string | null;
+  branch_address: string | null; upi_id: string | null; is_default: boolean;
 };
 
 const STATUSES = ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"];
