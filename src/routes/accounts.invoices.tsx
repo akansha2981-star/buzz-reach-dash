@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save, TrendingUp, Wallet, AlertCircle, CheckCircle2, Clock, Receipt, Sparkles } from "lucide-react";
 import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
 import { InvoicePreviewDialog } from "@/components/accounts/InvoicePreviewDialog";
 
