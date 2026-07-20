@@ -194,7 +194,7 @@ function InvoicesPage() {
         </CardContent>
       </Card>
 
-      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} toPDFData={toPDFData} />
+      <InvoiceDialog open={open} onOpenChange={setOpen} editing={editing} onDownload={handleDownload} existingInvoices={invoices} />
       <InvoicePaymentsDialog
         open={!!paymentsFor}
         onOpenChange={(o) => { if (!o) setPaymentsFor(null); }}
