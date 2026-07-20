@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,17 +127,8 @@ function InvoiceDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
   const [form, setForm] = useState<Partial<Invoice>>({});
   const isEdit = !!editing;
 
-  useState(() => {});
-  // reset when opening
   const reset = () => setForm(editing ?? { currency: "INR", status: "draft", issue_date: new Date().toISOString().slice(0, 10), amount: 0, tax: 0 });
-  if (open && form.id !== editing?.id && !(!editing && form && Object.keys(form).length && !form.id)) {
-    // no-op; handled below via effect substitute
-  }
-
-  // simple: rebuild on open change
-  const [key, setKey] = useState(0);
-  if (open && key === 0) { reset(); setKey(1); }
-  if (!open && key === 1) setKey(0);
+  useEffect(() => { if (open) reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
 
   const save = useMutation({
     mutationFn: async () => {
