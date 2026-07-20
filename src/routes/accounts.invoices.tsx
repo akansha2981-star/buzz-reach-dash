@@ -320,6 +320,7 @@ function InvoiceDialog({
         due_date: editing.due_date || "", status: editing.status,
         category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
         notes: editing.notes || DEFAULT_NOTES,
+        bank_account_id: editing.bank_account_id ?? null,
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
