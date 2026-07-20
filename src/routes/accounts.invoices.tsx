@@ -188,9 +188,9 @@ type FormState = {
   items: InvoiceItem[];
 };
 
-const emptyForm = (): FormState => ({
+const emptyForm = (existing: { invoice_number: string | null }[] = []): FormState => ({
   client: "", client_location: "", client_email: "", client_phone: "",
-  invoice_number: nextInvoiceNumber(), currency: "INR",
+  invoice_number: nextInvoiceNumber(existing), currency: "INR",
   issue_date: new Date().toISOString().slice(0, 10), due_date: "",
   status: "draft", category: "", payment_mode: "Bank Transfer",
   notes: DEFAULT_NOTES,
