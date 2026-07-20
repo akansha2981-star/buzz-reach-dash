@@ -29,6 +29,17 @@ export type InvoiceBank = {
   tag?: string | null;
 };
 
+export type InvoiceCompanyOverride = {
+  brand?: string;
+  legal?: string;
+  ids?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  signatory?: string;
+  terms?: string[];
+};
+
 export type InvoicePDFData = {
   invoice_number: string;
   issue_date: string;
@@ -43,7 +54,9 @@ export type InvoicePDFData = {
   currency?: string;
   notes?: string | null;
   bank?: InvoiceBank | null;
+  company?: InvoiceCompanyOverride | null;
 };
+
 
 function numberToWordsIndian(num: number): string {
   const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
@@ -88,10 +101,25 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
 
   // ============ HEADER (white bg) ============
+  const co = {
+    brand: inv.company?.brand || COMPANY.brand,
+    legal: inv.company?.legal || COMPANY.legal,
+    ids: inv.company?.ids || COMPANY.ids,
+    address: inv.company?.address || COMPANY.address,
+    email: inv.company?.email || COMPANY.email,
+    phone: inv.company?.phone || COMPANY.phone,
+    signatory: inv.company?.signatory || "Authorized Signatory",
+    terms: inv.company?.terms && inv.company.terms.length ? inv.company.terms : [
+      "Payment to be made as per the agreed terms mentioned in the engagement agreement.",
+      "All payments should be made to the bank account details mentioned above.",
+      "Any disputes regarding this invoice should be raised within 7 days of receipt.",
+    ],
+  };
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);
   doc.setTextColor(...C.navy);
-  doc.text(COMPANY.brand, M, M + 10);
+  doc.text(co.brand, M, M + 10);
 
   doc.setFontSize(22);
   doc.setTextColor(...C.gold);
@@ -101,14 +129,15 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...C.navy);
-  doc.text(COMPANY.legal, M, M + 30);
+  doc.text(co.legal, M, M + 30);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...C.ink);
-  doc.text(COMPANY.ids, M, M + 44);
-  const addrLines = doc.splitTextToSize(COMPANY.address, contentW);
+  doc.text(co.ids, M, M + 44);
+  const addrLines = doc.splitTextToSize(co.address, contentW);
   doc.text(addrLines, M, M + 58);
+
 
   // Gold divider
   let y = M + 80;
@@ -281,9 +310,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...C.ink);
-  doc.text(`For ${COMPANY.brand} (${COMPANY.legal})`, M, y);
+  doc.text(`For ${co.brand} (${co.legal})`, M, y);
   y += 40;
-  doc.text("Authorized Signatory", M, y);
+  doc.text(co.signatory, M, y);
+
   y += 14;
 
   // Thin gray divider
@@ -301,12 +331,12 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...C.ink);
-  const terms = [
-    "• Payment to be made as per the agreed terms mentioned in the engagement agreement.",
-    "• All payments should be made to the bank account details mentioned above.",
-    "• Any disputes regarding this invoice should be raised within 7 days of receipt.",
-  ];
-  terms.forEach((t) => { doc.text(t, M, y); y += 13; });
+  const terms = co.terms.map((t) => (t.trim().startsWith("•") ? t : `• ${t.trim()}`));
+  terms.forEach((t) => {
+    const wrapped = doc.splitTextToSize(t, contentW);
+    wrapped.forEach((line: string) => { doc.text(line, M, y); y += 13; });
+  });
+
 
   y += 8;
   doc.setFont("helvetica", "bold");
@@ -316,7 +346,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   y += 14;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...C.ink);
-  doc.text(`For queries, contact: ${COMPANY.email} | ${COMPANY.phone}`, M, y);
+  doc.text(`For queries, contact: ${co.email} | ${co.phone}`, M, y);
   y += 13;
   doc.text("This is a system-generated invoice; no signature is required.", M, y);
 

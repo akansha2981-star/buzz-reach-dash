@@ -47,6 +47,7 @@ import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
 import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
 import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
+import { Route as AccountsCompanyRouteImport } from './routes/accounts.company'
 import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
 import { Route as AccountsBankAccountsRouteImport } from './routes/accounts.bank-accounts'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
@@ -247,6 +248,11 @@ const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AccountsRoute,
 } as any)
+const AccountsCompanyRoute = AccountsCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const AccountsClientsRoute = AccountsClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
+  '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -351,6 +358,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
+  '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
+  '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -452,6 +461,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
+    | '/accounts/company'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
+    | '/accounts/company'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
+    | '/accounts/company'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -885,6 +897,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsExpensesRouteImport
       parentRoute: typeof AccountsRoute
     }
+    '/accounts/company': {
+      id: '/accounts/company'
+      path: '/company'
+      fullPath: '/accounts/company'
+      preLoaderRoute: typeof AccountsCompanyRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/accounts/clients': {
       id: '/accounts/clients'
       path: '/clients'
@@ -954,6 +973,7 @@ declare module '@tanstack/react-router' {
 interface AccountsRouteChildren {
   AccountsBankAccountsRoute: typeof AccountsBankAccountsRoute
   AccountsClientsRoute: typeof AccountsClientsRoute
+  AccountsCompanyRoute: typeof AccountsCompanyRoute
   AccountsExpensesRoute: typeof AccountsExpensesRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
   AccountsRecurringRoute: typeof AccountsRecurringRoute
@@ -964,6 +984,7 @@ interface AccountsRouteChildren {
 const AccountsRouteChildren: AccountsRouteChildren = {
   AccountsBankAccountsRoute: AccountsBankAccountsRoute,
   AccountsClientsRoute: AccountsClientsRoute,
+  AccountsCompanyRoute: AccountsCompanyRoute,
   AccountsExpensesRoute: AccountsExpensesRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,
   AccountsRecurringRoute: AccountsRecurringRoute,

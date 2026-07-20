@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark } from "lucide-react";
+import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark, Building2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const TABS = [
   { to: "/accounts/recurring", label: "Recurring", icon: Repeat },
   { to: "/accounts/clients", label: "Clients", icon: Users },
   { to: "/accounts/bank-accounts", label: "Bank", icon: Landmark },
+  { to: "/accounts/company", label: "Company", icon: Building2 },
 ];
 
 function AccountsLayout() {

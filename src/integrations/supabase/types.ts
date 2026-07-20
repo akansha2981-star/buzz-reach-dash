@@ -107,6 +107,60 @@ export type Database = {
         }
         Relationships: []
       }
+      accounts_company_settings: {
+        Row: {
+          address: string | null
+          brand: string
+          cin: string | null
+          created_at: string
+          email: string | null
+          gstin: string | null
+          id: string
+          legal_name: string
+          pan: string | null
+          phone: string | null
+          signatory: string | null
+          tan: string | null
+          terms: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          brand?: string
+          cin?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          legal_name?: string
+          pan?: string | null
+          phone?: string | null
+          signatory?: string | null
+          tan?: string | null
+          terms?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          brand?: string
+          cin?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          legal_name?: string
+          pan?: string | null
+          phone?: string | null
+          signatory?: string | null
+          tan?: string | null
+          terms?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       accounts_expenses: {
         Row: {
           amount: number
