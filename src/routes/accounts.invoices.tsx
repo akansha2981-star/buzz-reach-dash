@@ -322,6 +322,23 @@ function InvoicesPage() {
 }
 
 
+function HeroStat({ icon, label, value, sub, accent }: { icon: React.ReactNode; label: string; value: string; sub?: string; accent?: "emerald"|"amber"|"sky" }) {
+  const dot = accent === "emerald" ? "text-emerald-300 bg-emerald-400/10 ring-emerald-400/30"
+    : accent === "amber" ? "text-amber-300 bg-amber-400/10 ring-amber-400/30"
+    : accent === "sky" ? "text-sky-300 bg-sky-400/10 ring-sky-400/30"
+    : "text-slate-200 bg-white/10 ring-white/20";
+  return (
+    <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3.5 backdrop-blur transition hover:bg-white/10">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-300">{label}</span>
+        <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-md ring-1", dot)}>{icon}</span>
+      </div>
+      <div className="mt-1.5 text-lg font-bold tracking-tight text-white sm:text-xl">{value}</div>
+      {sub && <div className="mt-0.5 text-[11px] text-slate-400">{sub}</div>}
+    </div>
+  );
+}
+
 function StatCard({ label, value, tone }: { label: string; value: string; tone?: string }) {
   const toneCls = tone === "emerald" ? "text-emerald-600" : tone === "amber" ? "text-amber-600" : "text-foreground";
   return (
