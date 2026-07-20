@@ -284,6 +284,7 @@ type FormState = {
   category: string;
   payment_mode: string;
   notes: string;
+  bank_account_id: string | null;
   items: InvoiceItem[];
 };
 
@@ -293,6 +294,7 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
   issue_date: new Date().toISOString().slice(0, 10), due_date: "",
   status: "draft", category: "", payment_mode: "Bank Transfer",
   notes: DEFAULT_NOTES,
+  bank_account_id: null,
   items: [{ name: "", description: "", amount: 0 }],
 });
 
