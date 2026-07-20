@@ -331,12 +331,12 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...C.ink);
-  const terms = [
-    "• Payment to be made as per the agreed terms mentioned in the engagement agreement.",
-    "• All payments should be made to the bank account details mentioned above.",
-    "• Any disputes regarding this invoice should be raised within 7 days of receipt.",
-  ];
-  terms.forEach((t) => { doc.text(t, M, y); y += 13; });
+  const terms = co.terms.map((t) => (t.trim().startsWith("•") ? t : `• ${t.trim()}`));
+  terms.forEach((t) => {
+    const wrapped = doc.splitTextToSize(t, contentW);
+    wrapped.forEach((line: string) => { doc.text(line, M, y); y += 13; });
+  });
+
 
   y += 8;
   doc.setFont("helvetica", "bold");
