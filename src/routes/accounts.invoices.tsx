@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save } from "lucide-react";
 import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
+import { InvoicePreviewDialog } from "@/components/accounts/InvoicePreviewDialog";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
