@@ -101,10 +101,25 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
 
   // ============ HEADER (white bg) ============
+  const co = {
+    brand: inv.company?.brand || COMPANY.brand,
+    legal: inv.company?.legal || COMPANY.legal,
+    ids: inv.company?.ids || COMPANY.ids,
+    address: inv.company?.address || COMPANY.address,
+    email: inv.company?.email || COMPANY.email,
+    phone: inv.company?.phone || COMPANY.phone,
+    signatory: inv.company?.signatory || "Authorized Signatory",
+    terms: inv.company?.terms && inv.company.terms.length ? inv.company.terms : [
+      "Payment to be made as per the agreed terms mentioned in the engagement agreement.",
+      "All payments should be made to the bank account details mentioned above.",
+      "Any disputes regarding this invoice should be raised within 7 days of receipt.",
+    ],
+  };
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);
   doc.setTextColor(...C.navy);
-  doc.text(COMPANY.brand, M, M + 10);
+  doc.text(co.brand, M, M + 10);
 
   doc.setFontSize(22);
   doc.setTextColor(...C.gold);
@@ -114,14 +129,15 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...C.navy);
-  doc.text(COMPANY.legal, M, M + 30);
+  doc.text(co.legal, M, M + 30);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...C.ink);
-  doc.text(COMPANY.ids, M, M + 44);
-  const addrLines = doc.splitTextToSize(COMPANY.address, contentW);
+  doc.text(co.ids, M, M + 44);
+  const addrLines = doc.splitTextToSize(co.address, contentW);
   doc.text(addrLines, M, M + 58);
+
 
   // Gold divider
   let y = M + 80;
