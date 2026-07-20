@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Receipt, Repeat } from "lucide-react";
+import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { cn } from "@/lib/utils";
@@ -7,9 +7,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/accounts")({ component: AccountsLayout });
 
 const TABS = [
+  { to: "/accounts/summary", label: "Summary", icon: LayoutDashboard },
   { to: "/accounts/invoices", label: "Invoices", icon: FileText },
   { to: "/accounts/expenses", label: "Expenses", icon: Receipt },
   { to: "/accounts/recurring", label: "Recurring", icon: Repeat },
+  { to: "/accounts/clients", label: "Clients", icon: Users },
+  { to: "/accounts/bank-accounts", label: "Bank", icon: Landmark },
 ];
 
 function AccountsLayout() {
