@@ -179,7 +179,12 @@ export function AppSidebar() {
                             <Link to="/accounts/recurring"><Repeat className="h-4 w-4" /><span>Recurring Monthly</span></Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                      </SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/clients")}>
+                            <Link to="/accounts/clients"><Users className="h-4 w-4" /><span>Permanent Clients</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+
                     </CollapsibleContent>
                   </SidebarMenuItem>
                 </Collapsible>
