@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save } from "lucide-react";
 import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
+import { InvoicePreviewDialog } from "@/components/accounts/InvoicePreviewDialog";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,6 +63,8 @@ function InvoicesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Invoice | null>(null);
   const [paymentsFor, setPaymentsFor] = useState<Invoice | null>(null);
+  const [previewFor, setPreviewFor] = useState<Invoice | null>(null);
+
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["accounts_invoices"],
@@ -99,22 +103,26 @@ function InvoicesPage() {
     .filter(i => i.status !== "cancelled")
     .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
+  const toPDFData = (inv: Invoice) => ({
+    invoice_number: inv.invoice_number || "DRAFT",
+    issue_date: inv.issue_date,
+    due_date: inv.due_date,
+    payment_mode: inv.payment_mode,
+    category: inv.category,
+    client: inv.client,
+    client_location: inv.client_location,
+    client_email: inv.client_email,
+    client_phone: inv.client_phone,
+    items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
+    currency: inv.currency,
+    notes: inv.notes || DEFAULT_NOTES,
+  });
+
   const handleDownload = (inv: Invoice) => {
-    downloadInvoicePDF({
-      invoice_number: inv.invoice_number || "DRAFT",
-      issue_date: inv.issue_date,
-      due_date: inv.due_date,
-      payment_mode: inv.payment_mode,
-      category: inv.category,
-      client: inv.client,
-      client_location: inv.client_location,
-      client_email: inv.client_email,
-      client_phone: inv.client_phone,
-      items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
-      currency: inv.currency,
-      notes: inv.notes || DEFAULT_NOTES,
-    });
+    downloadInvoicePDF(toPDFData(inv));
   };
+
+
 
   return (
     <div className="space-y-4">
@@ -168,9 +176,13 @@ function InvoicesPage() {
                       <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
                         <IndianRupee className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Payments</span>
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => setPreviewFor(inv)} title="View PDF">
+                        <Eye className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">View</span>
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
                         <Download className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">PDF</span>
                       </Button>
+
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(inv); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete invoice?")) del.mutate(inv.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
@@ -188,8 +200,14 @@ function InvoicesPage() {
         onOpenChange={(o) => { if (!o) setPaymentsFor(null); }}
         invoice={paymentsFor}
       />
+      <InvoicePreviewDialog
+        open={!!previewFor}
+        onOpenChange={(o) => { if (!o) setPreviewFor(null); }}
+        invoice={previewFor ? toPDFData(previewFor) : null}
+      />
     </div>
   );
+
 }
 
 
