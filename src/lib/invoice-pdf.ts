@@ -29,6 +29,17 @@ export type InvoiceBank = {
   tag?: string | null;
 };
 
+export type InvoiceCompanyOverride = {
+  brand?: string;
+  legal?: string;
+  ids?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  signatory?: string;
+  terms?: string[];
+};
+
 export type InvoicePDFData = {
   invoice_number: string;
   issue_date: string;
@@ -43,7 +54,9 @@ export type InvoicePDFData = {
   currency?: string;
   notes?: string | null;
   bank?: InvoiceBank | null;
+  company?: InvoiceCompanyOverride | null;
 };
+
 
 function numberToWordsIndian(num: number): string {
   const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
