@@ -198,13 +198,14 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
 });
 
 function InvoiceDialog({
-  open, onOpenChange, editing, onDownload,
+  open, onOpenChange, editing, onDownload, existingInvoices,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void; editing: Invoice | null;
   onDownload: (inv: Invoice) => void;
+  existingInvoices: { invoice_number: string | null }[];
 }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<FormState>(emptyForm());
+  const [form, setForm] = useState<FormState>(emptyForm(existingInvoices));
   const isEdit = !!editing;
 
   useEffect(() => {
@@ -213,7 +214,7 @@ function InvoiceDialog({
       setForm({
         client: editing.client, client_location: editing.client_location || "",
         client_email: editing.client_email || "", client_phone: editing.client_phone || "",
-        invoice_number: editing.invoice_number || nextInvoiceNumber(),
+        invoice_number: editing.invoice_number || nextInvoiceNumber(existingInvoices),
         currency: editing.currency, issue_date: editing.issue_date,
         due_date: editing.due_date || "", status: editing.status,
         category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
@@ -221,9 +222,9 @@ function InvoiceDialog({
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
-      setForm(emptyForm());
+      setForm(emptyForm(existingInvoices));
     }
-  }, [open, editing]);
+  }, [open, editing, existingInvoices]);
 
   const subtotal = form.items.reduce((s, it) => s + Number(it.amount || 0), 0);
 
