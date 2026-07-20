@@ -152,6 +152,39 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
+              {can("can_accounts") && (
+                <Collapsible defaultOpen={path.startsWith("/accounts")} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        <Wallet />
+                        <span>Accounts</span>
+                        <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/invoices")}>
+                            <Link to="/accounts/invoices"><FileText className="h-4 w-4" /><span>Invoice Management</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/expenses")}>
+                            <Link to="/accounts/expenses"><Receipt className="h-4 w-4" /><span>Expenses</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/recurring")}>
+                            <Link to="/accounts/recurring"><Repeat className="h-4 w-4" /><span>Recurring Monthly</span></Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
+
               {can("can_my_workspace") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path.startsWith("/me/confidential")}>
