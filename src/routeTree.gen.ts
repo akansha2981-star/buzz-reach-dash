@@ -46,6 +46,7 @@ import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
 import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
+import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
 import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
 import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
@@ -239,6 +240,11 @@ const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AccountsRoute,
 } as any)
+const AccountsClientsRoute = AccountsClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
+  '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/meetings'
     | '/tasks'
+    | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -512,6 +523,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/meetings'
     | '/tasks'
+    | '/accounts/clients'
     | '/accounts/expenses'
     | '/accounts/invoices'
     | '/accounts/recurring'
@@ -842,6 +854,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsExpensesRouteImport
       parentRoute: typeof AccountsRoute
     }
+    '/accounts/clients': {
+      id: '/accounts/clients'
+      path: '/clients'
+      fullPath: '/accounts/clients'
+      preLoaderRoute: typeof AccountsClientsRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/outreach/$type/$id': {
       id: '/outreach/$type/$id'
       path: '/$id'
@@ -895,6 +914,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AccountsRouteChildren {
+  AccountsClientsRoute: typeof AccountsClientsRoute
   AccountsExpensesRoute: typeof AccountsExpensesRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
   AccountsRecurringRoute: typeof AccountsRecurringRoute
@@ -902,6 +922,7 @@ interface AccountsRouteChildren {
 }
 
 const AccountsRouteChildren: AccountsRouteChildren = {
+  AccountsClientsRoute: AccountsClientsRoute,
   AccountsExpensesRoute: AccountsExpensesRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,
   AccountsRecurringRoute: AccountsRecurringRoute,
