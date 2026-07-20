@@ -160,14 +160,89 @@ function InvoicesPage() {
 
 
 
+  // ==== Analytics ====
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const grandTotal = invoices.reduce((s, i) => s + Number(i.total), 0);
+  const collectionRate = grandTotal > 0 ? Math.round((totalCollected / grandTotal) * 100) : 0;
+  const overdueList = invoices.filter(i => i.due_date && new Date(i.due_date) < now && (paidByInvoice[i.id] ?? 0) < Number(i.total) && i.status !== "cancelled" && i.status !== "paid");
+  const overdueAmt = overdueList.reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
+  const monthInvoices = invoices.filter(i => new Date(i.issue_date) >= monthStart);
+  const monthBilled = monthInvoices.reduce((s, i) => s + Number(i.total), 0);
+  const statusCounts = invoices.reduce<Record<string, number>>((m, i) => { m[i.status] = (m[i.status] ?? 0) + 1; return m; }, {});
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Total invoices" value={invoices.length.toString()} />
-        <StatCard label="Collected" value={`₹${totalCollected.toLocaleString()}`} tone="emerald" />
-        <StatCard label="Outstanding" value={`₹${totalOutstanding.toLocaleString()}`} tone="amber" />
-        <div className="flex items-center justify-end">
-          <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />New invoice</Button>
+    <div className="space-y-6">
+      {/* ============== HERO SUMMARY ============== */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl">
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" />
+        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-indigo-500/30 blur-3xl" />
+
+        <div className="relative p-5 sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-amber-300/90">
+                <Sparkles className="h-3.5 w-3.5" /> Invoice Command Center
+              </div>
+              <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Invoice Management</h1>
+              <p className="mt-1 text-sm text-slate-300">Track billings, payments and outstanding dues in real-time.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="secondary" size="sm" className="bg-white/10 text-white hover:bg-white/20 border-white/20">
+                <Link to="/accounts/clients"><UserPlus className="mr-1 h-4 w-4" />Clients</Link>
+              </Button>
+              <Button onClick={() => { setEditing(null); setOpen(true); }} className="bg-amber-400 text-slate-900 hover:bg-amber-300 font-semibold shadow-lg">
+                <Plus className="mr-1 h-4 w-4" />New invoice
+              </Button>
+            </div>
+          </div>
+
+          {/* KPI row */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <HeroStat icon={<Receipt className="h-4 w-4" />} label="Total billed" value={`₹${grandTotal.toLocaleString("en-IN")}`} sub={`${invoices.length} invoice${invoices.length===1?"":"s"}`} />
+            <HeroStat icon={<CheckCircle2 className="h-4 w-4" />} label="Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} sub={`${collectionRate}% collection rate`} accent="emerald" />
+            <HeroStat icon={<Clock className="h-4 w-4" />} label="Outstanding" value={`₹${totalOutstanding.toLocaleString("en-IN")}`} sub={overdueAmt>0?`₹${overdueAmt.toLocaleString("en-IN")} overdue`:"On track"} accent="amber" />
+            <HeroStat icon={<TrendingUp className="h-4 w-4" />} label="This month" value={`₹${monthBilled.toLocaleString("en-IN")}`} sub={`${monthInvoices.length} new invoice${monthInvoices.length===1?"":"s"}`} accent="sky" />
+          </div>
+
+          {/* Collection progress */}
+          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <div className="flex items-center justify-between text-xs text-slate-300">
+              <span className="flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5 text-amber-300" /> Collection progress</span>
+              <span className="font-semibold text-white">{collectionRate}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full bg-gradient-to-r from-emerald-400 via-amber-300 to-amber-400 transition-all" style={{ width: `${collectionRate}%` }} />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
+              <span>Paid <span className="text-emerald-300 font-medium">₹{totalCollected.toLocaleString("en-IN")}</span></span>
+              <span>Pending <span className="text-amber-300 font-medium">₹{totalOutstanding.toLocaleString("en-IN")}</span></span>
+              {overdueList.length > 0 && (
+                <span className="flex items-center gap-1 text-rose-300"><AlertCircle className="h-3 w-3" />{overdueList.length} overdue</span>
+              )}
+            </div>
+          </div>
+
+          {/* Status pills */}
+          {invoices.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {STATUSES.map((s) => statusCounts[s] ? (
+                <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                  <span className={cn("h-1.5 w-1.5 rounded-full",
+                    s==="paid" && "bg-emerald-400",
+                    s==="partially_paid" && "bg-amber-400",
+                    s==="sent" && "bg-sky-400",
+                    s==="draft" && "bg-slate-400",
+                    s==="overdue" && "bg-rose-400",
+                    s==="cancelled" && "bg-zinc-500",
+                  )} />
+                  <span className="capitalize">{(STATUS_LABELS[s] ?? s).replace("_"," ")}</span>
+                  <span className="font-semibold text-white">{statusCounts[s]}</span>
+                </span>
+              ) : null)}
+            </div>
+          )}
         </div>
       </div>
 
