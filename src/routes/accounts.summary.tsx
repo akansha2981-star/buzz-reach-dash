@@ -286,6 +286,7 @@ function SummaryPage() {
         <Kpi icon={Receipt} label="One-time expenses" value={fmtINR(expensesOneTime)} />
         <Kpi icon={Repeat} label="Recurring paid" value={fmtINR(expensesRecurring)} tone="amber" />
         <Kpi icon={PiggyBank} label="Invested (range)" value={fmtINR(totalInvestment)} tone="violet" sub={`${filteredInvestments.length} entries`} />
+        <Kpi icon={HandCoins} label="Manual income (range)" value={fmtINR(manualIncomeTotal)} tone="emerald" sub={`${filteredManualIncome.length} entries`} />
 
       </div>
 
