@@ -181,7 +181,10 @@ function SummaryPage() {
       .reduce((s: number, i: any) => s + Number(i.total || 0), 0);
     const collected = payments
       .filter((p: any) => p.paid_on && !isBefore(parseISO(p.paid_on), m.start) && !isAfter(parseISO(p.paid_on), m.end))
-      .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      .reduce((s: number, p: any) => s + Number(p.amount || 0), 0)
+      + manualIncome
+        .filter((x: any) => x.received_on && !isBefore(parseISO(x.received_on), m.start) && !isAfter(parseISO(x.received_on), m.end))
+        .reduce((s: number, x: any) => s + Number(x.amount || 0), 0);
     const exp = expenses
       .filter((e: any) => e.spent_on && !isBefore(parseISO(e.spent_on), m.start) && !isAfter(parseISO(e.spent_on), m.end))
       .reduce((s: number, e: any) => s + Number(e.amount || 0), 0);
