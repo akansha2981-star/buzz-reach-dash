@@ -401,6 +401,65 @@ export type Database = {
           },
         ]
       }
+      accounts_manual_income: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          notes: string | null
+          payer: string | null
+          payment_method: string | null
+          received_on: string
+          reference: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          payer?: string | null
+          payment_method?: string | null
+          received_on?: string
+          reference?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          payer?: string | null
+          payment_method?: string | null
+          received_on?: string
+          reference?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_manual_income_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts_recurring_expense_payments: {
         Row: {
           amount: number

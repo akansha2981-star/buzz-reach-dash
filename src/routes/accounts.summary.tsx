@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Wallet, FileText, Receipt, Repeat,
-  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark,
+  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark, HandCoins,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -64,6 +64,10 @@ function SummaryPage() {
   const { data: investments = [] } = useQuery({
     queryKey: ["sum_investments"],
     queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [],
+  });
+  const { data: manualIncome = [] } = useQuery({
+    queryKey: ["sum_manual_income"],
+    queryFn: async () => (await supabase.from("accounts_manual_income").select("*")).data ?? [],
   });
 
 
@@ -140,13 +144,24 @@ function SummaryPage() {
   );
   const totalInvestment = filteredInvestments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
 
+  // Manual (non-invoiced) income
+  const filteredManualIncome = useMemo(
+    () => manualIncome.filter((m: any) => inRange(m.received_on) && (category === "all" || m.category === category)),
+    // eslint-disable-next-line
+    [manualIncome, rangeStart, category]
+  );
+  const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
   // All-time cash position: money received − money spent − money invested
-  const allTimeReceived = payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimeReceived =
+    payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0) +
+    manualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
   const allTimeExpenses =
     expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0) +
     recPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
   const allTimeInvestment = investments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
   const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment;
+
 
 
   // Monthly time-series
@@ -166,7 +181,10 @@ function SummaryPage() {
       .reduce((s: number, i: any) => s + Number(i.total || 0), 0);
     const collected = payments
       .filter((p: any) => p.paid_on && !isBefore(parseISO(p.paid_on), m.start) && !isAfter(parseISO(p.paid_on), m.end))
-      .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      .reduce((s: number, p: any) => s + Number(p.amount || 0), 0)
+      + manualIncome
+        .filter((x: any) => x.received_on && !isBefore(parseISO(x.received_on), m.start) && !isAfter(parseISO(x.received_on), m.end))
+        .reduce((s: number, x: any) => s + Number(x.amount || 0), 0);
     const exp = expenses
       .filter((e: any) => e.spent_on && !isBefore(parseISO(e.spent_on), m.start) && !isAfter(parseISO(e.spent_on), m.end))
       .reduce((s: number, e: any) => s + Number(e.amount || 0), 0);
@@ -246,7 +264,7 @@ function SummaryPage() {
 
       {/* Headline position — all-time, auto-synced */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="All-time collections" />
+        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="Invoice payments + manual income" />
         <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(allTimeExpenses)} tone="red" sub="One-time + recurring paid" />
         <Kpi icon={PiggyBank} label="Total investment" value={fmtINR(allTimeInvestment)} tone="violet" sub={`${investments.length} entries`} />
         <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment" />
@@ -268,6 +286,7 @@ function SummaryPage() {
         <Kpi icon={Receipt} label="One-time expenses" value={fmtINR(expensesOneTime)} />
         <Kpi icon={Repeat} label="Recurring paid" value={fmtINR(expensesRecurring)} tone="amber" />
         <Kpi icon={PiggyBank} label="Invested (range)" value={fmtINR(totalInvestment)} tone="violet" sub={`${filteredInvestments.length} entries`} />
+        <Kpi icon={HandCoins} label="Manual income (range)" value={fmtINR(manualIncomeTotal)} tone="emerald" sub={`${filteredManualIncome.length} entries`} />
 
       </div>
 
