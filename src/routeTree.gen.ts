@@ -45,6 +45,7 @@ import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcemen
 import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
 import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
+import { Route as AccountsLedgerRouteImport } from './routes/accounts.ledger'
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
 import { Route as AccountsInvestmentsRouteImport } from './routes/accounts.investments'
 import { Route as AccountsIncomeRouteImport } from './routes/accounts.income'
@@ -240,6 +241,11 @@ const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
   path: '/recurring',
   getParentRoute: () => AccountsRoute,
 } as any)
+const AccountsLedgerRoute = AccountsLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const AccountsInvoicesRoute = AccountsInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/ledger': typeof AccountsLedgerRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/ledger': typeof AccountsLedgerRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
+  '/accounts/ledger': typeof AccountsLedgerRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -484,6 +493,7 @@ export interface FileRouteTypes {
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
+    | '/accounts/ledger'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
+    | '/accounts/ledger'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -585,6 +596,7 @@ export interface FileRouteTypes {
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
+    | '/accounts/ledger'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -907,6 +919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsRecurringRouteImport
       parentRoute: typeof AccountsRoute
     }
+    '/accounts/ledger': {
+      id: '/accounts/ledger'
+      path: '/ledger'
+      fullPath: '/accounts/ledger'
+      preLoaderRoute: typeof AccountsLedgerRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/accounts/invoices': {
       id: '/accounts/invoices'
       path: '/invoices'
@@ -1016,6 +1035,7 @@ interface AccountsRouteChildren {
   AccountsIncomeRoute: typeof AccountsIncomeRoute
   AccountsInvestmentsRoute: typeof AccountsInvestmentsRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
+  AccountsLedgerRoute: typeof AccountsLedgerRoute
   AccountsRecurringRoute: typeof AccountsRecurringRoute
   AccountsSummaryRoute: typeof AccountsSummaryRoute
   AccountsIndexRoute: typeof AccountsIndexRoute
@@ -1029,6 +1049,7 @@ const AccountsRouteChildren: AccountsRouteChildren = {
   AccountsIncomeRoute: AccountsIncomeRoute,
   AccountsInvestmentsRoute: AccountsInvestmentsRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,
+  AccountsLedgerRoute: AccountsLedgerRoute,
   AccountsRecurringRoute: AccountsRecurringRoute,
   AccountsSummaryRoute: AccountsSummaryRoute,
   AccountsIndexRoute: AccountsIndexRoute,
