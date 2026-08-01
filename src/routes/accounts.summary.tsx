@@ -61,6 +61,11 @@ function SummaryPage() {
     queryKey: ["sum_rec_payments"],
     queryFn: async () => (await supabase.from("accounts_recurring_expense_payments").select("*")).data ?? [],
   });
+  const { data: investments = [] } = useQuery({
+    queryKey: ["sum_investments"],
+    queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [],
+  });
+
 
   const inRange = (d: string | null) => (d ? isAfter(parseISO(d), rangeStart) || parseISO(d).getTime() === rangeStart.getTime() : false);
 
