@@ -9,6 +9,7 @@ export const Route = createFileRoute("/accounts")({ component: AccountsLayout })
 const TABS = [
   { to: "/accounts/summary", label: "Summary", icon: LayoutDashboard },
   { to: "/accounts/invoices", label: "Invoices", icon: FileText },
+  { to: "/accounts/income", label: "Income", icon: HandCoins },
   { to: "/accounts/expenses", label: "Expenses", icon: Receipt },
   { to: "/accounts/recurring", label: "Recurring", icon: Repeat },
   { to: "/accounts/investments", label: "Investments", icon: PiggyBank },
