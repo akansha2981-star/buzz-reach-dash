@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Wallet, FileText, Receipt, Repeat,
-  AlertTriangle, CheckCircle2, Clock, IndianRupee,
+  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -61,6 +61,11 @@ function SummaryPage() {
     queryKey: ["sum_rec_payments"],
     queryFn: async () => (await supabase.from("accounts_recurring_expense_payments").select("*")).data ?? [],
   });
+  const { data: investments = [] } = useQuery({
+    queryKey: ["sum_investments"],
+    queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [],
+  });
+
 
   const inRange = (d: string | null) => (d ? isAfter(parseISO(d), rangeStart) || parseISO(d).getTime() === rangeStart.getTime() : false);
 
@@ -126,6 +131,23 @@ function SummaryPage() {
       .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
 
   const netProfit = totalCollected - totalExpenses;
+
+  // Investments (range-filtered + all-time for bank balance)
+  const filteredInvestments = useMemo(
+    () => investments.filter((i: any) => inRange(i.invested_on) && (category === "all" || i.category === category)),
+    // eslint-disable-next-line
+    [investments, rangeStart, category]
+  );
+  const totalInvestment = filteredInvestments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+
+  // All-time cash position: money received − money spent − money invested
+  const allTimeReceived = payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimeExpenses =
+    expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0) +
+    recPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimeInvestment = investments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+  const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment;
+
 
   // Monthly time-series
   const months = useMemo(() => {
@@ -222,8 +244,17 @@ function SummaryPage() {
         <Badge variant="outline" className="ml-auto">Since {format(rangeStart, "dd MMM yyyy")}</Badge>
       </div>
 
+      {/* Headline position — all-time, auto-synced */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="All-time collections" />
+        <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(allTimeExpenses)} tone="red" sub="One-time + recurring paid" />
+        <Kpi icon={PiggyBank} label="Total investment" value={fmtINR(allTimeInvestment)} tone="violet" sub={`${investments.length} entries`} />
+        <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment" />
+      </div>
+
       {/* KPI Grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
         <Kpi icon={Wallet} label="Net profit" value={fmtINR(netProfit)} tone={netProfit >= 0 ? "emerald" : "red"} sub={`Avg/mo ${fmtINR(monthAvgRevenue - monthAvgExpense)}`} />
         <Kpi icon={TrendingUp} label="Total collected" value={fmtINR(totalCollected)} tone="emerald" sub={`Avg/mo ${fmtINR(monthAvgRevenue)}`} />
         <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(totalExpenses)} tone="amber" sub={`Avg/mo ${fmtINR(monthAvgExpense)}`} />
@@ -236,6 +267,8 @@ function SummaryPage() {
         <Kpi icon={Receipt} label="Office expenses" value={fmtINR(officeExpenses)} tone="sky" />
         <Kpi icon={Receipt} label="One-time expenses" value={fmtINR(expensesOneTime)} />
         <Kpi icon={Repeat} label="Recurring paid" value={fmtINR(expensesRecurring)} tone="amber" />
+        <Kpi icon={PiggyBank} label="Invested (range)" value={fmtINR(totalInvestment)} tone="violet" sub={`${filteredInvestments.length} entries`} />
+
       </div>
 
       {/* Cumulative area */}

@@ -209,6 +209,68 @@ export type Database = {
         }
         Relationships: []
       }
+      accounts_investments: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          current_value: number | null
+          expected_return: number | null
+          id: string
+          invested_on: string
+          notes: string | null
+          payment_method: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          current_value?: number | null
+          expected_return?: number | null
+          id?: string
+          invested_on?: string
+          notes?: string | null
+          payment_method?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          current_value?: number | null
+          expected_return?: number | null
+          id?: string
+          invested_on?: string
+          notes?: string | null
+          payment_method?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_investments_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts_invoice_payments: {
         Row: {
           amount: number
