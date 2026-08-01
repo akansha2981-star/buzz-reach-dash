@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Wallet, FileText, Receipt, Repeat,
-  AlertTriangle, CheckCircle2, Clock, IndianRupee,
+  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
