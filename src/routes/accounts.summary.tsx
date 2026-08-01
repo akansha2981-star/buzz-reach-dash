@@ -267,6 +267,8 @@ function SummaryPage() {
         <Kpi icon={Receipt} label="Office expenses" value={fmtINR(officeExpenses)} tone="sky" />
         <Kpi icon={Receipt} label="One-time expenses" value={fmtINR(expensesOneTime)} />
         <Kpi icon={Repeat} label="Recurring paid" value={fmtINR(expensesRecurring)} tone="amber" />
+        <Kpi icon={PiggyBank} label="Invested (range)" value={fmtINR(totalInvestment)} tone="violet" sub={`${filteredInvestments.length} entries`} />
+
       </div>
 
       {/* Cumulative area */}
