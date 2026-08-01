@@ -264,7 +264,7 @@ function SummaryPage() {
 
       {/* Headline position — all-time, auto-synced */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="All-time collections" />
+        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="Invoice payments + manual income" />
         <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(allTimeExpenses)} tone="red" sub="One-time + recurring paid" />
         <Kpi icon={PiggyBank} label="Total investment" value={fmtINR(allTimeInvestment)} tone="violet" sub={`${investments.length} entries`} />
         <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment" />
