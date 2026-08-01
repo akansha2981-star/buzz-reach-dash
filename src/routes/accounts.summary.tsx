@@ -244,8 +244,17 @@ function SummaryPage() {
         <Badge variant="outline" className="ml-auto">Since {format(rangeStart, "dd MMM yyyy")}</Badge>
       </div>
 
+      {/* Headline position — all-time, auto-synced */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="All-time collections" />
+        <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(allTimeExpenses)} tone="red" sub="One-time + recurring paid" />
+        <Kpi icon={PiggyBank} label="Total investment" value={fmtINR(allTimeInvestment)} tone="violet" sub={`${investments.length} entries`} />
+        <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment" />
+      </div>
+
       {/* KPI Grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
         <Kpi icon={Wallet} label="Net profit" value={fmtINR(netProfit)} tone={netProfit >= 0 ? "emerald" : "red"} sub={`Avg/mo ${fmtINR(monthAvgRevenue - monthAvgExpense)}`} />
         <Kpi icon={TrendingUp} label="Total collected" value={fmtINR(totalCollected)} tone="emerald" sub={`Avg/mo ${fmtINR(monthAvgRevenue)}`} />
         <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(totalExpenses)} tone="amber" sub={`Avg/mo ${fmtINR(monthAvgExpense)}`} />
