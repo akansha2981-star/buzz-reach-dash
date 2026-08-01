@@ -65,6 +65,10 @@ function SummaryPage() {
     queryKey: ["sum_investments"],
     queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [],
   });
+  const { data: manualIncome = [] } = useQuery({
+    queryKey: ["sum_manual_income"],
+    queryFn: async () => (await supabase.from("accounts_manual_income").select("*")).data ?? [],
+  });
 
 
   const inRange = (d: string | null) => (d ? isAfter(parseISO(d), rangeStart) || parseISO(d).getTime() === rangeStart.getTime() : false);
