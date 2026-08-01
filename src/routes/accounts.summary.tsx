@@ -144,13 +144,24 @@ function SummaryPage() {
   );
   const totalInvestment = filteredInvestments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
 
+  // Manual (non-invoiced) income
+  const filteredManualIncome = useMemo(
+    () => manualIncome.filter((m: any) => inRange(m.received_on) && (category === "all" || m.category === category)),
+    // eslint-disable-next-line
+    [manualIncome, rangeStart, category]
+  );
+  const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
   // All-time cash position: money received − money spent − money invested
-  const allTimeReceived = payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimeReceived =
+    payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0) +
+    manualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
   const allTimeExpenses =
     expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0) +
     recPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
   const allTimeInvestment = investments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
   const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment;
+
 
 
   // Monthly time-series
