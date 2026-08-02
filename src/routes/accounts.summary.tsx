@@ -156,7 +156,16 @@ function SummaryPage() {
   );
   const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
 
-  // All-time cash position: money received − money spent − money invested
+  // Personal (non-business) spend — excluded from business expenses, deducted from bank balance
+  const filteredPersonal = useMemo(
+    () => personal.filter((p: any) => inRange(p.spent_on)),
+    // eslint-disable-next-line
+    [personal, rangeStart]
+  );
+  const personalRangeTotal = filteredPersonal.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimePersonal = personal.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+
+  // All-time cash position: money received − money spent − money invested − personal spend
   const allTimeReceived =
     payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0) +
     manualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
@@ -164,7 +173,7 @@ function SummaryPage() {
     expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0) +
     recPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
   const allTimeInvestment = investments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
-  const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment;
+  const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment - allTimePersonal;
 
 
 
