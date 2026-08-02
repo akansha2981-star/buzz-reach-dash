@@ -275,7 +275,7 @@ function LedgerPage() {
         />
         <LedgerSection
           title="Debit — Money Out"
-          hint="Expenses, recurring payments and investments"
+          hint="Expenses, recurring payments, investments and personal spending"
           tone="debit"
           total={moneyOut}
           entries={debitEntries}
