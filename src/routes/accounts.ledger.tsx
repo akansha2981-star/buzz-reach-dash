@@ -76,8 +76,9 @@ function LedgerPage() {
   const q5 = useQuery({ queryKey: ["led_rec_pay"], queryFn: async () => (await supabase.from("accounts_recurring_expense_payments").select("*")).data ?? [] });
   const q6 = useQuery({ queryKey: ["led_rec"], queryFn: async () => (await supabase.from("accounts_recurring_expenses").select("id,title,category")).data ?? [] });
   const q7 = useQuery({ queryKey: ["led_inv_est"], queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [] });
+  const q8 = useQuery({ queryKey: ["led_personal"], queryFn: async () => (await supabase.from("accounts_personal_expenses").select("*")).data ?? [] });
 
-  const loading = [q1, q2, q3, q4, q5, q6, q7].some((x) => x.isLoading);
+  const loading = [q1, q2, q3, q4, q5, q6, q7, q8].some((x) => x.isLoading);
 
   const allEntries = useMemo<Entry[]>(() => {
     const invMap = new Map((q2.data ?? []).map((i: any) => [i.id, i]));
@@ -121,8 +122,15 @@ function LedgerPage() {
         method: i.payment_method || "—", amount: Number(i.amount || 0),
       });
     });
+    (q8.data ?? []).forEach((p: any) => {
+      out.push({
+        id: "pe_" + p.id, date: p.spent_on, direction: "debit", source: "Personal expense",
+        title: p.title, category: p.category || "Personal",
+        method: p.payment_method || "—", amount: Number(p.amount || 0),
+      });
+    });
     return out.filter((e) => !!e.date);
-  }, [q1.data, q2.data, q3.data, q4.data, q5.data, q6.data, q7.data]);
+  }, [q1.data, q2.data, q3.data, q4.data, q5.data, q6.data, q7.data, q8.data]);
 
   const sources = useMemo(() => Array.from(new Set(allEntries.map((e) => e.source))).sort(), [allEntries]);
   const categories = useMemo(() => Array.from(new Set(allEntries.map((e) => e.category))).sort(), [allEntries]);
@@ -267,7 +275,7 @@ function LedgerPage() {
         />
         <LedgerSection
           title="Debit — Money Out"
-          hint="Expenses, recurring payments and investments"
+          hint="Expenses, recurring payments, investments and personal spending"
           tone="debit"
           total={moneyOut}
           entries={debitEntries}

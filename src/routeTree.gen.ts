@@ -45,6 +45,7 @@ import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcemen
 import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
 import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
+import { Route as AccountsPersonalRouteImport } from './routes/accounts.personal'
 import { Route as AccountsLedgerRouteImport } from './routes/accounts.ledger'
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
 import { Route as AccountsInvestmentsRouteImport } from './routes/accounts.investments'
@@ -241,6 +242,11 @@ const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
   path: '/recurring',
   getParentRoute: () => AccountsRoute,
 } as any)
+const AccountsPersonalRoute = AccountsPersonalRouteImport.update({
+  id: '/personal',
+  path: '/personal',
+  getParentRoute: () => AccountsRoute,
+} as any)
 const AccountsLedgerRoute = AccountsLedgerRouteImport.update({
   id: '/ledger',
   path: '/ledger',
@@ -335,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/ledger': typeof AccountsLedgerRoute
+  '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/ledger': typeof AccountsLedgerRoute
+  '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -439,6 +447,7 @@ export interface FileRoutesById {
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
   '/accounts/ledger': typeof AccountsLedgerRoute
+  '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
@@ -494,6 +503,7 @@ export interface FileRouteTypes {
     | '/accounts/investments'
     | '/accounts/invoices'
     | '/accounts/ledger'
+    | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/accounts/investments'
     | '/accounts/invoices'
     | '/accounts/ledger'
+    | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -597,6 +608,7 @@ export interface FileRouteTypes {
     | '/accounts/investments'
     | '/accounts/invoices'
     | '/accounts/ledger'
+    | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
     | '/habits/$habitId'
@@ -919,6 +931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsRecurringRouteImport
       parentRoute: typeof AccountsRoute
     }
+    '/accounts/personal': {
+      id: '/accounts/personal'
+      path: '/personal'
+      fullPath: '/accounts/personal'
+      preLoaderRoute: typeof AccountsPersonalRouteImport
+      parentRoute: typeof AccountsRoute
+    }
     '/accounts/ledger': {
       id: '/accounts/ledger'
       path: '/ledger'
@@ -1036,6 +1055,7 @@ interface AccountsRouteChildren {
   AccountsInvestmentsRoute: typeof AccountsInvestmentsRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
   AccountsLedgerRoute: typeof AccountsLedgerRoute
+  AccountsPersonalRoute: typeof AccountsPersonalRoute
   AccountsRecurringRoute: typeof AccountsRecurringRoute
   AccountsSummaryRoute: typeof AccountsSummaryRoute
   AccountsIndexRoute: typeof AccountsIndexRoute
@@ -1050,6 +1070,7 @@ const AccountsRouteChildren: AccountsRouteChildren = {
   AccountsInvestmentsRoute: AccountsInvestmentsRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,
   AccountsLedgerRoute: AccountsLedgerRoute,
+  AccountsPersonalRoute: AccountsPersonalRoute,
   AccountsRecurringRoute: AccountsRecurringRoute,
   AccountsSummaryRoute: AccountsSummaryRoute,
   AccountsIndexRoute: AccountsIndexRoute,
@@ -1152,13 +1173,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

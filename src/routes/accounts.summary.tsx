@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Wallet, FileText, Receipt, Repeat,
-  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark, HandCoins,
+  AlertTriangle, CheckCircle2, Clock, IndianRupee, PiggyBank, Landmark, HandCoins, UserRound,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -68,6 +68,10 @@ function SummaryPage() {
   const { data: manualIncome = [] } = useQuery({
     queryKey: ["sum_manual_income"],
     queryFn: async () => (await supabase.from("accounts_manual_income").select("*")).data ?? [],
+  });
+  const { data: personal = [] } = useQuery({
+    queryKey: ["sum_personal"],
+    queryFn: async () => (await supabase.from("accounts_personal_expenses").select("*")).data ?? [],
   });
 
 
@@ -152,7 +156,16 @@ function SummaryPage() {
   );
   const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
 
-  // All-time cash position: money received − money spent − money invested
+  // Personal (non-business) spend — excluded from business expenses, deducted from bank balance
+  const filteredPersonal = useMemo(
+    () => personal.filter((p: any) => inRange(p.spent_on)),
+    // eslint-disable-next-line
+    [personal, rangeStart]
+  );
+  const personalRangeTotal = filteredPersonal.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  const allTimePersonal = personal.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+
+  // All-time cash position: money received − money spent − money invested − personal spend
   const allTimeReceived =
     payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0) +
     manualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
@@ -160,7 +173,7 @@ function SummaryPage() {
     expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0) +
     recPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
   const allTimeInvestment = investments.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
-  const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment;
+  const bankBalance = allTimeReceived - allTimeExpenses - allTimeInvestment - allTimePersonal;
 
 
 
@@ -267,7 +280,14 @@ function SummaryPage() {
         <Kpi icon={TrendingUp} label="Total money received" value={fmtINR(allTimeReceived)} tone="emerald" sub="Invoice payments + manual income" />
         <Kpi icon={TrendingDown} label="Total expenses" value={fmtINR(allTimeExpenses)} tone="red" sub="One-time + recurring paid" />
         <Kpi icon={PiggyBank} label="Total investment" value={fmtINR(allTimeInvestment)} tone="violet" sub={`${investments.length} entries`} />
-        <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment" />
+        <Kpi icon={Landmark} label="Balance in bank" value={fmtINR(bankBalance)} tone={bankBalance >= 0 ? "sky" : "red"} sub="Received − expenses − investment − personal" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi icon={UserRound} label="Personal spend (all-time)" value={fmtINR(allTimePersonal)} tone="rose" sub={`${personal.length} entries · outside business expenses`} />
+        <Kpi icon={UserRound} label="Personal spend (range)" value={fmtINR(personalRangeTotal)} tone="rose" sub={`${filteredPersonal.length} entries`} />
+        <Kpi icon={TrendingDown} label="Business expenses only" value={fmtINR(allTimeExpenses)} tone="amber" sub="Personal spend not included" />
+        <Kpi icon={Wallet} label="Total cash outflow" value={fmtINR(allTimeExpenses + allTimeInvestment + allTimePersonal)} tone="red" sub="Business + investment + personal" />
       </div>
 
       {/* KPI Grid */}

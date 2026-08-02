@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark, Building2, PiggyBank, HandCoins, ArrowLeftRight } from "lucide-react";
+import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark, Building2, PiggyBank, HandCoins, ArrowLeftRight, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const TABS = [
   { to: "/accounts/invoices", label: "Invoices", icon: FileText },
   { to: "/accounts/income", label: "Income", icon: HandCoins },
   { to: "/accounts/expenses", label: "Expenses", icon: Receipt },
+  { to: "/accounts/personal", label: "Personal", icon: UserRound },
 
   { to: "/accounts/recurring", label: "Recurring", icon: Repeat },
   { to: "/accounts/investments", label: "Investments", icon: PiggyBank },
