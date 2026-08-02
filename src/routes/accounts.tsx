@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark, Building2, PiggyBank, HandCoins, ArrowLeftRight } from "lucide-react";
+import { FileText, Receipt, Repeat, LayoutDashboard, Users, Landmark, Building2, PiggyBank, HandCoins, ArrowLeftRight, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { cn } from "@/lib/utils";
