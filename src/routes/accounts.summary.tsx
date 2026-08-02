@@ -284,7 +284,10 @@ function SummaryPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi icon={UserRound} label="Personal spend (all-time)" value={fmtINR(allTimePersonal)} tone="rose" sub={`${personal.length} entries · excluded from business expenses`} />
+        <Kpi icon={UserRound} label="Personal spend (all-time)" value={fmtINR(allTimePersonal)} tone="rose" sub={`${personal.length} entries · outside business expenses`} />
+        <Kpi icon={UserRound} label="Personal spend (range)" value={fmtINR(personalRangeTotal)} tone="rose" sub={`${filteredPersonal.length} entries`} />
+        <Kpi icon={TrendingDown} label="Business expenses only" value={fmtINR(allTimeExpenses)} tone="amber" sub="Personal spend not included" />
+        <Kpi icon={Wallet} label="Total cash outflow" value={fmtINR(allTimeExpenses + allTimeInvestment + allTimePersonal)} tone="red" sub="Business + investment + personal" />
       </div>
 
       {/* KPI Grid */}
