@@ -76,8 +76,9 @@ function LedgerPage() {
   const q5 = useQuery({ queryKey: ["led_rec_pay"], queryFn: async () => (await supabase.from("accounts_recurring_expense_payments").select("*")).data ?? [] });
   const q6 = useQuery({ queryKey: ["led_rec"], queryFn: async () => (await supabase.from("accounts_recurring_expenses").select("id,title,category")).data ?? [] });
   const q7 = useQuery({ queryKey: ["led_inv_est"], queryFn: async () => (await supabase.from("accounts_investments").select("*")).data ?? [] });
+  const q8 = useQuery({ queryKey: ["led_personal"], queryFn: async () => (await supabase.from("accounts_personal_expenses").select("*")).data ?? [] });
 
-  const loading = [q1, q2, q3, q4, q5, q6, q7].some((x) => x.isLoading);
+  const loading = [q1, q2, q3, q4, q5, q6, q7, q8].some((x) => x.isLoading);
 
   const allEntries = useMemo<Entry[]>(() => {
     const invMap = new Map((q2.data ?? []).map((i: any) => [i.id, i]));
