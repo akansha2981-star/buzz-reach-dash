@@ -122,8 +122,15 @@ function LedgerPage() {
         method: i.payment_method || "—", amount: Number(i.amount || 0),
       });
     });
+    (q8.data ?? []).forEach((p: any) => {
+      out.push({
+        id: "pe_" + p.id, date: p.spent_on, direction: "debit", source: "Personal expense",
+        title: p.title, category: p.category || "Personal",
+        method: p.payment_method || "—", amount: Number(p.amount || 0),
+      });
+    });
     return out.filter((e) => !!e.date);
-  }, [q1.data, q2.data, q3.data, q4.data, q5.data, q6.data, q7.data]);
+  }, [q1.data, q2.data, q3.data, q4.data, q5.data, q6.data, q7.data, q8.data]);
 
   const sources = useMemo(() => Array.from(new Set(allEntries.map((e) => e.source))).sort(), [allEntries]);
   const categories = useMemo(() => Array.from(new Set(allEntries.map((e) => e.category))).sort(), [allEntries]);
