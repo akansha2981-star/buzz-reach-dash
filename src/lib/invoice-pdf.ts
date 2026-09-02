@@ -257,7 +257,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     },
     alternateRowStyles: { fillColor: [250, 251, 253] },
     columnStyles: {
-      0: { cellWidth: 28, halign: "center", textColor: C.mute },
+      0: { cellWidth: 34, halign: "center", textColor: C.mute },
       1: { cellWidth: 132, fontStyle: "bold", textColor: C.navy },
       2: { cellWidth: "auto" },
       3: { cellWidth: 96, halign: "right", fontStyle: "bold" },
