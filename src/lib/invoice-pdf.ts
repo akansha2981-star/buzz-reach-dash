@@ -101,7 +101,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const contentW = pageW - M * 2;
   const GAP = 16;                     // gutter between columns
   const colW = (contentW - GAP) / 2;
-  const FOOTER_SAFE = 66;             // reserved bottom space for footer
+  const FOOTER_SAFE = 52;             // reserved bottom space for footer
 
   const currency = inv.currency || "INR";
   const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
@@ -143,25 +143,25 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   };
 
   // ============================== HEADER BAND ==============================
-  const headerH = 96;
+  const headerH = 88;
   doc.setFillColor(...C.navy);
   doc.rect(0, 0, pageW, headerH, "F");
   doc.setFillColor(...C.gold);
   doc.rect(0, headerH, pageW, 4, "F");
 
   setText(23, C.white, true);
-  doc.text(co.brand, M, 44);
+  doc.text(co.brand, M, 42);
   setText(9.5, C.gold, true);
-  doc.text(co.legal, M, 61);
+  doc.text(co.legal, M, 58);
   setText(8.5, [205, 212, 225], false);
-  doc.text(wrap(co.ids, contentW * 0.56), M, 75, { lineHeightFactor: 1.35 });
+  doc.text(wrap(co.ids, contentW * 0.56), M, 72, { lineHeightFactor: 1.35 });
 
   setText(24, C.gold, true);
-  doc.text("INVOICE", pageW - M, 44, { align: "right" });
+  doc.text("INVOICE", pageW - M, 42, { align: "right" });
   setText(10, C.white, true);
-  doc.text(inv.invoice_number || "DRAFT", pageW - M, 62, { align: "right" });
+  doc.text(inv.invoice_number || "DRAFT", pageW - M, 59, { align: "right" });
   setText(8.5, [205, 212, 225], false);
-  doc.text(`Date: ${inv.issue_date}`, pageW - M, 75, { align: "right" });
+  doc.text(`Date: ${inv.issue_date}`, pageW - M, 72, { align: "right" });
 
   // ============================== COMPANY STRIP ==============================
   let y = headerH + 4 + 16;
@@ -246,13 +246,13 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
-      cellPadding: { top: 9, bottom: 9, left: 10, right: 10 },
+      cellPadding: { top: 8, bottom: 8, left: 10, right: 10 },
       lineWidth: 0,
     },
     bodyStyles: {
       fontSize: 9.5,
       textColor: C.ink,
-      cellPadding: { top: 10, bottom: 10, left: 10, right: 10 },
+      cellPadding: { top: 8, bottom: 8, left: 10, right: 10 },
       valign: "top",
     },
     alternateRowStyles: { fillColor: [250, 251, 253] },
@@ -300,7 +300,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (inv.notes) {
     setText(8.5, C.ink, false);
     const nl = wrap(inv.notes, contentW - 28);
-    const boxH = nl.length * 11.5 + 24;
+    const boxH = nl.length * 11.5 + 20;
     y = ensure(boxH + 16, y);
     doc.setFillColor(...C.goldSoft);
     doc.roundedRect(M, y, contentW, boxH, 6, 6, "F");
@@ -308,7 +308,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.roundedRect(M, y, 3.5, boxH, 2, 2, "F");
     setText(8.5, C.ink, false);
     doc.text(nl, M + 14, y + 16, { lineHeightFactor: 1.4 });
-    y += boxH + 18;
+    y += boxH + 16;
   }
 
   // ============================== BANK DETAILS ==============================
@@ -375,7 +375,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.text(brAddrLines, M + 14, bankBottom - 4, { lineHeightFactor: 1.35 });
     bankBottom += brAddrLines.length * 11;
   }
-  y = y + bankBoxH + 18;
+  y = y + bankBoxH + 16;
 
   // ============================== TERMS + SIGNATORY ==============================
   const termsLinesAll: string[] = [];
@@ -383,8 +383,8 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     const clean = t.trim().replace(/^•\s*/, "");
     wrap(clean, colW - 14).forEach((l, i) => termsLinesAll.push(i === 0 ? `•  ${l}` : `    ${l}`));
   });
-  const blockH = Math.max(termsLinesAll.length * 12 + 22, 92);
-  y = ensure(blockH + 12, y);
+  const blockH = Math.max(termsLinesAll.length * 12 + 22, 90);
+  y = ensure(blockH + 36, y);
 
   const tTop = sectionTitle("Terms & Conditions", M, y, colW);
   setText(8.5, C.ink, false);
@@ -402,7 +402,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(8, C.mute, false);
   doc.text(co.legal, sx + colW, y + 75, { align: "right" });
 
-  y = Math.max(ty, y + 86) + 10;
+  y = Math.max(ty, y + 84) + 8;
 
   // Thank-you strip
   y = ensure(34, y);
