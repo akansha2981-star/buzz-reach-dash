@@ -143,35 +143,36 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   };
 
   // ============================== HEADER BAND ==============================
-  const headerH = 104;
+  const headerH = 96;
   doc.setFillColor(...C.navy);
   doc.rect(0, 0, pageW, headerH, "F");
   doc.setFillColor(...C.gold);
   doc.rect(0, headerH, pageW, 4, "F");
 
   setText(23, C.white, true);
-  doc.text(co.brand, M, 46);
+  doc.text(co.brand, M, 44);
   setText(9.5, C.gold, true);
-  doc.text(co.legal, M, 63);
+  doc.text(co.legal, M, 61);
   setText(8.5, [205, 212, 225], false);
-  doc.text(wrap(co.ids, contentW * 0.56), M, 78, { lineHeightFactor: 1.35 });
+  doc.text(wrap(co.ids, contentW * 0.56), M, 75, { lineHeightFactor: 1.35 });
 
   setText(24, C.gold, true);
-  doc.text("INVOICE", pageW - M, 46, { align: "right" });
+  doc.text("INVOICE", pageW - M, 44, { align: "right" });
   setText(10, C.white, true);
-  doc.text(inv.invoice_number || "DRAFT", pageW - M, 64, { align: "right" });
+  doc.text(inv.invoice_number || "DRAFT", pageW - M, 62, { align: "right" });
   setText(8.5, [205, 212, 225], false);
-  doc.text(`Date: ${inv.issue_date}`, pageW - M, 78, { align: "right" });
+  doc.text(`Date: ${inv.issue_date}`, pageW - M, 75, { align: "right" });
 
   // ============================== COMPANY STRIP ==============================
-  let y = headerH + 4 + 18;
+  let y = headerH + 4 + 16;
   setText(8.5, C.mute, false);
   const addrLines = wrap(co.address, contentW * 0.62);
   doc.text(addrLines, M, y, { lineHeightFactor: 1.35 });
   doc.text(`${co.email}   ·   ${co.phone}`, pageW - M, y, { align: "right" });
-  y += Math.max(addrLines.length * 11, 11) + 14;
+  y += Math.max(addrLines.length * 11, 11) + 12;
 
   // ============================== BILLED TO / DETAILS ==============================
+  const nameLines = wrap(inv.client, colW - 28);
   const billLines: string[] = [];
   if (inv.client_location) billLines.push(...wrap(inv.client_location, colW - 28));
   if (inv.client_email) billLines.push(`Email: ${inv.client_email}`);
@@ -186,9 +187,9 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (inv.category) detailRows.push(["Category", inv.category]);
 
   const PAD = 14;
-  const leftH = PAD + 15 + billLines.length * 12 + PAD - 2;
+  const leftH = PAD + 15 + nameLines.length * 14 + billLines.length * 12 + PAD - 4;
   const rightH = PAD + detailRows.length * 15 + PAD - 3;
-  const cardH = Math.max(leftH, rightH, 86);
+  const cardH = Math.max(leftH, rightH, 80);
 
   y = ensure(cardH + 20, y);
 
@@ -202,8 +203,8 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   doc.text("BILLED TO", M + PAD, ly);
   ly += 15;
   setText(11.5, C.navy, true);
-  doc.text(inv.client, M + PAD, ly, { maxWidth: colW - PAD * 2 });
-  ly += 14;
+  doc.text(nameLines, M + PAD, ly, { lineHeightFactor: 1.2 });
+  ly += nameLines.length * 14 + 2;
   setText(9, C.ink, false);
   billLines.forEach((l) => { doc.text(l, M + PAD, ly); ly += 12; });
 
@@ -224,7 +225,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     ry += 15;
   });
 
-  y += cardH + 24;
+  y += cardH + 20;
 
   // ============================== ITEMS TABLE ==============================
   const bodyRows = inv.items.map((it, idx) => [
@@ -265,7 +266,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   });
 
   // @ts-expect-error jspdf-autotable augments lastAutoTable at runtime
-  y = (doc.lastAutoTable?.finalY ?? y) + 18;
+  y = (doc.lastAutoTable?.finalY ?? y) + 16;
 
   // ============================== TOTALS ==============================
   const totalsW = 250;
@@ -293,7 +294,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const wordLines = wrap(numberToWordsIndian(subtotal), contentW - totalsW - GAP);
   doc.text(wordLines, M, y + 16, { lineHeightFactor: 1.35 });
 
-  y = Math.max(bandY + bandH, y + 16 + wordLines.length * 12) + 24;
+  y = Math.max(bandY + bandH, y + 16 + wordLines.length * 12) + 20;
 
   // ============================== NOTES ==============================
   if (inv.notes) {
@@ -307,7 +308,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.roundedRect(M, y, 3.5, boxH, 2, 2, "F");
     setText(8.5, C.ink, false);
     doc.text(nl, M + 14, y + 16, { lineHeightFactor: 1.4 });
-    y += boxH + 22;
+    y += boxH + 18;
   }
 
   // ============================== BANK DETAILS ==============================
@@ -374,7 +375,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.text(brAddrLines, M + 14, bankBottom - 4, { lineHeightFactor: 1.35 });
     bankBottom += brAddrLines.length * 11;
   }
-  y = y + bankBoxH + 24;
+  y = y + bankBoxH + 18;
 
   // ============================== TERMS + SIGNATORY ==============================
   const termsLinesAll: string[] = [];
@@ -420,8 +421,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.setLineWidth(0.5);
     doc.line(M, pageH - 42, pageW - M, pageH - 42);
     setText(7.5, C.mute, false);
-    doc.text("This is a system-generated invoice; no signature is required.", M, pageH - 28);
-    doc.text(`${co.brand}  ·  Invoice ${inv.invoice_number || "DRAFT"}`, pageW / 2, pageH - 28, { align: "center" });
+    doc.text(`${co.brand}  ·  Invoice ${inv.invoice_number || "DRAFT"}  ·  system-generated, no signature required`, M, pageH - 28);
     doc.text(`Page ${p} of ${pages}`, pageW - M, pageH - 28, { align: "right" });
   }
 
