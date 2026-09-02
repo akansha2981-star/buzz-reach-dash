@@ -384,7 +384,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(clean, colW - 14).forEach((l, i) => termsLinesAll.push(i === 0 ? `•  ${l}` : `    ${l}`));
   });
   const blockH = Math.max(termsLinesAll.length * 12 + 22, 90);
-  y = ensure(blockH + 36, y);
+  y = ensure(blockH + 8, y);
 
   const tTop = sectionTitle("Terms & Conditions", M, y, colW);
   setText(8.5, C.ink, false);
@@ -404,15 +404,6 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   y = Math.max(ty, y + 84) + 8;
 
-  // Thank-you strip
-  y = ensure(34, y);
-  doc.setFillColor(...C.navySoft);
-  doc.roundedRect(M, y, contentW, 28, 6, 6, "F");
-  setText(9.5, C.navy, true);
-  doc.text("Thank you for your business!", M + 14, y + 18);
-  setText(8.5, C.mute, false);
-  doc.text(`Queries: ${co.email}  ·  ${co.phone}`, pageW - M - 14, y + 18, { align: "right" });
-
   // ============================== PAGE FOOTERS ==============================
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
@@ -420,6 +411,12 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.setDrawColor(...C.hair);
     doc.setLineWidth(0.5);
     doc.line(M, pageH - 42, pageW - M, pageH - 42);
+    if (p === pages) {
+      setText(9, C.navy, true);
+      doc.text("Thank you for your business!", M, pageH - 56);
+      setText(8, C.mute, false);
+      doc.text(`Queries: ${co.email}  ·  ${co.phone}`, pageW - M, pageH - 56, { align: "right" });
+    }
     setText(7.5, C.mute, false);
     doc.text(`${co.brand}  ·  Invoice ${inv.invoice_number || "DRAFT"}  ·  system-generated, no signature required`, M, pageH - 28);
     doc.text(`Page ${p} of ${pages}`, pageW - M, pageH - 28, { align: "right" });
