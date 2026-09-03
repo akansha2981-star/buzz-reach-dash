@@ -202,7 +202,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     ry += 20;
   });
 
-  y = Math.max(ly, y - 14 + panelH + 8) + 18;
+  y = Math.max(ly, y - 14 + panelH + 8) + 12;
 
   // ============================== BILLED TO + IDS/TERMS ==============================
   y = ensure(120, y);
@@ -228,7 +228,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(inv.notes, colW).forEach((l) => { doc.text(l, rx, cy); cy += 11 });
   }
 
-  y = Math.max(by, cy) + 14;
+  y = Math.max(by, cy) + 10;
 
   // ============================== ITEMS TABLE ==============================
   y = ensure(120, y);
@@ -272,7 +272,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   });
 
   // @ts-expect-error jspdf-autotable augments lastAutoTable at runtime
-  y = (doc.lastAutoTable?.finalY ?? y) + 18;
+  y = (doc.lastAutoTable?.finalY ?? y) + 14;
 
   // ============================== TOTALS ==============================
   y = ensure(92, y);
@@ -335,10 +335,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 46;
+  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 34;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
-  y += 20;
+  y += 16;
 
   let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
   bankPairs.forEach(([k, v]) => {
