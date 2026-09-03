@@ -76,15 +76,16 @@ function numberToWordsIndian(num: number): string {
   return result + " Only";
 }
 
-// Brand palette: navy + gold on white
+// Brand palette: teal + gold on white (matches brand template)
 const C = {
-  navy: [15, 36, 71] as [number, number, number],
-  navySoft: [237, 240, 246] as [number, number, number],
-  gold: [232, 184, 58] as [number, number, number],
-  goldSoft: [253, 248, 234] as [number, number, number],
-  ink: [33, 37, 45] as [number, number, number],
-  mute: [110, 116, 128] as [number, number, number],
-  hair: [223, 226, 232] as [number, number, number],
+  teal: [23, 182, 190] as [number, number, number],
+  tealDark: [12, 137, 145] as [number, number, number],
+  gold: [240, 174, 40] as [number, number, number],
+  ink: [26, 30, 36] as [number, number, number],
+  body: [70, 76, 86] as [number, number, number],
+  mute: [130, 136, 146] as [number, number, number],
+  panel: [246, 247, 248] as [number, number, number],
+  hair: [226, 229, 233] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
 };
 
@@ -92,18 +93,23 @@ function fmt(n: number) {
   return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w[0]!.toUpperCase()).join("");
+}
+
 export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
-  const M = 42;                       // page margin
+  const M = 46;
   const contentW = pageW - M * 2;
-  const GAP = 16;                     // gutter between columns
+  const GAP = 22;
   const colW = (contentW - GAP) / 2;
-  const FOOTER_SAFE = 52;             // reserved bottom space for footer
+  const FOOTER_SAFE = 84;
 
   const currency = inv.currency || "INR";
+  const cur = currency === "INR" ? "Rs." : currency;
   const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
 
   const co = {
@@ -121,197 +127,186 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     ],
   };
 
-  // ---------- tiny helpers ----------
-  const setText = (size: number, color: [number, number, number], bold = false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
+  // ---------- helpers ----------
+  const setText = (size: number, color: [number, number, number], bold = false, italic = false) => {
+    doc.setFont("helvetica", bold ? "bold" : italic ? "italic" : "normal");
     doc.setFontSize(size);
     doc.setTextColor(...color);
   };
   const wrap = (t: string, w: number): string[] => doc.splitTextToSize(t, w) as string[];
   const ensure = (needed: number, y: number): number => {
-    if (y + needed > pageH - FOOTER_SAFE) { doc.addPage(); return M + 10; }
+    if (y + needed > pageH - FOOTER_SAFE) { doc.addPage(); return M + 6; }
     return y;
   };
-  const sectionTitle = (label: string, x: number, y: number, w: number) => {
-    setText(9, C.navy, true);
-    doc.text(label.toUpperCase(), x, y);
-    doc.setDrawColor(...C.gold);
-    doc.setLineWidth(1.4);
-    doc.line(x, y + 5, x + Math.min(26, w), y + 5);
+  const rule = (y: number, x1 = M, x2 = pageW - M, color = C.teal, w = 1.6) => {
+    doc.setDrawColor(...color);
+    doc.setLineWidth(w);
+    doc.line(x1, y, x2, y);
     doc.setLineWidth(0.5);
-    return y + 18;
+  };
+  const heading = (label: string, x: number, y: number) => {
+    setText(10.5, C.ink, true);
+    doc.text(label, x, y);
+    return y + 15;
   };
 
-  // ============================== HEADER BAND ==============================
-  const headerH = 88;
-  doc.setFillColor(...C.navy);
-  doc.rect(0, 0, pageW, headerH, "F");
+  // ============================== TITLE ==============================
+  let y = M + 30;
+  setText(30, C.teal, true);
+  doc.text("INVOICE", M, y);
+
+  // gold logo badge
+  const lr = 30;
+  const lcx = pageW - M - lr;
+  const lcy = y - 12;
   doc.setFillColor(...C.gold);
-  doc.rect(0, headerH, pageW, 4, "F");
+  doc.circle(lcx, lcy, lr, "F");
+  setText(initials(co.brand).length > 2 ? 13 : 15, C.white, true);
+  doc.text(initials(co.brand), lcx, lcy + 5, { align: "center" });
 
-  setText(23, C.white, true);
-  doc.text(co.brand, M, 42);
-  setText(9.5, C.gold, true);
-  doc.text(co.legal, M, 58);
-  setText(8.5, [205, 212, 225], false);
-  doc.text(wrap(co.ids, contentW * 0.56), M, 72, { lineHeightFactor: 1.35 });
+  y += 26;
+  rule(y);
+  y += 26;
 
-  setText(24, C.gold, true);
-  doc.text("INVOICE", pageW - M, 42, { align: "right" });
-  setText(10, C.white, true);
-  doc.text(inv.invoice_number || "DRAFT", pageW - M, 59, { align: "right" });
-  setText(8.5, [205, 212, 225], false);
-  doc.text(`Date: ${inv.issue_date}`, pageW - M, 72, { align: "right" });
-
-  // ============================== COMPANY STRIP ==============================
-  let y = headerH + 4 + 16;
-  setText(8.5, C.mute, false);
-  const addrLines = wrap(co.address, contentW * 0.62);
-  doc.text(addrLines, M, y, { lineHeightFactor: 1.35 });
-  doc.text(`${co.email}   ·   ${co.phone}`, pageW - M, y, { align: "right" });
-  y += Math.max(addrLines.length * 11, 11) + 12;
-
-  // ============================== BILLED TO / DETAILS ==============================
-  const nameLines = wrap(inv.client, colW - 28);
-  const billLines: string[] = [];
-  if (inv.client_location) billLines.push(...wrap(inv.client_location, colW - 28));
-  if (inv.client_email) billLines.push(`Email: ${inv.client_email}`);
-  if (inv.client_phone) billLines.push(`Mobile: ${inv.client_phone}`);
-
+  // ============================== COMPANY + DETAILS ==============================
   const detailRows: Array<[string, string]> = [
-    ["Invoice No.", inv.invoice_number || "DRAFT"],
-    ["Invoice Date", inv.issue_date],
-    ["Due Date", inv.due_date || "As per agreement"],
-    ["Payment Mode", inv.payment_mode || "Bank Transfer"],
+    ["Invoice Number:", inv.invoice_number || "DRAFT"],
+    ["Invoice Date:", inv.issue_date],
+    ["Due Date:", inv.due_date || "As per agreement"],
+    ["Payment Mode:", inv.payment_mode || "Bank Transfer"],
   ];
-  if (inv.category) detailRows.push(["Category", inv.category]);
+  if (inv.category) detailRows.push(["Category:", inv.category]);
 
-  const PAD = 14;
-  const leftH = PAD + 15 + nameLines.length * 14 + billLines.length * 12 + PAD - 4;
-  const rightH = PAD + detailRows.length * 15 + PAD - 3;
-  const cardH = Math.max(leftH, rightH, 80);
+  // left: company block
+  let ly = heading(co.brand, M, y);
+  setText(9, C.body, false, true);
+  const compLines = [
+    ...wrap(co.legal, colW),
+    ...wrap(co.address, colW),
+    `Phone: ${co.phone}`,
+    `Email: ${co.email}`,
+  ];
+  compLines.forEach((l) => { doc.text(l, M, ly); ly += 12.5; });
 
-  y = ensure(cardH + 20, y);
-
-  // left card
-  doc.setFillColor(...C.navySoft);
-  doc.roundedRect(M, y, colW, cardH, 6, 6, "F");
-  doc.setFillColor(...C.gold);
-  doc.roundedRect(M, y, 3.5, cardH, 2, 2, "F");
-  let ly = y + PAD + 2;
-  setText(8, C.mute, true);
-  doc.text("BILLED TO", M + PAD, ly);
-  ly += 15;
-  setText(11.5, C.navy, true);
-  doc.text(nameLines, M + PAD, ly, { lineHeightFactor: 1.2 });
-  ly += nameLines.length * 14 + 2;
-  setText(9, C.ink, false);
-  billLines.forEach((l) => { doc.text(l, M + PAD, ly); ly += 12; });
-
-  // right card
+  // right: gray details panel
   const rx = M + colW + GAP;
-  doc.setDrawColor(...C.hair);
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(rx, y, colW, cardH, 6, 6, "FD");
-  let ry = y + PAD + 2;
-  setText(8, C.mute, true);
-  doc.text("INVOICE DETAILS", rx + PAD, ry);
-  ry += 15;
+  const panelH = detailRows.length * 20 + 26;
+  doc.setFillColor(...C.panel);
+  doc.rect(rx, y - 14, colW, panelH, "F");
+  let ry = y + 4;
   detailRows.forEach(([k, v]) => {
-    setText(9, C.mute, false);
-    doc.text(k, rx + PAD, ry);
-    setText(9, C.navy, true);
-    doc.text(v, rx + colW - PAD, ry, { align: "right", maxWidth: colW - PAD * 2 - 70 });
-    ry += 15;
+    setText(9, C.body, false);
+    doc.text(k, rx + 14, ry);
+    setText(9, C.ink, true);
+    doc.text(v, rx + 118, ry, { maxWidth: colW - 132 });
+    ry += 20;
   });
 
-  y += cardH + 20;
+  y = Math.max(ly, y - 14 + panelH + 8) + 12;
+
+  // ============================== BILLED TO + IDS/TERMS ==============================
+  y = ensure(120, y);
+  let by = heading("Billed To", M, y);
+  setText(10, C.ink, true);
+  const nameLines = wrap(inv.client, colW);
+  nameLines.forEach((l) => { doc.text(l, M, by); by += 13; });
+  setText(9, C.body, false, true);
+  const billLines: string[] = [];
+  if (inv.client_location) billLines.push(...wrap(inv.client_location, colW));
+  if (inv.client_email) billLines.push(`Email: ${inv.client_email}`);
+  if (inv.client_phone) billLines.push(`Phone: ${inv.client_phone}`);
+  billLines.forEach((l) => { doc.text(l, M, by); by += 12.5; });
+
+  let cy = heading("Company Identifiers", rx, y);
+  setText(8.8, C.body, false);
+  wrap(co.ids.replace(/\s*\|\s*/g, "   ·   "), colW).forEach((l) => { doc.text(l, rx, cy); cy += 12 });
+  if (inv.notes) {
+    cy += 4;
+    setText(9, C.ink, true);
+    doc.text("Notes", rx, cy); cy += 12;
+    setText(8.5, C.body, false);
+    wrap(inv.notes, colW).forEach((l) => { doc.text(l, rx, cy); cy += 11 });
+  }
+
+  y = Math.max(by, cy) + 10;
 
   // ============================== ITEMS TABLE ==============================
+  y = ensure(120, y);
+  rule(y, M, pageW - M, C.teal, 1.6);
+  y += 6;
+
   const bodyRows = inv.items.map((it, idx) => [
     String(idx + 1),
     it.name,
     it.description || "—",
-    fmt(Number(it.amount || 0)),
+    `${cur} ${fmt(Number(it.amount || 0))}`,
   ]);
 
   autoTable(doc, {
     startY: y,
-    head: [["#", "Service", "Description", `Amount (${currency})`]],
+    head: [["#", "Items", "Description", "Total"]],
     body: bodyRows,
     theme: "plain",
-    styles: { font: "helvetica", lineColor: C.hair, lineWidth: { top: 0, right: 0, bottom: 0.5, left: 0 } },
+    styles: { font: "helvetica", cellPadding: { top: 10, bottom: 10, left: 0, right: 10 } },
     headStyles: {
-      fillColor: C.navy,
-      textColor: [255, 255, 255],
+      textColor: C.ink,
       fontStyle: "bold",
-      fontSize: 9,
-      cellPadding: { top: 8, bottom: 8, left: 10, right: 10 },
-      lineWidth: 0,
+      fontSize: 9.5,
+      lineColor: C.hair,
+      lineWidth: { top: 0, right: 0, bottom: 0.8, left: 0 },
     },
     bodyStyles: {
       fontSize: 9.5,
-      textColor: C.ink,
-      cellPadding: { top: 8, bottom: 8, left: 10, right: 10 },
+      textColor: C.body,
+      lineColor: C.hair,
+      lineWidth: { top: 0, right: 0, bottom: 0.6, left: 0 },
       valign: "top",
     },
-    alternateRowStyles: { fillColor: [250, 251, 253] },
     columnStyles: {
-      0: { cellWidth: 34, halign: "center", textColor: C.mute },
-      1: { cellWidth: 132, fontStyle: "bold", textColor: C.navy },
+      0: { cellWidth: 26, textColor: C.mute },
+      1: { cellWidth: 150, fontStyle: "bold", textColor: C.ink },
       2: { cellWidth: "auto" },
-      3: { cellWidth: 96, halign: "right", fontStyle: "bold" },
+      3: { cellWidth: 104, halign: "right", fontStyle: "bold", textColor: C.ink },
     },
     margin: { left: M, right: M, bottom: FOOTER_SAFE },
   });
 
   // @ts-expect-error jspdf-autotable augments lastAutoTable at runtime
-  y = (doc.lastAutoTable?.finalY ?? y) + 16;
+  y = (doc.lastAutoTable?.finalY ?? y) + 14;
 
   // ============================== TOTALS ==============================
-  const totalsW = 250;
-  const totalsX = pageW - M - totalsW;
-  y = ensure(84, y);
+  y = ensure(92, y);
+  const labelX = pageW - M - 190;
+  const valX = pageW - M;
 
-  setText(9.5, C.mute, false);
-  doc.text("Subtotal", totalsX + 14, y + 2);
-  setText(9.5, C.ink, false);
-  doc.text(`${currency} ${fmt(subtotal)}`, pageW - M - 14, y + 2, { align: "right" });
+  setText(9.5, C.ink, true);
+  doc.text("Subtotal", labelX, y);
+  setText(9.5, C.body, false);
+  doc.text(`${cur} ${fmt(subtotal)}`, valX, y, { align: "right" });
 
-  const bandY = y + 14;
-  const bandH = 38;
-  doc.setFillColor(...C.navy);
-  doc.roundedRect(totalsX, bandY, totalsW, bandH, 6, 6, "F");
-  setText(10, C.gold, true);
-  doc.text("TOTAL PAYABLE", totalsX + 14, bandY + 23);
-  setText(13, C.white, true);
-  doc.text(`${currency} ${fmt(subtotal)}`, pageW - M - 14, bandY + 23, { align: "right" });
+  y += 20;
+  setText(9.5, C.ink, true);
+  doc.text("Tax", labelX, y);
+  setText(9.5, C.body, false);
+  doc.text(`${cur} 0.00`, valX, y, { align: "right" });
 
-  // Amount in words (left of totals block)
-  setText(8, C.mute, true);
-  doc.text("AMOUNT IN WORDS", M, y + 2);
-  setText(9.5, C.navy, true);
-  const wordLines = wrap(numberToWordsIndian(subtotal), contentW - totalsW - GAP);
-  doc.text(wordLines, M, y + 16, { lineHeightFactor: 1.35 });
+  y += 12;
+  rule(y, labelX - 10, valX, C.hair, 0.8);
+  y += 20;
+  setText(11.5, C.teal, true);
+  doc.text("Total Payable", labelX, y);
+  doc.text(`${cur} ${fmt(subtotal)}`, valX, y, { align: "right" });
 
-  y = Math.max(bandY + bandH, y + 16 + wordLines.length * 12) + 20;
+  // amount in words on the left of totals
+  setText(8.5, C.mute, true);
+  doc.text("AMOUNT IN WORDS", M, y - 40);
+  setText(9.5, C.ink, true);
+  const wordLines = wrap(numberToWordsIndian(subtotal), contentW - 190);
+  doc.text(wordLines, M, y - 26, { lineHeightFactor: 1.35 });
 
-  // ============================== NOTES ==============================
-  if (inv.notes) {
-    setText(8.5, C.ink, false);
-    const nl = wrap(inv.notes, contentW - 28);
-    const boxH = nl.length * 11.5 + 20;
-    y = ensure(boxH + 16, y);
-    doc.setFillColor(...C.goldSoft);
-    doc.roundedRect(M, y, contentW, boxH, 6, 6, "F");
-    doc.setFillColor(...C.gold);
-    doc.roundedRect(M, y, 3.5, boxH, 2, 2, "F");
-    setText(8.5, C.ink, false);
-    doc.text(nl, M + 14, y + 16, { lineHeightFactor: 1.4 });
-    y += boxH + 16;
-  }
+  y = Math.max(y, y - 26 + wordLines.length * 12) + 18;
 
-  // ============================== BANK DETAILS ==============================
+  // ============================== BANK DETAILS + TERMS ==============================
   const bank: InvoiceBank = {
     name: inv.bank?.name || COMPANY.bank.name,
     number: inv.bank?.number || COMPANY.bank.number,
@@ -330,96 +325,65 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   ];
   if (bank.upi) bankPairs.push(["UPI ID", bank.upi]);
 
-  const halfCount = Math.ceil(bankPairs.length / 2);
-  const bankLeft = bankPairs.slice(0, halfCount);
-  const bankRight = bankPairs.slice(halfCount);
 
-  const brAddrLines = bank.branchAddress ? wrap(`Branch Address: ${bank.branchAddress}`, contentW - 28) : [];
-  const bankBoxH = 30 + Math.max(bankLeft.length, bankRight.length) * 16 + (brAddrLines.length ? brAddrLines.length * 11 + 8 : 0) + 12;
+  const c1 = contentW * 0.38, c2 = contentW * 0.36, c3 = contentW * 0.24;
+  const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
 
-  y = ensure(bankBoxH + 30, y);
-  y = sectionTitle(bank.tag ? `Bank Details for Payment — ${bank.tag}` : "Bank Details for Payment", M, y, contentW);
-
-  doc.setDrawColor(...C.hair);
-  doc.setFillColor(252, 253, 255);
-  doc.roundedRect(M, y, contentW, bankBoxH, 6, 6, "FD");
-
-  const renderPairs = (pairs: Array<[string, string]>, x: number, startY: number, w: number) => {
-    let py = startY;
-    pairs.forEach(([k, v]) => {
-      setText(8, C.mute, false);
-      doc.text(k, x, py);
-      setText(9.5, C.navy, true);
-      doc.text(v, x, py + 11, { maxWidth: w });
-      py += 16 + 10;
-    });
-  };
-  // two columns, label above value
-  let byL = y + 18;
-  let byR = y + 18;
-  bankLeft.forEach(([k, v]) => {
-    setText(8, C.mute, false); doc.text(k, M + 14, byL);
-    setText(9.5, C.navy, true); doc.text(v, M + 14, byL + 12, { maxWidth: colW - 28 });
-    byL += 28;
-  });
-  bankRight.forEach(([k, v]) => {
-    setText(8, C.mute, false); doc.text(k, M + colW + GAP, byR);
-    setText(9.5, C.navy, true); doc.text(v, M + colW + GAP, byR + 12, { maxWidth: colW - 14 });
-    byR += 28;
-  });
-  void renderPairs;
-
-  let bankBottom = Math.max(byL, byR);
-  if (brAddrLines.length) {
-    setText(8.5, C.mute, false);
-    doc.text(brAddrLines, M + 14, bankBottom - 4, { lineHeightFactor: 1.35 });
-    bankBottom += brAddrLines.length * 11;
-  }
-  y = y + bankBoxH + 16;
-
-  // ============================== TERMS + SIGNATORY ==============================
-  const termsLinesAll: string[] = [];
+  const termsLines: string[] = [];
   co.terms.forEach((t) => {
-    const clean = t.trim().replace(/^•\s*/, "");
-    wrap(clean, colW - 14).forEach((l, i) => termsLinesAll.push(i === 0 ? `•  ${l}` : `    ${l}`));
+    const clean = t.trim().replace(/^\u2022\s*/, "");
+    wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
-  const blockH = Math.max(termsLinesAll.length * 12 + 22, 90);
-  y = ensure(blockH + 8, y);
 
-  const tTop = sectionTitle("Terms & Conditions", M, y, colW);
-  setText(8.5, C.ink, false);
-  let ty = tTop;
-  termsLinesAll.forEach((l) => { doc.text(l, M, ty); ty += 12; });
+  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 34;
+  y = ensure(blockH, y);
+  rule(y, M, pageW - M, C.hair, 0.8);
+  y += 16;
 
-  // signatory (right column)
-  const sx = M + colW + GAP;
+  let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
+  bankPairs.forEach(([k, v]) => {
+    setText(8.5, C.mute, false);
+    doc.text(k, x1, ky);
+    setText(8.8, C.ink, true);
+    doc.text(v, x1 + 88, ky, { maxWidth: c1 - 88 });
+    ky += 15;
+  });
+
+  let ty = heading("Terms & Conditions", x2, y);
+  setText(8.3, C.body, false);
+  termsLines.forEach((l) => { doc.text(l, x2, ty); ty += 11.5; });
+
+  // signature column
   setText(8.5, C.mute, false);
-  doc.text(`For ${co.brand}`, sx + colW, y, { align: "right" });
+  doc.text(`For ${co.brand}`, pageW - M, y, { align: "right" });
   doc.setDrawColor(...C.hair);
-  doc.line(sx + colW - 170, y + 50, sx + colW, y + 50);
-  setText(9.5, C.navy, true);
-  doc.text(co.signatory, sx + colW, y + 63, { align: "right" });
+  doc.setLineWidth(0.8);
+  doc.line(x3, y + 40, pageW - M, y + 40);
+  setText(9, C.ink, true);
+  doc.text(co.signatory, pageW - M, y + 52, { align: "right" });
   setText(8, C.mute, false);
-  doc.text(co.legal, sx + colW, y + 75, { align: "right" });
+  doc.text(co.legal, pageW - M, y + 63, { align: "right" });
 
-  y = Math.max(ty, y + 84) + 8;
+  y = Math.max(ky, ty, y + 68) + 10;
 
-  // ============================== PAGE FOOTERS ==============================
+  // ============================== FOOTERS ==============================
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
-    doc.setDrawColor(...C.hair);
-    doc.setLineWidth(0.5);
-    doc.line(M, pageH - 42, pageW - M, pageH - 42);
-    if (p === pages) {
-      setText(9, C.navy, true);
-      doc.text("Thank you for your business!", M, pageH - 56);
-      setText(8, C.mute, false);
-      doc.text(`Queries: ${co.email}  ·  ${co.phone}`, pageW - M, pageH - 56, { align: "right" });
-    }
-    setText(7.5, C.mute, false);
-    doc.text(`${co.brand}  ·  Invoice ${inv.invoice_number || "DRAFT"}  ·  system-generated, no signature required`, M, pageH - 28);
-    doc.text(`Page ${p} of ${pages}`, pageW - M, pageH - 28, { align: "right" });
+    // teal baseline band
+    doc.setFillColor(...C.teal);
+    doc.rect(0, pageH - 14, pageW, 14, "F");
+
+    rule(pageH - 62, M, pageW - M, C.hair, 0.8);
+    const fy = pageH - 46;
+    setText(8.2, C.ink, true);
+    doc.text("Registered Address", M, fy);
+    doc.text("Contact", M + contentW / 3, fy);
+    doc.text("Invoice", M + (contentW / 3) * 2, fy);
+    setText(7.6, C.mute, false);
+    doc.text(wrap(co.address, contentW / 3 - 16), M, fy + 11, { lineHeightFactor: 1.3 });
+    doc.text([`Phone: ${co.phone}`, `Email: ${co.email}`], M + contentW / 3, fy + 11, { lineHeightFactor: 1.3 });
+    doc.text([`${inv.invoice_number || "DRAFT"}`, `Page ${p} of ${pages}`], M + (contentW / 3) * 2, fy + 11, { lineHeightFactor: 1.3 });
   }
 
   return doc;
