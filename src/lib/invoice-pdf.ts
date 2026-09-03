@@ -196,7 +196,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // right: gray details panel
   const rx = M + colW + GAP;
-  const panelH = detailRows.length * 20 + 26;
+  const panelH = detailRows.length * 18 + 22;
   doc.setFillColor(...C.panel);
   doc.rect(rx, y - 14, colW, panelH, "F");
   let ry = y + 4;
@@ -205,10 +205,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.text(k, rx + 14, ry);
     setText(9, C.ink, true);
     doc.text(v, rx + 118, ry, { maxWidth: colW - 132 });
-    ry += 20;
+    ry += 18;
   });
 
-  y = Math.max(ly, y - 14 + panelH + 8) + 12;
+  y = Math.max(ly, y - 14 + panelH + 6) + 6;
 
   // ============================== BILLED TO + IDS/TERMS ==============================
   y = ensure(120, y);
@@ -229,7 +229,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
 
 
-  y = Math.max(by, cy) + 10;
+  y = Math.max(by, cy) + 6;
 
   // ============================== ITEMS TABLE ==============================
   y = ensure(120, y);
@@ -248,7 +248,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     head: [["#", "Items", "Description", "Total"]],
     body: bodyRows,
     theme: "plain",
-    styles: { font: "helvetica", cellPadding: { top: 10, bottom: 10, left: 0, right: 10 } },
+    styles: { font: "helvetica", cellPadding: { top: 7.5, bottom: 7.5, left: 0, right: 10 } },
     headStyles: {
       textColor: C.ink,
       fontStyle: "bold",
@@ -372,7 +372,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(8, C.mute, false);
   wrap(co.legal, c3).forEach((l, i) => doc.text(l, pageW - M, y + 65 + i * 10, { align: "right" }));
 
-  y = Math.max(ky, ty, y + 74) + 14;
+  y = Math.max(ky, ty, y + 74) + 12;
 
   // ============================== NOTES (own section, just above footer) ==============================
   if (inv.notes) {
