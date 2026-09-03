@@ -248,6 +248,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     head: [["#", "Items", "Description", "Total"]],
     body: bodyRows,
     theme: "plain",
+    rowPageBreak: "avoid",
     styles: { font: "helvetica", cellPadding: { top: 6.5, bottom: 6.5, left: 0, right: 10 } },
     headStyles: {
       textColor: C.ink,
@@ -396,6 +397,9 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
+    if (p > 1) {
+      try { doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - 40, M - 22, 40, 40); } catch { /* ignore */ }
+    }
     // teal baseline band
     doc.setFillColor(...C.teal);
     doc.rect(0, pageH - 14, pageW, 14, "F");
