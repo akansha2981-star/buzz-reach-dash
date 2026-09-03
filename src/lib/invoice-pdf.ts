@@ -331,37 +331,45 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(clean, colW - 12).forEach((l, i) => termsLines.push(i === 0 ? `•  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5) + 40;
+  const c1 = contentW * 0.32, c2 = contentW * 0.40, c3 = contentW * 0.24;
+  const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
+
+  const termsLines: string[] = [];
+  co.terms.forEach((t) => {
+    const clean = t.trim().replace(/^\u2022\s*/, "");
+    wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
+  });
+
+  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 46;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
   y += 20;
 
-  let ky = heading(bank.tag ? `Payment Details — ${bank.tag}` : "Payment Details", M, y);
+  let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
   bankPairs.forEach(([k, v]) => {
-    setText(8.8, C.mute, false);
-    doc.text(k, M, ky);
-    setText(9, C.ink, true);
-    doc.text(v, M + 110, ky, { maxWidth: colW - 110 });
+    setText(8.5, C.mute, false);
+    doc.text(k, x1, ky);
+    setText(8.8, C.ink, true);
+    doc.text(v, x1 + 92, ky, { maxWidth: c1 - 92 });
     ky += 15;
   });
 
-  let ty = heading("Terms & Conditions", rx, y);
-  setText(8.5, C.body, false);
-  termsLines.forEach((l) => { doc.text(l, rx, ty); ty += 11.5; });
+  let ty = heading("Terms & Conditions", x2, y);
+  setText(8.3, C.body, false);
+  termsLines.forEach((l) => { doc.text(l, x2, ty); ty += 11.5; });
 
-  y = Math.max(ky, ty) + 14;
-
-  // ============================== SIGNATORY ==============================
-  y = ensure(54, y);
-  setText(8.8, C.mute, false);
+  // signature column
+  setText(8.5, C.mute, false);
   doc.text(`For ${co.brand}`, pageW - M, y, { align: "right" });
   doc.setDrawColor(...C.hair);
   doc.setLineWidth(0.8);
-  doc.line(pageW - M - 170, y + 26, pageW - M, y + 26);
-  setText(9.5, C.ink, true);
-  doc.text(co.signatory, pageW - M, y + 38, { align: "right" });
-  setText(8.2, C.mute, false);
-  doc.text(co.legal, pageW - M, y + 49, { align: "right" });
+  doc.line(x3, y + 40, pageW - M, y + 40);
+  setText(9, C.ink, true);
+  doc.text(co.signatory, pageW - M, y + 52, { align: "right" });
+  setText(8, C.mute, false);
+  doc.text(co.legal, pageW - M, y + 63, { align: "right" });
+
+  y = Math.max(ky, ty, y + 68) + 10;
 
   // ============================== FOOTERS ==============================
   const pages = doc.getNumberOfPages();
