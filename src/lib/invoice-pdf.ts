@@ -326,7 +326,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (bank.upi) bankPairs.push(["UPI ID", bank.upi]);
 
 
-  const c1 = contentW * 0.32, c2 = contentW * 0.40, c3 = contentW * 0.24;
+  const c1 = contentW * 0.38, c2 = contentW * 0.36, c3 = contentW * 0.24;
   const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
 
   const termsLines: string[] = [];
@@ -335,19 +335,18 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 24, termsLines.length * 11.5, 70) + 46;
+  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 46;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
   y += 20;
 
   let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
   bankPairs.forEach(([k, v]) => {
-    setText(8, C.mute, false);
+    setText(8.5, C.mute, false);
     doc.text(k, x1, ky);
     setText(8.8, C.ink, true);
-    const vl = wrap(v, c1 - 4);
-    doc.text(vl, x1, ky + 10.5, { lineHeightFactor: 1.25 });
-    ky += 12 + vl.length * 10.5;
+    doc.text(v, x1 + 88, ky, { maxWidth: c1 - 88 });
+    ky += 15;
   });
 
   let ty = heading("Terms & Conditions", x2, y);
