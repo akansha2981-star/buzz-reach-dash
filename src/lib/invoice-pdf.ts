@@ -325,11 +325,6 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   ];
   if (bank.upi) bankPairs.push(["UPI ID", bank.upi]);
 
-  const termsLines: string[] = [];
-  co.terms.forEach((t) => {
-    const clean = t.trim().replace(/^•\s*/, "");
-    wrap(clean, colW - 12).forEach((l, i) => termsLines.push(i === 0 ? `•  ${l}` : `    ${l}`));
-  });
 
   const c1 = contentW * 0.32, c2 = contentW * 0.40, c3 = contentW * 0.24;
   const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
