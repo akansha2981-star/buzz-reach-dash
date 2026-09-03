@@ -276,7 +276,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // ============================== TOTALS ==============================
   y = ensure(92, y);
-  const labelX = pageW - M - 150;
+  const labelX = pageW - M - 190;
   const valX = pageW - M;
 
   setText(9.5, C.ink, true);
@@ -335,18 +335,19 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 46;
+  const blockH = Math.max(bankPairs.length * 24, termsLines.length * 11.5, 70) + 46;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
   y += 20;
 
   let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
   bankPairs.forEach(([k, v]) => {
-    setText(8.5, C.mute, false);
+    setText(8, C.mute, false);
     doc.text(k, x1, ky);
     setText(8.8, C.ink, true);
-    doc.text(v, x1 + 92, ky, { maxWidth: c1 - 92 });
-    ky += 15;
+    const vl = wrap(v, c1 - 4);
+    doc.text(vl, x1, ky + 10.5, { lineHeightFactor: 1.25 });
+    ky += 12 + vl.length * 10.5;
   });
 
   let ty = heading("Terms & Conditions", x2, y);
