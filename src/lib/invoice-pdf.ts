@@ -372,22 +372,22 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(8, C.mute, false);
   wrap(co.legal, c3).forEach((l, i) => doc.text(l, pageW - M, y + 65 + i * 10, { align: "right" }));
 
-  y = Math.max(ky, ty, y + 74) + 12;
+  y = Math.max(ky, ty, y + 70) + 10;
 
   // ============================== NOTES (own section, just above footer) ==============================
   if (inv.notes) {
-    setText(8.6, C.body, false);
+    setText(8.2, C.body, false);
     const noteLines = wrap(inv.notes, contentW - 28);
-    const noteH = noteLines.length * 11 + 40;
-    y = ensure(noteH, y);
+    const noteH = noteLines.length * 10.5 + 34;
+    if (y + noteH > pageH - 74) { doc.addPage(); y = M + 6; }
     doc.setFillColor(...C.panel);
     doc.rect(M, y, contentW, noteH - 8, "F");
     doc.setFillColor(...C.teal);
     doc.rect(M, y, 3, noteH - 8, "F");
     setText(9, C.ink, true);
-    doc.text("Notes", M + 14, y + 18);
-    setText(8.4, C.body, false);
-    noteLines.forEach((l, i) => doc.text(l, M + 14, y + 32 + i * 11));
+    doc.text("Notes", M + 14, y + 16);
+    setText(8.2, C.body, false);
+    noteLines.forEach((l, i) => doc.text(l, M + 14, y + 29 + i * 10.5));
     y += noteH + 6;
   }
 
