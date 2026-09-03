@@ -106,7 +106,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const contentW = pageW - M * 2;
   const GAP = 22;
   const colW = (contentW - GAP) / 2;
-  const FOOTER_SAFE = 96;
+  const FOOTER_SAFE = 84;
 
   const currency = inv.currency || "INR";
   const cur = currency === "INR" ? "Rs." : currency;
@@ -304,7 +304,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   const wordLines = wrap(numberToWordsIndian(subtotal), contentW - 190);
   doc.text(wordLines, M, y - 26, { lineHeightFactor: 1.35 });
 
-  y = Math.max(y, y - 26 + wordLines.length * 12) + 26;
+  y = Math.max(y, y - 26 + wordLines.length * 12) + 18;
 
   // ============================== BANK DETAILS + TERMS ==============================
   const bank: InvoiceBank = {
@@ -349,19 +349,19 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(8.5, C.body, false);
   termsLines.forEach((l) => { doc.text(l, rx, ty); ty += 11.5; });
 
-  y = Math.max(ky, ty) + 18;
+  y = Math.max(ky, ty) + 14;
 
   // ============================== SIGNATORY ==============================
-  y = ensure(70, y);
+  y = ensure(54, y);
   setText(8.8, C.mute, false);
   doc.text(`For ${co.brand}`, pageW - M, y, { align: "right" });
   doc.setDrawColor(...C.hair);
   doc.setLineWidth(0.8);
-  doc.line(pageW - M - 170, y + 40, pageW - M, y + 40);
+  doc.line(pageW - M - 170, y + 26, pageW - M, y + 26);
   setText(9.5, C.ink, true);
-  doc.text(co.signatory, pageW - M, y + 53, { align: "right" });
+  doc.text(co.signatory, pageW - M, y + 38, { align: "right" });
   setText(8.2, C.mute, false);
-  doc.text(co.legal, pageW - M, y + 64, { align: "right" });
+  doc.text(co.legal, pageW - M, y + 49, { align: "right" });
 
   // ============================== FOOTERS ==============================
   const pages = doc.getNumberOfPages();
