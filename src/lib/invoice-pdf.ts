@@ -157,14 +157,18 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(30, C.teal, true);
   doc.text("INVOICE", M, y);
 
-  // gold logo badge
-  const lr = 30;
-  const lcx = pageW - M - lr;
-  const lcy = y - 12;
-  doc.setFillColor(...C.gold);
-  doc.circle(lcx, lcy, lr, "F");
-  setText(initials(co.brand).length > 2 ? 13 : 15, C.white, true);
-  doc.text(initials(co.brand), lcx, lcy + 5, { align: "center" });
+  // brand logo (top-right)
+  const logoSize = 62;
+  try {
+    doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - logoSize, y - 42, logoSize, logoSize);
+  } catch {
+    const lr = 28;
+    doc.setFillColor(...C.gold);
+    doc.circle(pageW - M - lr, y - 12, lr, "F");
+    setText(15, C.white, true);
+    doc.text(initials(co.brand), pageW - M - lr, y - 7, { align: "center" });
+  }
+
 
   y += 26;
   rule(y);
