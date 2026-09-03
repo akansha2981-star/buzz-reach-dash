@@ -327,27 +327,34 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (bank.upi) bankPairs.push(["UPI ID", bank.upi]);
 
 
-  const c1 = contentW * 0.38, c2 = contentW * 0.36, c3 = contentW * 0.24;
-  const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
+  const c1 = contentW * 0.42, c2 = contentW * 0.34, c3 = contentW * 0.2;
+  const x1 = M, x2 = M + c1 + 10, x3 = pageW - M - c3;
 
   const termsLines: string[] = [];
   co.terms.forEach((t) => {
     const clean = t.trim().replace(/^\u2022\s*/, "");
-    wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
+    wrap(clean, c2 - 8).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 34;
+  // pre-measure wrapped bank values so rows never overlap
+  const labelW = 86;
+  const valW = c1 - labelW - 8;
+  setText(8.8, C.ink, true);
+  const bankRows = bankPairs.map(([k, v]) => ({ k, lines: wrap(v, valW) }));
+  const bankH = bankRows.reduce((s, r) => s + Math.max(14, r.lines.length * 11.5 + 3), 0);
+
+  const blockH = Math.max(bankH, termsLines.length * 11.5, 74) + 34;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
-  y += 16;
+  y += 18;
 
   let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
-  bankPairs.forEach(([k, v]) => {
+  bankRows.forEach(({ k, lines }) => {
     setText(8.5, C.mute, false);
     doc.text(k, x1, ky);
     setText(8.8, C.ink, true);
-    doc.text(v, x1 + 88, ky, { maxWidth: c1 - 88 });
-    ky += 15;
+    lines.forEach((l, i) => doc.text(l, x1 + labelW, ky + i * 11));
+    ky += Math.max(14, lines.length * 11 + 3);
   });
 
   let ty = heading("Terms & Conditions", x2, y);
@@ -356,16 +363,34 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // signature column
   setText(8.5, C.mute, false);
-  doc.text(`For ${co.brand}`, pageW - M, y, { align: "right" });
+  doc.text(`For ${co.brand}`, pageW - M, y - 1, { align: "right" });
   doc.setDrawColor(...C.hair);
   doc.setLineWidth(0.8);
-  doc.line(x3, y + 40, pageW - M, y + 40);
+  doc.line(x3, y + 42, pageW - M, y + 42);
   setText(9, C.ink, true);
-  doc.text(co.signatory, pageW - M, y + 52, { align: "right" });
+  doc.text(co.signatory, pageW - M, y + 54, { align: "right" });
   setText(8, C.mute, false);
-  doc.text(co.legal, pageW - M, y + 63, { align: "right" });
+  wrap(co.legal, c3).forEach((l, i) => doc.text(l, pageW - M, y + 65 + i * 10, { align: "right" }));
 
-  y = Math.max(ky, ty, y + 68) + 10;
+  y = Math.max(ky, ty, y + 74) + 14;
+
+  // ============================== NOTES (own section, just above footer) ==============================
+  if (inv.notes) {
+    setText(8.6, C.body, false);
+    const noteLines = wrap(inv.notes, contentW - 28);
+    const noteH = noteLines.length * 11 + 40;
+    y = ensure(noteH, y);
+    doc.setFillColor(...C.panel);
+    doc.rect(M, y, contentW, noteH - 8, "F");
+    doc.setFillColor(...C.teal);
+    doc.rect(M, y, 3, noteH - 8, "F");
+    setText(9, C.ink, true);
+    doc.text("Notes", M + 14, y + 18);
+    setText(8.4, C.body, false);
+    noteLines.forEach((l, i) => doc.text(l, M + 14, y + 32 + i * 11));
+    y += noteH + 6;
+  }
+
 
   // ============================== FOOTERS ==============================
   const pages = doc.getNumberOfPages();
