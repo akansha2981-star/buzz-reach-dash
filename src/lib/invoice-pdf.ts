@@ -398,7 +398,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     if (p > 1) {
-      try { doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - 40, M - 22, 40, 40); } catch { /* ignore */ }
+      try { doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - 32, 8, 32, 32); } catch { /* ignore */ }
     }
     // teal baseline band
     doc.setFillColor(...C.teal);
