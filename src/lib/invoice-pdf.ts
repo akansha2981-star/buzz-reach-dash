@@ -196,7 +196,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // right: gray details panel
   const rx = M + colW + GAP;
-  const panelH = detailRows.length * 18 + 22;
+  const panelH = detailRows.length * 17 + 20;
   doc.setFillColor(...C.panel);
   doc.rect(rx, y - 14, colW, panelH, "F");
   let ry = y + 4;
@@ -205,7 +205,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.text(k, rx + 14, ry);
     setText(9, C.ink, true);
     doc.text(v, rx + 118, ry, { maxWidth: colW - 132 });
-    ry += 18;
+    ry += 17;
   });
 
   y = Math.max(ly, y - 14 + panelH + 6) + 6;
@@ -248,7 +248,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     head: [["#", "Items", "Description", "Total"]],
     body: bodyRows,
     theme: "plain",
-    styles: { font: "helvetica", cellPadding: { top: 7.5, bottom: 7.5, left: 0, right: 10 } },
+    styles: { font: "helvetica", cellPadding: { top: 6.5, bottom: 6.5, left: 0, right: 10 } },
     headStyles: {
       textColor: C.ink,
       fontStyle: "bold",
@@ -372,13 +372,13 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(8, C.mute, false);
   wrap(co.legal, c3).forEach((l, i) => doc.text(l, pageW - M, y + 65 + i * 10, { align: "right" }));
 
-  y = Math.max(ky, ty, y + 70) + 10;
+  y = Math.max(ky, ty, y + 66) + 8;
 
   // ============================== NOTES (own section, just above footer) ==============================
   if (inv.notes) {
     setText(8.2, C.body, false);
     const noteLines = wrap(inv.notes, contentW - 28);
-    const noteH = noteLines.length * 10.5 + 34;
+    const noteH = noteLines.length * 10.5 + 30;
     if (y + noteH > pageH - 74) { doc.addPage(); y = M + 6; }
     doc.setFillColor(...C.panel);
     doc.rect(M, y, contentW, noteH - 8, "F");
