@@ -1,5 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { INVOICE_LOGO_DATA_URL } from "./invoice-logo";
+
 
 export const COMPANY = {
   brand: "B School Buzz",
@@ -155,14 +157,18 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   setText(30, C.teal, true);
   doc.text("INVOICE", M, y);
 
-  // gold logo badge
-  const lr = 30;
-  const lcx = pageW - M - lr;
-  const lcy = y - 12;
-  doc.setFillColor(...C.gold);
-  doc.circle(lcx, lcy, lr, "F");
-  setText(initials(co.brand).length > 2 ? 13 : 15, C.white, true);
-  doc.text(initials(co.brand), lcx, lcy + 5, { align: "center" });
+  // brand logo (top-right)
+  const logoSize = 62;
+  try {
+    doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - logoSize, y - 42, logoSize, logoSize);
+  } catch {
+    const lr = 28;
+    doc.setFillColor(...C.gold);
+    doc.circle(pageW - M - lr, y - 12, lr, "F");
+    setText(15, C.white, true);
+    doc.text(initials(co.brand), pageW - M - lr, y - 7, { align: "center" });
+  }
+
 
   y += 26;
   rule(y);
@@ -190,7 +196,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // right: gray details panel
   const rx = M + colW + GAP;
-  const panelH = detailRows.length * 20 + 26;
+  const panelH = detailRows.length * 17 + 20;
   doc.setFillColor(...C.panel);
   doc.rect(rx, y - 14, colW, panelH, "F");
   let ry = y + 4;
@@ -199,10 +205,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     doc.text(k, rx + 14, ry);
     setText(9, C.ink, true);
     doc.text(v, rx + 118, ry, { maxWidth: colW - 132 });
-    ry += 20;
+    ry += 17;
   });
 
-  y = Math.max(ly, y - 14 + panelH + 8) + 12;
+  y = Math.max(ly, y - 14 + panelH + 6) + 6;
 
   // ============================== BILLED TO + IDS/TERMS ==============================
   y = ensure(120, y);
@@ -220,15 +226,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   let cy = heading("Company Identifiers", rx, y);
   setText(8.8, C.body, false);
   wrap(co.ids.replace(/\s*\|\s*/g, "   ·   "), colW).forEach((l) => { doc.text(l, rx, cy); cy += 12 });
-  if (inv.notes) {
-    cy += 4;
-    setText(9, C.ink, true);
-    doc.text("Notes", rx, cy); cy += 12;
-    setText(8.5, C.body, false);
-    wrap(inv.notes, colW).forEach((l) => { doc.text(l, rx, cy); cy += 11 });
-  }
 
-  y = Math.max(by, cy) + 10;
+
+
+  y = Math.max(by, cy) + 6;
 
   // ============================== ITEMS TABLE ==============================
   y = ensure(120, y);
@@ -247,7 +248,8 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
     head: [["#", "Items", "Description", "Total"]],
     body: bodyRows,
     theme: "plain",
-    styles: { font: "helvetica", cellPadding: { top: 10, bottom: 10, left: 0, right: 10 } },
+    rowPageBreak: "avoid",
+    styles: { font: "helvetica", cellPadding: { top: 6.5, bottom: 6.5, left: 0, right: 10 } },
     headStyles: {
       textColor: C.ink,
       fontStyle: "bold",
@@ -326,27 +328,34 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (bank.upi) bankPairs.push(["UPI ID", bank.upi]);
 
 
-  const c1 = contentW * 0.38, c2 = contentW * 0.36, c3 = contentW * 0.24;
-  const x1 = M, x2 = M + c1 + 8, x3 = pageW - M - c3;
+  const c1 = contentW * 0.42, c2 = contentW * 0.34, c3 = contentW * 0.2;
+  const x1 = M, x2 = M + c1 + 10, x3 = pageW - M - c3;
 
   const termsLines: string[] = [];
   co.terms.forEach((t) => {
     const clean = t.trim().replace(/^\u2022\s*/, "");
-    wrap(clean, c2 - 10).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
+    wrap(clean, c2 - 8).forEach((l, i) => termsLines.push(i === 0 ? `\u2022  ${l}` : `    ${l}`));
   });
 
-  const blockH = Math.max(bankPairs.length * 15, termsLines.length * 11.5, 70) + 34;
+  // pre-measure wrapped bank values so rows never overlap
+  const labelW = 86;
+  const valW = c1 - labelW - 8;
+  setText(8.8, C.ink, true);
+  const bankRows = bankPairs.map(([k, v]) => ({ k, lines: wrap(v, valW) }));
+  const bankH = bankRows.reduce((s, r) => s + Math.max(14, r.lines.length * 11.5 + 3), 0);
+
+  const blockH = Math.max(bankH, termsLines.length * 11.5, 74) + 34;
   y = ensure(blockH, y);
   rule(y, M, pageW - M, C.hair, 0.8);
-  y += 16;
+  y += 18;
 
   let ky = heading(bank.tag ? `Payment Details \u2014 ${bank.tag}` : "Payment Details", x1, y);
-  bankPairs.forEach(([k, v]) => {
+  bankRows.forEach(({ k, lines }) => {
     setText(8.5, C.mute, false);
     doc.text(k, x1, ky);
     setText(8.8, C.ink, true);
-    doc.text(v, x1 + 88, ky, { maxWidth: c1 - 88 });
-    ky += 15;
+    lines.forEach((l, i) => doc.text(l, x1 + labelW, ky + i * 11));
+    ky += Math.max(14, lines.length * 11 + 3);
   });
 
   let ty = heading("Terms & Conditions", x2, y);
@@ -355,21 +364,42 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // signature column
   setText(8.5, C.mute, false);
-  doc.text(`For ${co.brand}`, pageW - M, y, { align: "right" });
+  doc.text(`For ${co.brand}`, pageW - M, y - 1, { align: "right" });
   doc.setDrawColor(...C.hair);
   doc.setLineWidth(0.8);
-  doc.line(x3, y + 40, pageW - M, y + 40);
+  doc.line(x3, y + 42, pageW - M, y + 42);
   setText(9, C.ink, true);
-  doc.text(co.signatory, pageW - M, y + 52, { align: "right" });
+  doc.text(co.signatory, pageW - M, y + 54, { align: "right" });
   setText(8, C.mute, false);
-  doc.text(co.legal, pageW - M, y + 63, { align: "right" });
+  wrap(co.legal, c3).forEach((l, i) => doc.text(l, pageW - M, y + 65 + i * 10, { align: "right" }));
 
-  y = Math.max(ky, ty, y + 68) + 10;
+  y = Math.max(ky, ty, y + 66) + 8;
+
+  // ============================== NOTES (own section, just above footer) ==============================
+  if (inv.notes) {
+    setText(8.2, C.body, false);
+    const noteLines = wrap(inv.notes, contentW - 28);
+    const noteH = noteLines.length * 10.5 + 30;
+    if (y + noteH > pageH - 74) { doc.addPage(); y = M + 6; }
+    doc.setFillColor(...C.panel);
+    doc.rect(M, y, contentW, noteH - 8, "F");
+    doc.setFillColor(...C.teal);
+    doc.rect(M, y, 3, noteH - 8, "F");
+    setText(9, C.ink, true);
+    doc.text("Notes", M + 14, y + 16);
+    setText(8.2, C.body, false);
+    noteLines.forEach((l, i) => doc.text(l, M + 14, y + 29 + i * 10.5));
+    y += noteH + 6;
+  }
+
 
   // ============================== FOOTERS ==============================
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
+    if (p > 1) {
+      try { doc.addImage(INVOICE_LOGO_DATA_URL, "PNG", pageW - M - 32, 8, 32, 32); } catch { /* ignore */ }
+    }
     // teal baseline band
     doc.setFillColor(...C.teal);
     doc.rect(0, pageH - 14, pageW, 14, "F");
