@@ -1,5 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { INVOICE_LOGO_DATA_URL } from "./invoice-logo";
+
 
 export const COMPANY = {
   brand: "B School Buzz",
