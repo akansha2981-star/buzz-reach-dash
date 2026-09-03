@@ -226,13 +226,8 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   let cy = heading("Company Identifiers", rx, y);
   setText(8.8, C.body, false);
   wrap(co.ids.replace(/\s*\|\s*/g, "   ·   "), colW).forEach((l) => { doc.text(l, rx, cy); cy += 12 });
-  if (inv.notes) {
-    cy += 4;
-    setText(9, C.ink, true);
-    doc.text("Notes", rx, cy); cy += 12;
-    setText(8.5, C.body, false);
-    wrap(inv.notes, colW).forEach((l) => { doc.text(l, rx, cy); cy += 11 });
-  }
+
+
 
   y = Math.max(by, cy) + 10;
 
