@@ -60,6 +60,7 @@ import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
 import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
 import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
 import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
 const TasksRoute = TasksRouteImport.update({
@@ -317,6 +318,12 @@ const HrmsAdminAnalyticsRoute = HrmsAdminAnalyticsRouteImport.update({
   path: '/hrms/admin/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay-webhook',
+    path: '/api/public/razorpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   id: '/api/public/bootstrap-admin',
   path: '/api/public/bootstrap-admin',
@@ -370,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -421,6 +429,7 @@ export interface FileRoutesByTo {
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -476,6 +485,7 @@ export interface FileRoutesById {
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -583,6 +594,7 @@ export interface FileRouteTypes {
     | '/hrms'
     | '/me'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -637,6 +649,7 @@ export interface FileRouteTypes {
     | '/hrms/'
     | '/me/'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -671,6 +684,7 @@ export interface RootRouteChildren {
   SettingsUsersRoute: typeof SettingsUsersRoute
   HrmsIndexRoute: typeof HrmsIndexRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   HrmsAdminAnalyticsRoute: typeof HrmsAdminAnalyticsRoute
   HrmsAdminAttendanceRoute: typeof HrmsAdminAttendanceRoute
   HrmsAdminAuditRoute: typeof HrmsAdminAuditRoute
@@ -1036,6 +1050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsAdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/razorpay-webhook': {
+      id: '/api/public/razorpay-webhook'
+      path: '/api/public/razorpay-webhook'
+      fullPath: '/api/public/razorpay-webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bootstrap-admin': {
       id: '/api/public/bootstrap-admin'
       path: '/api/public/bootstrap-admin'
@@ -1165,6 +1186,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsUsersRoute: SettingsUsersRoute,
   HrmsIndexRoute: HrmsIndexRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   HrmsAdminAnalyticsRoute: HrmsAdminAnalyticsRoute,
   HrmsAdminAttendanceRoute: HrmsAdminAttendanceRoute,
   HrmsAdminAuditRoute: HrmsAdminAuditRoute,
