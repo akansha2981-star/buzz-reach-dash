@@ -233,69 +233,20 @@ export function AppSidebar() {
             <SidebarGroupLabel>Sales Intelligence</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <Collapsible defaultOpen={path.startsWith("/sales")} className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton>
-                        <Zap className="text-red-500" />
-                        <span className="font-semibold">Live Sales Tracker</span>
-                        {!collapsed && (
-                          <span className="ml-auto flex items-center gap-2">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-                            </span>
-                            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                          </span>
-                        )}
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales")}>
-                            <Link to="/sales"><BarChart3 className="h-4 w-4" /><span>Overview</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/transactions")}>
-                            <Link to="/sales/transactions"><Activity className="h-4 w-4" /><span>Live Transactions</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/ad-spend")}>
-                            <Link to="/sales/ad-spend"><Megaphone className="h-4 w-4" /><span>Ad Spend</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/profit")}>
-                            <Link to="/sales/profit"><TrendingUp className="h-4 w-4" /><span>Profit Analytics</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/reports")}>
-                            <Link to="/sales/reports"><LineChart className="h-4 w-4" /><span>Reports</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/expenses")}>
-                            <Link to="/sales/expenses"><Receipt className="h-4 w-4" /><span>Expenses</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/refunds")}>
-                            <Link to="/sales/refunds"><Repeat className="h-4 w-4" /><span>Refunds</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/sales/settings")}>
-                            <Link to="/sales/settings"><Settings className="h-4 w-4" /><span>Settings</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith("/sales")}>
+                    <Link to="/sales">
+                      <Zap className="text-red-500" />
+                      <span className="font-semibold">Live Sales Tracker</span>
+                      {!collapsed && (
+                        <span className="ml-auto relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                        </span>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
