@@ -152,6 +152,39 @@ function SalesSettingsPage() {
         </div>
       </SectionCard>
 
+      <SectionCard title="Import past sales from Razorpay" subtitle="One-time backfill — pulls historical payments and refunds directly from your Razorpay account">
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <Label className="mb-1 block text-xs text-muted-foreground">From</Label>
+            <Input type="date" value={bf.from} onChange={(e) => setBf((s) => ({ ...s, from: e.target.value }))} className="w-[160px]" />
+          </div>
+          <div>
+            <Label className="mb-1 block text-xs text-muted-foreground">To</Label>
+            <Input type="date" value={bf.to} onChange={(e) => setBf((s) => ({ ...s, to: e.target.value }))} className="w-[160px]" />
+          </div>
+          <Button onClick={() => runImport.mutate()} disabled={runImport.isPending || !rzp?.keySecretConfigured}>
+            <History className="mr-1.5 h-4 w-4" />
+            {runImport.isPending ? "Importing…" : "Import history"}
+          </Button>
+          {[30, 90, 365].map((d) => (
+            <Button key={d} size="sm" variant="outline" onClick={() => {
+              const to = new Date();
+              const from = new Date(Date.now() - d * 86400000);
+              setBf({ from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) });
+            }}>
+              Last {d === 365 ? "1 year" : `${d} days`}
+            </Button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Safe to run more than once — each payment and refund is matched on its Razorpay ID, so nothing is ever duplicated.
+          Import in stretches of up to a year at a time; missing courses and websites are created automatically from payment notes.
+        </p>
+        {!rzp?.keySecretConfigured && (
+          <p className="mt-2 text-xs text-amber-700">Add your Razorpay API keys first — the import needs them to read past transactions.</p>
+        )}
+      </SectionCard>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="Profit calculation rules" subtitle="Gateway fees, tax and default cost">
           <div className="grid gap-3 sm:grid-cols-2">
