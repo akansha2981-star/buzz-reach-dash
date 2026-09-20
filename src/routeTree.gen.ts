@@ -28,6 +28,7 @@ import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
 import { Route as SalesTransactionsRouteImport } from './routes/sales.transactions'
+import { Route as SalesSettingsRouteImport } from './routes/sales.settings'
 import { Route as SalesReportsRouteImport } from './routes/sales.reports'
 import { Route as SalesRefundsRouteImport } from './routes/sales.refunds'
 import { Route as SalesProfitRouteImport } from './routes/sales.profit'
@@ -164,6 +165,11 @@ const SettingsLogsRoute = SettingsLogsRouteImport.update({
 const SalesTransactionsRoute = SalesTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesSettingsRoute = SalesSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => SalesRoute,
 } as any)
 const SalesReportsRoute = SalesReportsRouteImport.update({
@@ -423,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/sales/profit': typeof SalesProfitRoute
   '/sales/refunds': typeof SalesRefundsRoute
   '/sales/reports': typeof SalesReportsRoute
+  '/sales/settings': typeof SalesSettingsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -482,6 +489,7 @@ export interface FileRoutesByTo {
   '/sales/profit': typeof SalesProfitRoute
   '/sales/refunds': typeof SalesRefundsRoute
   '/sales/reports': typeof SalesReportsRoute
+  '/sales/settings': typeof SalesSettingsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -546,6 +554,7 @@ export interface FileRoutesById {
   '/sales/profit': typeof SalesProfitRoute
   '/sales/refunds': typeof SalesRefundsRoute
   '/sales/reports': typeof SalesReportsRoute
+  '/sales/settings': typeof SalesSettingsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/sales/profit'
     | '/sales/refunds'
     | '/sales/reports'
+    | '/sales/settings'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -670,6 +680,7 @@ export interface FileRouteTypes {
     | '/sales/profit'
     | '/sales/refunds'
     | '/sales/reports'
+    | '/sales/settings'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -733,6 +744,7 @@ export interface FileRouteTypes {
     | '/sales/profit'
     | '/sales/refunds'
     | '/sales/reports'
+    | '/sales/settings'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -919,6 +931,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/sales/transactions'
       preLoaderRoute: typeof SalesTransactionsRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/settings': {
+      id: '/sales/settings'
+      path: '/settings'
+      fullPath: '/sales/settings'
+      preLoaderRoute: typeof SalesSettingsRouteImport
       parentRoute: typeof SalesRoute
     }
     '/sales/reports': {
@@ -1293,6 +1312,7 @@ interface SalesRouteChildren {
   SalesProfitRoute: typeof SalesProfitRoute
   SalesRefundsRoute: typeof SalesRefundsRoute
   SalesReportsRoute: typeof SalesReportsRoute
+  SalesSettingsRoute: typeof SalesSettingsRoute
   SalesTransactionsRoute: typeof SalesTransactionsRoute
   SalesIndexRoute: typeof SalesIndexRoute
 }
@@ -1303,6 +1323,7 @@ const SalesRouteChildren: SalesRouteChildren = {
   SalesProfitRoute: SalesProfitRoute,
   SalesRefundsRoute: SalesRefundsRoute,
   SalesReportsRoute: SalesReportsRoute,
+  SalesSettingsRoute: SalesSettingsRoute,
   SalesTransactionsRoute: SalesTransactionsRoute,
   SalesIndexRoute: SalesIndexRoute,
 }
