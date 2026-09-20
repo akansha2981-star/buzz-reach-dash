@@ -19,6 +19,7 @@ import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SalesIndexRouteImport } from './routes/sales.index'
 import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
@@ -113,6 +114,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SalesIndexRoute = SalesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SalesRoute,
 } as any)
 const MeIndexRoute = MeIndexRouteImport.update({
   id: '/',
@@ -345,7 +351,7 @@ export interface FileRoutesByFullPath {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
-  '/sales': typeof SalesRoute
+  '/sales': typeof SalesRouteWithChildren
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/sales/': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -398,7 +405,6 @@ export interface FileRoutesByTo {
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
-  '/sales': typeof SalesRoute
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -436,6 +442,7 @@ export interface FileRoutesByTo {
   '/habits': typeof HabitsIndexRoute
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
+  '/sales': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -455,7 +462,7 @@ export interface FileRoutesById {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
-  '/sales': typeof SalesRoute
+  '/sales': typeof SalesRouteWithChildren
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -493,6 +500,7 @@ export interface FileRoutesById {
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/sales/': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -551,6 +559,7 @@ export interface FileRouteTypes {
     | '/habits/'
     | '/hrms/'
     | '/me/'
+    | '/sales/'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -566,7 +575,6 @@ export interface FileRouteTypes {
     | '/ceo-desk'
     | '/documents'
     | '/meetings'
-    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -604,6 +612,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/hrms'
     | '/me'
+    | '/sales'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/habits/'
     | '/hrms/'
     | '/me/'
+    | '/sales/'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -679,7 +689,7 @@ export interface RootRouteChildren {
   HabitsRoute: typeof HabitsRouteWithChildren
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
-  SalesRoute: typeof SalesRoute
+  SalesRoute: typeof SalesRouteWithChildren
   TasksRoute: typeof TasksRoute
   HrmsAnnouncementsRoute: typeof HrmsAnnouncementsRoute
   HrmsAttendanceRoute: typeof HrmsAttendanceRoute
@@ -775,6 +785,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/sales/': {
+      id: '/sales/'
+      path: '/'
+      fullPath: '/sales/'
+      preLoaderRoute: typeof SalesIndexRouteImport
+      parentRoute: typeof SalesRoute
     }
     '/me/': {
       id: '/me/'
@@ -1156,6 +1173,16 @@ const MeRouteChildren: MeRouteChildren = {
 
 const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
 
+interface SalesRouteChildren {
+  SalesIndexRoute: typeof SalesIndexRoute
+}
+
+const SalesRouteChildren: SalesRouteChildren = {
+  SalesIndexRoute: SalesIndexRoute,
+}
+
+const SalesRouteWithChildren = SalesRoute._addFileChildren(SalesRouteChildren)
+
 interface HrmsEmployeesRouteChildren {
   HrmsEmployeesIdRoute: typeof HrmsEmployeesIdRoute
 }
@@ -1189,7 +1216,7 @@ const rootRouteChildren: RootRouteChildren = {
   HabitsRoute: HabitsRouteWithChildren,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
-  SalesRoute: SalesRoute,
+  SalesRoute: SalesRouteWithChildren,
   TasksRoute: TasksRoute,
   HrmsAnnouncementsRoute: HrmsAnnouncementsRoute,
   HrmsAttendanceRoute: HrmsAttendanceRoute,
