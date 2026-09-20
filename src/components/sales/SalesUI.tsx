@@ -210,10 +210,44 @@ export function KpiCard({
     warning: "text-amber-600",
     danger: "text-destructive",
   }[accent];
+  const barCls = {
+    default: "from-foreground/30",
+    primary: "from-primary",
+    success: "from-emerald-500",
+    warning: "from-amber-500",
+    danger: "from-destructive",
+  }[accent];
+
+  // Brief highlight pulse whenever the underlying number changes (live updates).
+  const [flash, setFlash] = useState(false);
+  const prev = useRef(value);
+  useEffect(() => {
+    if (prev.current !== value) {
+      prev.current = value;
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <Card className="relative overflow-hidden border-border/60 p-4 shadow-sm transition-shadow hover:shadow-md">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className={cn(
+        "relative overflow-hidden border-border/60 p-4 shadow-sm transition-all duration-500 hover:shadow-lg",
+        flash && "ring-1 ring-primary/40 shadow-md",
+      )}>
+        <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r to-transparent opacity-70", barCls)} />
+        {flash && (
+          <motion.span
+            className="pointer-events-none absolute inset-0 bg-primary/5"
+            initial={{ opacity: 0.9 }} animate={{ opacity: 0 }} transition={{ duration: 0.9 }}
+          />
+        )}
         <div className="flex items-start justify-between gap-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
           {Icon && <Icon className="h-4 w-4 text-muted-foreground/70" />}
