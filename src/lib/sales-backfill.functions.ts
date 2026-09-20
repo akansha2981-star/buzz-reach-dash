@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+type PaymentInsert = Database["public"]["Tables"]["sales_payments"]["Insert"];
 
 type AnyRec = Record<string, any>;
 
@@ -132,7 +135,7 @@ export const importRazorpayHistory = createServerFn({ method: "POST" })
     try {
       // ---------------- payments ----------------
       const { items: payments, truncated } = await fetchAll("payments");
-      const rows: (AnyRec & { razorpay_payment_id: string })[] = [];
+      const rows: PaymentInsert[] = [];
       for (const p of payments) {
         const notes: AnyRec = p.notes ?? {};
         const productName = pick(notes, ["course", "course_name", "product", "product_name"]) ?? p.description ?? null;
@@ -174,7 +177,7 @@ export const importRazorpayHistory = createServerFn({ method: "POST" })
           utm_term: pick(notes, ["utm_term"]),
           paid_at: p.created_at ? new Date(p.created_at * 1000).toISOString() : new Date().toISOString(),
           raw: p as AnyRec,
-        });
+        } as PaymentInsert);
       }
 
       let paymentsStored = 0;
