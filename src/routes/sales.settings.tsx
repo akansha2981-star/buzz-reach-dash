@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Copy, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, History, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getRazorpayHealth } from "@/lib/sales-integration.functions";
+import { importRazorpayHistory } from "@/lib/sales-backfill.functions";
 import { inr, useCourses, useSalesSettings, useWebsites, type SalesSettings } from "@/lib/sales";
 import { EmptyState, SectionCard } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,22 @@ function SalesSettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Settings saved"); qc.invalidateQueries({ queryKey: ["sales"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const runHistory = useServerFn(importRazorpayHistory);
+  const [bf, setBf] = useState(() => {
+    const to = new Date();
+    const from = new Date(Date.now() - 30 * 86400000);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  });
+  const runImport = useMutation({
+    mutationFn: () => runHistory({ data: { from: bf.from, to: bf.to } }),
+    onSuccess: (r) => {
+      toast.success(r.paymentsStored > 0 ? r.message : "No transactions found in that date range");
+      if (r.truncated) toast.info("A lot of data in this range — import it in smaller stretches to be sure everything came through.");
+      qc.invalidateQueries({ queryKey: ["sales"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
