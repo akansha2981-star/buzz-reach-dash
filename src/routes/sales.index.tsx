@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
@@ -134,7 +135,16 @@ function OverviewPage() {
 
       {/* Live revenue hero */}
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
+          className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm"
+        >
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl"
+            animate={{ opacity: [0.35, 0.75, 0.35], scale: [1, 1.12, 1] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          />
           <div className="flex items-center gap-2">
             <LiveDot />
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Live revenue today</span>
@@ -148,7 +158,10 @@ function OverviewPage() {
           <p className="mt-3 text-[11px] text-muted-foreground">
             Last transaction: {lastTxn ? new Date(lastTxn.paid_at).toLocaleString() : "—"}
           </p>
-        </div>
+          <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground/80">
+            Test payments excluded · auto refreshing
+          </p>
+        </motion.div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2">
           <KpiCard label="Today's Revenue" value={todayM.netRevenue} format={(n) => inr(n)}
