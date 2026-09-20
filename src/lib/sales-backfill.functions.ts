@@ -132,7 +132,7 @@ export const importRazorpayHistory = createServerFn({ method: "POST" })
     try {
       // ---------------- payments ----------------
       const { items: payments, truncated } = await fetchAll("payments");
-      const rows: AnyRec[] = [];
+      const rows: (AnyRec & { razorpay_payment_id: string })[] = [];
       for (const p of payments) {
         const notes: AnyRec = p.notes ?? {};
         const productName = pick(notes, ["course", "course_name", "product", "product_name"]) ?? p.description ?? null;
