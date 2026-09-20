@@ -293,6 +293,8 @@ export type Filters = {
   websiteId?: string | "all";
   courseId?: string | "all";
   campaign?: string | "all";
+  /** Include payments flagged as test payments (excluded everywhere by default). */
+  includeTest?: boolean;
 };
 
 export type Metrics = {
