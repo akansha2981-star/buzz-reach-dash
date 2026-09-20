@@ -112,5 +112,3 @@ function SalesLayout() {
     </RequireAuth>
   );
 }
-
-export { SALES_KEYS };

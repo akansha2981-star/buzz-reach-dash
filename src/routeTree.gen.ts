@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as SalesRouteImport } from './routes/sales'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as HabitsRouteImport } from './routes/habits'
@@ -66,6 +67,11 @@ import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeetingsRoute = MeetingsRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
+  '/sales': typeof SalesRoute
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
   '/meetings': typeof MeetingsRoute
+  '/sales': typeof SalesRoute
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -447,6 +455,7 @@ export interface FileRoutesById {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
+  '/sales': typeof SalesRoute
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -504,6 +513,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/me'
     | '/meetings'
+    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -556,6 +566,7 @@ export interface FileRouteTypes {
     | '/ceo-desk'
     | '/documents'
     | '/meetings'
+    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/me'
     | '/meetings'
+    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -667,6 +679,7 @@ export interface RootRouteChildren {
   HabitsRoute: typeof HabitsRouteWithChildren
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
+  SalesRoute: typeof SalesRoute
   TasksRoute: typeof TasksRoute
   HrmsAnnouncementsRoute: typeof HrmsAnnouncementsRoute
   HrmsAttendanceRoute: typeof HrmsAttendanceRoute
@@ -698,6 +711,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meetings': {
@@ -1169,6 +1189,7 @@ const rootRouteChildren: RootRouteChildren = {
   HabitsRoute: HabitsRouteWithChildren,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
+  SalesRoute: SalesRoute,
   TasksRoute: TasksRoute,
   HrmsAnnouncementsRoute: HrmsAnnouncementsRoute,
   HrmsAttendanceRoute: HrmsAttendanceRoute,
