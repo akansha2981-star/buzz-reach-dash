@@ -28,6 +28,8 @@ import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
 import { Route as SalesTransactionsRouteImport } from './routes/sales.transactions'
+import { Route as SalesReportsRouteImport } from './routes/sales.reports'
+import { Route as SalesProfitRouteImport } from './routes/sales.profit'
 import { Route as SalesAdSpendRouteImport } from './routes/sales.ad-spend'
 import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
@@ -160,6 +162,16 @@ const SettingsLogsRoute = SettingsLogsRouteImport.update({
 const SalesTransactionsRoute = SalesTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesReportsRoute = SalesReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesProfitRoute = SalesProfitRouteImport.update({
+  id: '/profit',
+  path: '/profit',
   getParentRoute: () => SalesRoute,
 } as any)
 const SalesAdSpendRoute = SalesAdSpendRouteImport.update({
@@ -395,6 +407,8 @@ export interface FileRoutesByFullPath {
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
   '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -450,6 +464,8 @@ export interface FileRoutesByTo {
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
   '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -510,6 +526,8 @@ export interface FileRoutesById {
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
   '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
   '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
@@ -571,6 +589,8 @@ export interface FileRouteTypes {
     | '/outreach/colleges'
     | '/outreach/timeline'
     | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -626,6 +646,8 @@ export interface FileRouteTypes {
     | '/outreach/colleges'
     | '/outreach/timeline'
     | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -685,6 +707,8 @@ export interface FileRouteTypes {
     | '/outreach/colleges'
     | '/outreach/timeline'
     | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
     | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
@@ -871,6 +895,20 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/sales/transactions'
       preLoaderRoute: typeof SalesTransactionsRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/reports': {
+      id: '/sales/reports'
+      path: '/reports'
+      fullPath: '/sales/reports'
+      preLoaderRoute: typeof SalesReportsRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/profit': {
+      id: '/sales/profit'
+      path: '/profit'
+      fullPath: '/sales/profit'
+      preLoaderRoute: typeof SalesProfitRouteImport
       parentRoute: typeof SalesRoute
     }
     '/sales/ad-spend': {
@@ -1213,12 +1251,16 @@ const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
 
 interface SalesRouteChildren {
   SalesAdSpendRoute: typeof SalesAdSpendRoute
+  SalesProfitRoute: typeof SalesProfitRoute
+  SalesReportsRoute: typeof SalesReportsRoute
   SalesTransactionsRoute: typeof SalesTransactionsRoute
   SalesIndexRoute: typeof SalesIndexRoute
 }
 
 const SalesRouteChildren: SalesRouteChildren = {
   SalesAdSpendRoute: SalesAdSpendRoute,
+  SalesProfitRoute: SalesProfitRoute,
+  SalesReportsRoute: SalesReportsRoute,
   SalesTransactionsRoute: SalesTransactionsRoute,
   SalesIndexRoute: SalesIndexRoute,
 }
