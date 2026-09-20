@@ -31,7 +31,23 @@ function SalesLayout() {
   const qc = useQueryClient();
   const [connected, setConnected] = useState(true);
   const [lastSync, setLastSync] = useState<Date>(new Date());
+  const [active, setActive] = useState<string>(JUMPS[0].id);
   const notified = useRef<Set<string>>(new Set());
+
+  // Highlight the section currently in view in the sticky nav.
+  useEffect(() => {
+    const onScroll = () => {
+      let current = JUMPS[0].id;
+      for (const j of JUMPS) {
+        const el = document.getElementById(j.id);
+        if (el && el.getBoundingClientRect().top <= 160) current = j.id;
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const channel = supabase
