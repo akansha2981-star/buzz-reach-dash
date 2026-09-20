@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
@@ -134,7 +135,16 @@ function OverviewPage() {
 
       {/* Live revenue hero */}
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
+          className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm"
+        >
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl"
+            animate={{ opacity: [0.35, 0.75, 0.35], scale: [1, 1.12, 1] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          />
           <div className="flex items-center gap-2">
             <LiveDot />
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Live revenue today</span>
@@ -148,7 +158,10 @@ function OverviewPage() {
           <p className="mt-3 text-[11px] text-muted-foreground">
             Last transaction: {lastTxn ? new Date(lastTxn.paid_at).toLocaleString() : "—"}
           </p>
-        </div>
+          <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground/80">
+            Test payments excluded · auto refreshing
+          </p>
+        </motion.div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2">
           <KpiCard label="Today's Revenue" value={todayM.netRevenue} format={(n) => inr(n)}
@@ -165,7 +178,8 @@ function OverviewPage() {
 
       {/* Scoped KPI grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-        <KpiCard label="Net Revenue" value={scoped.netRevenue} format={(n) => inr(n)} sub="selected range" icon={IndianRupee} />
+        <KpiCard label="Gross Revenue" value={scoped.grossRevenue} format={(n) => inr(n)} sub="selected range" accent="primary" icon={IndianRupee} />
+        <KpiCard label="Net Revenue" value={scoped.netRevenue} format={(n) => inr(n)} sub="after refunds" icon={IndianRupee} />
         <KpiCard label="Ad Spend" value={scoped.adSpend} format={(n) => inr(n)} icon={Megaphone} />
         <KpiCard label="Gross Profit" value={scoped.grossProfit} format={(n) => inr(n)} />
         <KpiCard label="Net Profit" value={scoped.netProfit} format={(n) => inr(n)}
@@ -181,20 +195,41 @@ function OverviewPage() {
       </div>
 
       {/* Targets */}
-      {settings && (settings.daily_revenue_target > 0 || settings.monthly_revenue_target > 0) && (
-        <div className="grid gap-3 md:grid-cols-2">
+      {settings && (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <SectionCard title="Today's targets" subtitle="Daily goals">
             <div className="space-y-3">
               <TargetRow label="Revenue" value={todayM.netRevenue} target={settings.daily_revenue_target} fmt={inr} />
               <TargetRow label="Net profit" value={todayM.netProfit} target={settings.daily_profit_target} fmt={inr} />
               <TargetRow label="Sales" value={todayM.sales} target={settings.daily_sales_target} fmt={(n) => num(n)} />
               <TargetRow label="Ad spend limit" value={todayM.adSpend} target={settings.daily_ad_spend_limit} fmt={inr} invert />
+              {!settings.daily_revenue_target && !settings.daily_profit_target && !settings.daily_sales_target && !settings.daily_ad_spend_limit && (
+                <p className="text-xs text-muted-foreground">Set daily revenue, profit, sales and ad spend goals in Settings to see live progress bars here.</p>
+              )}
             </div>
           </SectionCard>
           <SectionCard title="Monthly target" subtitle="Month to date">
             <div className="space-y-3">
               <TargetRow label="Revenue" value={monthM.netRevenue} target={settings.monthly_revenue_target} fmt={inr} />
               <TargetRow label="Net profit" value={monthM.netProfit} target={settings.monthly_profit_target} fmt={inr} />
+              {!settings.monthly_revenue_target && !settings.monthly_profit_target && (
+                <p className="text-xs text-muted-foreground">Set monthly targets in Settings to track progress here.</p>
+              )}
+            </div>
+          </SectionCard>
+          <SectionCard title="Overall target achieved" subtitle="All time, against total targets">
+            <div className="space-y-3">
+              <TargetRow label="Total sales" value={allM.sales} target={settings.total_sales_target} fmt={(n) => num(n)} />
+              <TargetRow label="Gross revenue" value={allM.grossRevenue} target={settings.total_revenue_target} fmt={inr} />
+              <TargetRow label="Net profit" value={allM.netProfit} target={settings.total_profit_target} fmt={inr} />
+              {!settings.total_sales_target && !settings.total_revenue_target && !settings.total_profit_target && (
+                <p className="text-xs text-muted-foreground">Add total sales, gross revenue and net profit targets in Settings.</p>
+              )}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <Achieved label="Sales" value={num(allM.sales)} />
+              <Achieved label="Gross revenue" value={inr(allM.grossRevenue)} />
+              <Achieved label="Net profit" value={inr(allM.netProfit)} />
             </div>
           </SectionCard>
         </div>
@@ -398,6 +433,15 @@ function SectionAnchor({ id, title }: { id: string; title: string }) {
         <h2 className="font-display text-lg font-semibold sm:text-xl">{title}</h2>
         <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
       </div>
+    </div>
+  );
+}
+
+function Achieved({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label} achieved</p>
+      <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-emerald-600">{value}</p>
     </div>
   );
 }

@@ -41,6 +41,7 @@ export type SalesPayment = {
   utm_term: string | null;
   paid_at: string;
   created_at: string;
+  is_test?: boolean | null;
 };
 
 export type SalesRefund = {
@@ -83,6 +84,9 @@ export type SalesSettings = {
   daily_sales_target: number;
   monthly_revenue_target: number;
   monthly_profit_target: number;
+  total_sales_target: number;
+  total_revenue_target: number;
+  total_profit_target: number;
   expense_categories: string[];
 };
 
@@ -189,6 +193,7 @@ export function useSalesSettings() {
       return (data as unknown as SalesSettings) ?? null;
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -201,6 +206,7 @@ export function useWebsites() {
       return (data ?? []) as unknown as SalesWebsite[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -213,6 +219,7 @@ export function useCourses() {
       return (data ?? []) as unknown as SalesCourse[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -225,6 +232,7 @@ export function useCampaigns() {
       return (data ?? []) as unknown as SalesCampaign[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -238,7 +246,9 @@ export function usePayments() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesPayment[];
     },
-    staleTime: 15_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -251,7 +261,9 @@ export function useRefunds() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesRefund[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -264,7 +276,9 @@ export function useAdSpend() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesAdSpend[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -277,7 +291,9 @@ export function useSalesExpenses() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesExpense[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -289,6 +305,8 @@ export type Filters = {
   websiteId?: string | "all";
   courseId?: string | "all";
   campaign?: string | "all";
+  /** Include payments flagged as test payments (excluded everywhere by default). */
+  includeTest?: boolean;
 };
 
 export type Metrics = {
@@ -327,6 +345,7 @@ export function gatewayFeeFor(amount: number, s: SalesSettings | null | undefine
 
 export function filterPayments(rows: SalesPayment[], f: Filters) {
   return rows.filter((p) => {
+    if (!f.includeTest && p.is_test) return false;
     if (!inRange(p.paid_at, f.from, f.to)) return false;
     if (f.websiteId && f.websiteId !== "all" && p.website_id !== f.websiteId) return false;
     if (f.courseId && f.courseId !== "all" && p.course_id !== f.courseId) return false;

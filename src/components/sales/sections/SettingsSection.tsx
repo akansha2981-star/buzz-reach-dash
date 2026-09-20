@@ -52,6 +52,9 @@ export function SettingsSection() {
         daily_sales_target: Number(form.daily_sales_target) || 0,
         monthly_revenue_target: Number(form.monthly_revenue_target) || 0,
         monthly_profit_target: Number(form.monthly_profit_target) || 0,
+        total_sales_target: Number(form.total_sales_target) || 0,
+        total_revenue_target: Number(form.total_revenue_target) || 0,
+        total_profit_target: Number(form.total_profit_target) || 0,
       }).eq("id", settings.id);
       if (error) throw error;
     },
@@ -210,6 +213,9 @@ export function SettingsSection() {
             <NumField label="Daily sales target" value={form.daily_sales_target} onChange={(v) => setForm((s) => ({ ...s, daily_sales_target: v }))} />
             <NumField label="Monthly revenue target (₹)" value={form.monthly_revenue_target} onChange={(v) => setForm((s) => ({ ...s, monthly_revenue_target: v }))} />
             <NumField label="Monthly profit target (₹)" value={form.monthly_profit_target} onChange={(v) => setForm((s) => ({ ...s, monthly_profit_target: v }))} />
+            <NumField label="Total sales target (overall)" value={form.total_sales_target} onChange={(v) => setForm((s) => ({ ...s, total_sales_target: v }))} />
+            <NumField label="Total gross revenue target (₹)" value={form.total_revenue_target} onChange={(v) => setForm((s) => ({ ...s, total_revenue_target: v }))} />
+            <NumField label="Total net profit target (₹)" value={form.total_profit_target} onChange={(v) => setForm((s) => ({ ...s, total_profit_target: v }))} />
           </div>
         </SectionCard>
       </div>

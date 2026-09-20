@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Download, FlaskConical, Search } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { csvDownload, filterPayments, inr, num, usePayments } from "@/lib/sales";
 import { EmptyState, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
@@ -24,10 +27,26 @@ export function TransactionsSection() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState("recent");
+  const [testMode, setTestMode] = useState<"exclude" | "include" | "only">("exclude");
   const [page, setPage] = useState(1);
+  const qc = useQueryClient();
+
+  const markTest = useMutation({
+    mutationFn: async ({ id, is_test }: { id: string; is_test: boolean }) => {
+      const { error } = await supabase.from("sales_payments").update({ is_test }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.is_test ? "Marked as test payment — excluded from all numbers" : "Restored as a real payment");
+      qc.invalidateQueries({ queryKey: ["sales"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const rows = useMemo(() => {
-    let r = filterPayments(payments, f.filters);
+    let r = filterPayments(payments, { ...f.filters, includeTest: true });
+    if (testMode === "exclude") r = r.filter((p) => !p.is_test);
+    if (testMode === "only") r = r.filter((p) => !!p.is_test);
     if (status !== "all") r = r.filter((p) => p.status === status);
     if (q.trim()) {
       const s = q.trim().toLowerCase();
@@ -42,7 +61,7 @@ export function TransactionsSection() {
       return +new Date(b.paid_at) - +new Date(a.paid_at);
     });
     return r;
-  }, [payments, f.filters, status, q, sort]);
+  }, [payments, f.filters, status, q, sort, testMode]);
 
   const pages = Math.max(1, Math.ceil(rows.length / PAGE));
   const view = rows.slice((page - 1) * PAGE, page * PAGE);
@@ -104,6 +123,14 @@ export function TransactionsSection() {
               <SelectItem value="amount_asc">Amount: low → high</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={testMode} onValueChange={(v) => { setTestMode(v as typeof testMode); setPage(1); }}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="exclude">Real payments only</SelectItem>
+              <SelectItem value="include">Include test payments</SelectItem>
+              <SelectItem value="only">Test payments only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {isLoading ? (
@@ -116,18 +143,19 @@ export function TransactionsSection() {
         ) : (
           <>
             <div className="-mx-4 overflow-x-auto px-4">
-              <table className="w-full min-w-[900px] text-sm">
+              <table className="w-full min-w-[1020px] text-sm">
                 <thead>
                   <tr className="border-b border-border/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
                     <th className="py-2 pr-3">Date &amp; time</th><th className="py-2 pr-3">Course / product</th>
                     <th className="py-2 pr-3">Customer</th><th className="py-2 pr-3">Method</th>
                     <th className="py-2 pr-3">Campaign</th><th className="py-2 pr-3">Status</th>
-                    <th className="py-2 pr-3 text-right">Refund</th><th className="py-2 text-right">Amount</th>
+                    <th className="py-2 pr-3 text-right">Refund</th><th className="py-2 pr-3 text-right">Amount</th>
+                    <th className="py-2 text-right">Test</th>
                   </tr>
                 </thead>
                 <tbody>
                   {view.map((p) => (
-                    <tr key={p.id} className="border-b border-border/40 last:border-0">
+                    <tr key={p.id} className={`border-b border-border/40 transition-colors last:border-0 hover:bg-muted/40 ${p.is_test ? "opacity-60" : ""}`}>
                       <td className="py-2.5 pr-3 whitespace-nowrap text-xs text-muted-foreground">
                         {new Date(p.paid_at).toLocaleString()}
                       </td>
@@ -145,7 +173,19 @@ export function TransactionsSection() {
                       <td className="py-2.5 pr-3 text-right tabular-nums text-xs">
                         {p.refund_amount > 0 ? inr(p.refund_amount) : "—"}
                       </td>
-                      <td className="py-2.5 text-right font-semibold tabular-nums">{inr(p.final_amount)}</td>
+                      <td className="py-2.5 pr-3 text-right font-semibold tabular-nums">{inr(p.final_amount)}</td>
+                      <td className="py-2.5 text-right">
+                        <Button
+                          size="sm"
+                          variant={p.is_test ? "secondary" : "ghost"}
+                          className="h-7 gap-1 px-2 text-[11px]"
+                          disabled={markTest.isPending}
+                          onClick={() => markTest.mutate({ id: p.id, is_test: !p.is_test })}
+                        >
+                          <FlaskConical className="h-3.5 w-3.5" />
+                          {p.is_test ? "Test" : "Mark test"}
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

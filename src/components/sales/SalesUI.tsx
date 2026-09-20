@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, CalendarRange } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CalendarRange, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,19 @@ type FilterState = {
 
 const Ctx = createContext<FilterState | null>(null);
 
+const STORE_KEY = "sales-filters-v1";
+
+type Saved = {
+  range: RangeKey; from: string; to: string;
+  websiteId: string; courseId: string; campaign: string;
+};
+
+function readSaved(): Partial<Saved> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(window.localStorage.getItem(STORE_KEY) || "{}") as Partial<Saved>; }
+  catch { return {}; }
+}
+
 export function SalesFilterProvider({ children }: { children: ReactNode }) {
   const [range, setRange] = useState<RangeKey>("30d");
   const [customFrom, setFrom] = useState(resolveRange("30d").from);
@@ -37,6 +50,28 @@ export function SalesFilterProvider({ children }: { children: ReactNode }) {
   const [websiteId, setWebsiteId] = useState("all");
   const [courseId, setCourseId] = useState("all");
   const [campaign, setCampaign] = useState("all");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore the last used filter selection (after hydration to avoid SSR mismatch).
+  useEffect(() => {
+    const s = readSaved();
+    if (s.range) setRange(s.range);
+    if (s.from) setFrom(s.from);
+    if (s.to) setTo(s.to);
+    if (s.websiteId) setWebsiteId(s.websiteId);
+    if (s.courseId) setCourseId(s.courseId);
+    if (s.campaign) setCampaign(s.campaign);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({
+        range, from: customFrom, to: customTo, websiteId, courseId, campaign,
+      }));
+    } catch { /* storage unavailable */ }
+  }, [hydrated, range, customFrom, customTo, websiteId, courseId, campaign]);
 
   const resolved = useMemo(
     () => (range === "custom" ? { from: customFrom, to: customTo } : resolveRange(range)),
@@ -66,7 +101,7 @@ export function SalesFilterBar({ campaigns = [] }: { campaigns?: string[] }) {
   const { data: courses = [] } = useCourses();
 
   return (
-    <Card className="border-border/60 p-3 shadow-sm">
+    <Card className="border-border/60 bg-background/95 p-3 shadow-sm backdrop-blur">
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-[150px] flex-1">
           <Label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">Date range</Label>
@@ -121,9 +156,14 @@ export function SalesFilterBar({ campaigns = [] }: { campaigns?: string[] }) {
             </Select>
           </div>
         )}
-        <div className="flex items-center gap-1.5 pb-2 text-xs text-muted-foreground">
-          <CalendarRange className="h-3.5 w-3.5" />
-          {f.from} → {f.to}
+        <div className="flex items-center gap-2 pb-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2 py-1">
+            <CalendarRange className="h-3.5 w-3.5" />
+            <span className="tabular-nums">{f.from} → {f.to}</span>
+          </span>
+          <span className="hidden items-center gap-1 text-emerald-600 sm:inline-flex">
+            <Check className="h-3.5 w-3.5" />Saved
+          </span>
         </div>
       </div>
     </Card>
@@ -170,10 +210,44 @@ export function KpiCard({
     warning: "text-amber-600",
     danger: "text-destructive",
   }[accent];
+  const barCls = {
+    default: "from-foreground/30",
+    primary: "from-primary",
+    success: "from-emerald-500",
+    warning: "from-amber-500",
+    danger: "from-destructive",
+  }[accent];
+
+  // Brief highlight pulse whenever the underlying number changes (live updates).
+  const [flash, setFlash] = useState(false);
+  const prev = useRef(value);
+  useEffect(() => {
+    if (prev.current !== value) {
+      prev.current = value;
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <Card className="relative overflow-hidden border-border/60 p-4 shadow-sm transition-shadow hover:shadow-md">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className={cn(
+        "relative overflow-hidden border-border/60 p-4 shadow-sm transition-all duration-500 hover:shadow-lg",
+        flash && "ring-1 ring-primary/40 shadow-md",
+      )}>
+        <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r to-transparent opacity-70", barCls)} />
+        {flash && (
+          <motion.span
+            className="pointer-events-none absolute inset-0 bg-primary/5"
+            initial={{ opacity: 0.9 }} animate={{ opacity: 0 }} transition={{ duration: 0.9 }}
+          />
+        )}
         <div className="flex items-start justify-between gap-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
           {Icon && <Icon className="h-4 w-4 text-muted-foreground/70" />}

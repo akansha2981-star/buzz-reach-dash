@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Plus, Trash2 } from "lucide-react";
+import { Megaphone, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -94,8 +94,12 @@ export function ExpensesSection() {
         title="Other business expenses"
         subtitle="Deducted from net profit alongside ad spend and gateway fees"
         action={
+          <div className="flex flex-wrap items-center gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="#sales-ad-spend"><Megaphone className="mr-1.5 h-4 w-4" />Add ad spend</a>
+          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button size="sm"><Plus className="mr-1.5 h-4 w-4" />Add expense</Button></DialogTrigger>
+            <DialogTrigger asChild><Button size="sm"><Plus className="mr-1.5 h-4 w-4" />Add other expense</Button></DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
               <DialogHeader><DialogTitle>Add expense</DialogTitle></DialogHeader>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -151,6 +155,7 @@ export function ExpensesSection() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         }
       >
         {rows.length === 0 ? <EmptyState title="No expenses in this range" hint="Add software, salaries, hosting and other running costs to get a true net profit." /> : (
