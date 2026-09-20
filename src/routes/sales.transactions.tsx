@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, Search } from "lucide-react";
-import {
-  csvDownload, filterPayments, inr, num, usePayments, useSalesFilters as _unused,
-} from "@/lib/sales";
+import { csvDownload, filterPayments, inr, num, usePayments } from "@/lib/sales";
 import { EmptyState, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
