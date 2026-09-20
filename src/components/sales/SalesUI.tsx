@@ -30,6 +30,19 @@ type FilterState = {
 
 const Ctx = createContext<FilterState | null>(null);
 
+const STORE_KEY = "sales-filters-v1";
+
+type Saved = {
+  range: RangeKey; from: string; to: string;
+  websiteId: string; courseId: string; campaign: string;
+};
+
+function readSaved(): Partial<Saved> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(window.localStorage.getItem(STORE_KEY) || "{}") as Partial<Saved>; }
+  catch { return {}; }
+}
+
 export function SalesFilterProvider({ children }: { children: ReactNode }) {
   const [range, setRange] = useState<RangeKey>("30d");
   const [customFrom, setFrom] = useState(resolveRange("30d").from);
@@ -37,6 +50,28 @@ export function SalesFilterProvider({ children }: { children: ReactNode }) {
   const [websiteId, setWebsiteId] = useState("all");
   const [courseId, setCourseId] = useState("all");
   const [campaign, setCampaign] = useState("all");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore the last used filter selection (after hydration to avoid SSR mismatch).
+  useEffect(() => {
+    const s = readSaved();
+    if (s.range) setRange(s.range);
+    if (s.from) setFrom(s.from);
+    if (s.to) setTo(s.to);
+    if (s.websiteId) setWebsiteId(s.websiteId);
+    if (s.courseId) setCourseId(s.courseId);
+    if (s.campaign) setCampaign(s.campaign);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({
+        range, from: customFrom, to: customTo, websiteId, courseId, campaign,
+      }));
+    } catch { /* storage unavailable */ }
+  }, [hydrated, range, customFrom, customTo, websiteId, courseId, campaign]);
 
   const resolved = useMemo(
     () => (range === "custom" ? { from: customFrom, to: customTo } : resolveRange(range)),
