@@ -2263,6 +2263,548 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_ad_campaigns: {
+        Row: {
+          budget_mode: string
+          campaign_ref: string | null
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          daily_budget: number
+          duration_days: number
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          objective: string | null
+          platform: string
+          start_date: string | null
+          total_budget: number
+          updated_at: string
+          website_id: string | null
+        }
+        Insert: {
+          budget_mode?: string
+          campaign_ref?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_budget?: number
+          duration_days?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          objective?: string | null
+          platform?: string
+          start_date?: string | null
+          total_budget?: number
+          updated_at?: string
+          website_id?: string | null
+        }
+        Update: {
+          budget_mode?: string
+          campaign_ref?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_budget?: number
+          duration_days?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          objective?: string | null
+          platform?: string
+          start_date?: string | null
+          total_budget?: number
+          updated_at?: string
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_ad_campaigns_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "sales_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_ad_campaigns_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "sales_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_ad_spend: {
+        Row: {
+          ad_name: string | null
+          ad_set: string | null
+          amount: number
+          budget: number
+          budget_mode: string
+          campaign_id: string | null
+          campaign_name: string | null
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          duration_days: number
+          end_date: string | null
+          id: string
+          notes: string | null
+          objective: string | null
+          platform: string
+          spend_date: string
+          start_date: string | null
+          updated_at: string
+          website_id: string | null
+        }
+        Insert: {
+          ad_name?: string | null
+          ad_set?: string | null
+          amount?: number
+          budget?: number
+          budget_mode?: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_days?: number
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          objective?: string | null
+          platform?: string
+          spend_date?: string
+          start_date?: string | null
+          updated_at?: string
+          website_id?: string | null
+        }
+        Update: {
+          ad_name?: string | null
+          ad_set?: string | null
+          amount?: number
+          budget?: number
+          budget_mode?: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_days?: number
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          objective?: string | null
+          platform?: string
+          spend_date?: string
+          start_date?: string | null
+          updated_at?: string
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_ad_spend_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sales_ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_ad_spend_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "sales_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_ad_spend_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "sales_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_courses: {
+        Row: {
+          category: string | null
+          code: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          list_price: number
+          name: string
+          unit_cost: number
+          updated_at: string
+          website_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          list_price?: number
+          name: string
+          unit_cost?: number
+          updated_at?: string
+          website_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          list_price?: number
+          name?: string
+          unit_cost?: number
+          updated_at?: string
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_courses_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "sales_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_expenses: {
+        Row: {
+          amount: number
+          category: string
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          spent_on: string
+          title: string
+          updated_at: string
+          website_id: string | null
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          spent_on?: string
+          title: string
+          updated_at?: string
+          website_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          spent_on?: string
+          title?: string
+          updated_at?: string
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_expenses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "sales_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_expenses_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "sales_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_payments: {
+        Row: {
+          amount: number
+          coupon_code: string | null
+          course_id: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount: number
+          final_amount: number
+          gateway_fee: number
+          id: string
+          paid_at: string
+          payment_method: string | null
+          product_name: string | null
+          product_ref: string | null
+          raw: Json | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string
+          refund_amount: number
+          refund_status: string | null
+          status: string
+          tax: number
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          website_id: string | null
+        }
+        Insert: {
+          amount?: number
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
+          final_amount?: number
+          gateway_fee?: number
+          id?: string
+          paid_at?: string
+          payment_method?: string | null
+          product_name?: string | null
+          product_ref?: string | null
+          raw?: Json | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id: string
+          refund_amount?: number
+          refund_status?: string | null
+          status?: string
+          tax?: number
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          amount?: number
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
+          final_amount?: number
+          gateway_fee?: number
+          id?: string
+          paid_at?: string
+          payment_method?: string | null
+          product_name?: string | null
+          product_ref?: string | null
+          raw?: Json | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string
+          refund_amount?: number
+          refund_status?: string | null
+          status?: string
+          tax?: number
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_payments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "sales_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_payments_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "sales_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          is_partial: boolean
+          payment_id: string | null
+          raw: Json | null
+          razorpay_payment_id: string | null
+          razorpay_refund_id: string
+          reason: string | null
+          refunded_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_partial?: boolean
+          payment_id?: string | null
+          raw?: Json | null
+          razorpay_payment_id?: string | null
+          razorpay_refund_id: string
+          reason?: string | null
+          refunded_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_partial?: boolean
+          payment_id?: string | null
+          raw?: Json | null
+          razorpay_payment_id?: string | null
+          razorpay_refund_id?: string
+          reason?: string | null
+          refunded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "sales_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_settings: {
+        Row: {
+          daily_ad_spend_limit: number
+          daily_profit_target: number
+          daily_revenue_target: number
+          daily_sales_target: number
+          default_tax_percent: number
+          default_unit_cost: number
+          expense_categories: string[]
+          gateway_fee_gst_percent: number
+          gateway_fee_percent: number
+          id: string
+          monthly_profit_target: number
+          monthly_revenue_target: number
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          daily_ad_spend_limit?: number
+          daily_profit_target?: number
+          daily_revenue_target?: number
+          daily_sales_target?: number
+          default_tax_percent?: number
+          default_unit_cost?: number
+          expense_categories?: string[]
+          gateway_fee_gst_percent?: number
+          gateway_fee_percent?: number
+          id?: string
+          monthly_profit_target?: number
+          monthly_revenue_target?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          daily_ad_spend_limit?: number
+          daily_profit_target?: number
+          daily_revenue_target?: number
+          daily_sales_target?: number
+          default_tax_percent?: number
+          default_unit_cost?: number
+          expense_categories?: string[]
+          gateway_fee_gst_percent?: number
+          gateway_fee_percent?: number
+          id?: string
+          monthly_profit_target?: number
+          monthly_revenue_target?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales_webhook_logs: {
+        Row: {
+          created_at: string
+          event_type: string | null
+          id: string
+          message: string | null
+          payload: Json | null
+          razorpay_event_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          message?: string | null
+          payload?: Json | null
+          razorpay_event_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          message?: string | null
+          payload?: Json | null
+          razorpay_event_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      sales_websites: {
+        Row: {
+          created_at: string
+          domain: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed_at: string | null
@@ -2330,6 +2872,7 @@ export type Database = {
           can_logs: boolean
           can_meetings: boolean
           can_my_workspace: boolean
+          can_sales_tracker: boolean
           can_stages: boolean
           can_tasks: boolean
           can_timeline: boolean
@@ -2347,6 +2890,7 @@ export type Database = {
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
+          can_sales_tracker?: boolean
           can_stages?: boolean
           can_tasks?: boolean
           can_timeline?: boolean
@@ -2364,6 +2908,7 @@ export type Database = {
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
+          can_sales_tracker?: boolean
           can_stages?: boolean
           can_tasks?: boolean
           can_timeline?: boolean
@@ -2408,6 +2953,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_sales_access: { Args: { _uid: string }; Returns: boolean }
       is_hr_admin: { Args: never; Returns: boolean }
       is_manager_of: { Args: { _employee_id: string }; Returns: boolean }
     }
