@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Copy, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, History, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getRazorpayHealth } from "@/lib/sales-integration.functions";
+import { importRazorpayHistory } from "@/lib/sales-backfill.functions";
 import { inr, useCourses, useSalesSettings, useWebsites, type SalesSettings } from "@/lib/sales";
 import { EmptyState, SectionCard } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,22 @@ function SalesSettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Settings saved"); qc.invalidateQueries({ queryKey: ["sales"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const runHistory = useServerFn(importRazorpayHistory);
+  const [bf, setBf] = useState(() => {
+    const to = new Date();
+    const from = new Date(Date.now() - 30 * 86400000);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  });
+  const runImport = useMutation({
+    mutationFn: () => runHistory({ data: { from: bf.from, to: bf.to } }),
+    onSuccess: (r) => {
+      toast.success(r.paymentsStored > 0 ? r.message : "No transactions found in that date range");
+      if (r.truncated) toast.info("A lot of data in this range — import it in smaller stretches to be sure everything came through.");
+      qc.invalidateQueries({ queryKey: ["sales"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -150,6 +167,39 @@ function SalesSettingsPage() {
             <p className="mt-2">Every webhook is signature-verified and processed once — duplicate deliveries are ignored automatically.</p>
           </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title="Import past sales from Razorpay" subtitle="One-time backfill — pulls historical payments and refunds directly from your Razorpay account">
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <Label className="mb-1 block text-xs text-muted-foreground">From</Label>
+            <Input type="date" value={bf.from} onChange={(e) => setBf((s) => ({ ...s, from: e.target.value }))} className="w-[160px]" />
+          </div>
+          <div>
+            <Label className="mb-1 block text-xs text-muted-foreground">To</Label>
+            <Input type="date" value={bf.to} onChange={(e) => setBf((s) => ({ ...s, to: e.target.value }))} className="w-[160px]" />
+          </div>
+          <Button onClick={() => runImport.mutate()} disabled={runImport.isPending || !rzp?.keySecretConfigured}>
+            <History className="mr-1.5 h-4 w-4" />
+            {runImport.isPending ? "Importing…" : "Import history"}
+          </Button>
+          {[30, 90, 365].map((d) => (
+            <Button key={d} size="sm" variant="outline" onClick={() => {
+              const to = new Date();
+              const from = new Date(Date.now() - d * 86400000);
+              setBf({ from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) });
+            }}>
+              Last {d === 365 ? "1 year" : `${d} days`}
+            </Button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Safe to run more than once — each payment and refund is matched on its Razorpay ID, so nothing is ever duplicated.
+          Import in stretches of up to a year at a time; missing courses and websites are created automatically from payment notes.
+        </p>
+        {!rzp?.keySecretConfigured && (
+          <p className="mt-2 text-xs text-amber-700">Add your Razorpay API keys first — the import needs them to read past transactions.</p>
+        )}
       </SectionCard>
 
       <div className="grid gap-4 lg:grid-cols-2">
