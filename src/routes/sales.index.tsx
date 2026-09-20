@@ -203,6 +203,9 @@ function OverviewPage() {
               <TargetRow label="Net profit" value={todayM.netProfit} target={settings.daily_profit_target} fmt={inr} />
               <TargetRow label="Sales" value={todayM.sales} target={settings.daily_sales_target} fmt={(n) => num(n)} />
               <TargetRow label="Ad spend limit" value={todayM.adSpend} target={settings.daily_ad_spend_limit} fmt={inr} invert />
+              {!settings.daily_revenue_target && !settings.daily_profit_target && !settings.daily_sales_target && !settings.daily_ad_spend_limit && (
+                <p className="text-xs text-muted-foreground">Set daily revenue, profit, sales and ad spend goals in Settings to see live progress bars here.</p>
+              )}
             </div>
           </SectionCard>
           <SectionCard title="Monthly target" subtitle="Month to date">
