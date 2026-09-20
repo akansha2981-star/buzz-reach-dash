@@ -333,6 +333,7 @@ export function gatewayFeeFor(amount: number, s: SalesSettings | null | undefine
 
 export function filterPayments(rows: SalesPayment[], f: Filters) {
   return rows.filter((p) => {
+    if (!f.includeTest && p.is_test) return false;
     if (!inRange(p.paid_at, f.from, f.to)) return false;
     if (f.websiteId && f.websiteId !== "all" && p.website_id !== f.websiteId) return false;
     if (f.courseId && f.courseId !== "all" && p.course_id !== f.courseId) return false;
