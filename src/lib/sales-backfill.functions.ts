@@ -115,17 +115,20 @@ export const importRazorpayHistory = createServerFn({ method: "POST" })
       const key = label.toLowerCase();
       if (courseCache.has(key)) return courseCache.get(key)!;
       let id: string | null = null;
+      let codeTaken = false;
       if (code) {
         const { data: c } = await supabaseAdmin.from("sales_courses").select("id").ilike("code", code).limit(1).maybeSingle();
         id = c?.id ?? null;
+        codeTaken = !!c;
       }
       if (!id && name) {
         const { data: c } = await supabaseAdmin.from("sales_courses").select("id").ilike("name", name).limit(1).maybeSingle();
         id = c?.id ?? null;
       }
       if (!id) {
+        // Only claim the code when no other course already owns it (unique index on lower(code)).
         const { data: created } = await supabaseAdmin.from("sales_courses")
-          .insert({ name: label, code, website_id: websiteId }).select("id").single();
+          .insert({ name: label, code: codeTaken ? null : code, website_id: websiteId }).select("id").single();
         id = created?.id ?? null;
       }
       courseCache.set(key, id);
