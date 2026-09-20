@@ -156,9 +156,14 @@ export function SalesFilterBar({ campaigns = [] }: { campaigns?: string[] }) {
             </Select>
           </div>
         )}
-        <div className="flex items-center gap-1.5 pb-2 text-xs text-muted-foreground">
-          <CalendarRange className="h-3.5 w-3.5" />
-          {f.from} → {f.to}
+        <div className="flex items-center gap-2 pb-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2 py-1">
+            <CalendarRange className="h-3.5 w-3.5" />
+            <span className="tabular-nums">{f.from} → {f.to}</span>
+          </span>
+          <span className="hidden items-center gap-1 text-emerald-600 sm:inline-flex">
+            <Check className="h-3.5 w-3.5" />Saved
+          </span>
         </div>
       </div>
     </Card>
