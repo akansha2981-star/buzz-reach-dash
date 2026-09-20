@@ -7,6 +7,7 @@ const DEFAULT_PERMS: Permissions = {
   can_dashboard: true, can_colleges: false, can_coaching: false,
   can_meetings: false, can_stages: false, can_users: false, can_logs: false,
   can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: false, can_accounts: false,
+  can_sales_tracker: false,
 };
 
 type Ctx = {

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as SalesRouteImport } from './routes/sales'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as HabitsRouteImport } from './routes/habits'
@@ -18,6 +19,7 @@ import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SalesIndexRouteImport } from './routes/sales.index'
 import { Route as MeIndexRouteImport } from './routes/me.index'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
@@ -25,6 +27,10 @@ import { Route as AccountsIndexRouteImport } from './routes/accounts.index'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
+import { Route as SalesTransactionsRouteImport } from './routes/sales.transactions'
+import { Route as SalesReportsRouteImport } from './routes/sales.reports'
+import { Route as SalesProfitRouteImport } from './routes/sales.profit'
+import { Route as SalesAdSpendRouteImport } from './routes/sales.ad-spend'
 import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline'
 import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
 import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
@@ -60,11 +66,17 @@ import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
 import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
 import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
 import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeetingsRoute = MeetingsRouteImport.update({
@@ -107,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SalesIndexRoute = SalesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SalesRoute,
+} as any)
 const MeIndexRoute = MeIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -141,6 +158,26 @@ const SettingsLogsRoute = SettingsLogsRouteImport.update({
   id: '/settings/logs',
   path: '/settings/logs',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SalesTransactionsRoute = SalesTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesReportsRoute = SalesReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesProfitRoute = SalesProfitRouteImport.update({
+  id: '/profit',
+  path: '/profit',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SalesAdSpendRoute = SalesAdSpendRouteImport.update({
+  id: '/ad-spend',
+  path: '/ad-spend',
+  getParentRoute: () => SalesRoute,
 } as any)
 const OutreachTimelineRoute = OutreachTimelineRouteImport.update({
   id: '/outreach/timeline',
@@ -317,6 +354,12 @@ const HrmsAdminAnalyticsRoute = HrmsAdminAnalyticsRouteImport.update({
   path: '/hrms/admin/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay-webhook',
+    path: '/api/public/razorpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   id: '/api/public/bootstrap-admin',
   path: '/api/public/bootstrap-admin',
@@ -332,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
+  '/sales': typeof SalesRouteWithChildren
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -362,6 +406,10 @@ export interface FileRoutesByFullPath {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
+  '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
+  '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -369,7 +417,9 @@ export interface FileRoutesByFullPath {
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/sales/': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -413,6 +463,10 @@ export interface FileRoutesByTo {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
+  '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
+  '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -420,7 +474,9 @@ export interface FileRoutesByTo {
   '/habits': typeof HabitsIndexRoute
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
+  '/sales': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -438,6 +494,7 @@ export interface FileRoutesById {
   '/habits': typeof HabitsRouteWithChildren
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
+  '/sales': typeof SalesRouteWithChildren
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
   '/accounts/clients': typeof AccountsClientsRoute
@@ -468,6 +525,10 @@ export interface FileRoutesById {
   '/outreach/coaching': typeof OutreachCoachingRoute
   '/outreach/colleges': typeof OutreachCollegesRoute
   '/outreach/timeline': typeof OutreachTimelineRoute
+  '/sales/ad-spend': typeof SalesAdSpendRoute
+  '/sales/profit': typeof SalesProfitRoute
+  '/sales/reports': typeof SalesReportsRoute
+  '/sales/transactions': typeof SalesTransactionsRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/settings/stages': typeof SettingsStagesRoute
   '/settings/users': typeof SettingsUsersRoute
@@ -475,7 +536,9 @@ export interface FileRoutesById {
   '/habits/': typeof HabitsIndexRoute
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/sales/': typeof SalesIndexRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
   '/hrms/admin/attendance': typeof HrmsAdminAttendanceRoute
   '/hrms/admin/audit': typeof HrmsAdminAuditRoute
@@ -494,6 +557,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/me'
     | '/meetings'
+    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -524,6 +588,10 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/outreach/timeline'
+    | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
+    | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -531,7 +599,9 @@ export interface FileRouteTypes {
     | '/habits/'
     | '/hrms/'
     | '/me/'
+    | '/sales/'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -575,6 +645,10 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/outreach/timeline'
+    | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
+    | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -582,7 +656,9 @@ export interface FileRouteTypes {
     | '/habits'
     | '/hrms'
     | '/me'
+    | '/sales'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -599,6 +675,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/me'
     | '/meetings'
+    | '/sales'
     | '/tasks'
     | '/accounts/bank-accounts'
     | '/accounts/clients'
@@ -629,6 +706,10 @@ export interface FileRouteTypes {
     | '/outreach/coaching'
     | '/outreach/colleges'
     | '/outreach/timeline'
+    | '/sales/ad-spend'
+    | '/sales/profit'
+    | '/sales/reports'
+    | '/sales/transactions'
     | '/settings/logs'
     | '/settings/stages'
     | '/settings/users'
@@ -636,7 +717,9 @@ export interface FileRouteTypes {
     | '/habits/'
     | '/hrms/'
     | '/me/'
+    | '/sales/'
     | '/api/public/bootstrap-admin'
+    | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
     | '/hrms/admin/attendance'
     | '/hrms/admin/audit'
@@ -654,6 +737,7 @@ export interface RootRouteChildren {
   HabitsRoute: typeof HabitsRouteWithChildren
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
+  SalesRoute: typeof SalesRouteWithChildren
   TasksRoute: typeof TasksRoute
   HrmsAnnouncementsRoute: typeof HrmsAnnouncementsRoute
   HrmsAttendanceRoute: typeof HrmsAttendanceRoute
@@ -671,6 +755,7 @@ export interface RootRouteChildren {
   SettingsUsersRoute: typeof SettingsUsersRoute
   HrmsIndexRoute: typeof HrmsIndexRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   HrmsAdminAnalyticsRoute: typeof HrmsAdminAnalyticsRoute
   HrmsAdminAttendanceRoute: typeof HrmsAdminAttendanceRoute
   HrmsAdminAuditRoute: typeof HrmsAdminAuditRoute
@@ -684,6 +769,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meetings': {
@@ -742,6 +834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sales/': {
+      id: '/sales/'
+      path: '/'
+      fullPath: '/sales/'
+      preLoaderRoute: typeof SalesIndexRouteImport
+      parentRoute: typeof SalesRoute
+    }
     '/me/': {
       id: '/me/'
       path: '/'
@@ -790,6 +889,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/logs'
       preLoaderRoute: typeof SettingsLogsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/sales/transactions': {
+      id: '/sales/transactions'
+      path: '/transactions'
+      fullPath: '/sales/transactions'
+      preLoaderRoute: typeof SalesTransactionsRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/reports': {
+      id: '/sales/reports'
+      path: '/reports'
+      fullPath: '/sales/reports'
+      preLoaderRoute: typeof SalesReportsRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/profit': {
+      id: '/sales/profit'
+      path: '/profit'
+      fullPath: '/sales/profit'
+      preLoaderRoute: typeof SalesProfitRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/sales/ad-spend': {
+      id: '/sales/ad-spend'
+      path: '/ad-spend'
+      fullPath: '/sales/ad-spend'
+      preLoaderRoute: typeof SalesAdSpendRouteImport
+      parentRoute: typeof SalesRoute
     }
     '/outreach/timeline': {
       id: '/outreach/timeline'
@@ -1036,6 +1163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HrmsAdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/razorpay-webhook': {
+      id: '/api/public/razorpay-webhook'
+      path: '/api/public/razorpay-webhook'
+      fullPath: '/api/public/razorpay-webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bootstrap-admin': {
       id: '/api/public/bootstrap-admin'
       path: '/api/public/bootstrap-admin'
@@ -1115,6 +1249,24 @@ const MeRouteChildren: MeRouteChildren = {
 
 const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
 
+interface SalesRouteChildren {
+  SalesAdSpendRoute: typeof SalesAdSpendRoute
+  SalesProfitRoute: typeof SalesProfitRoute
+  SalesReportsRoute: typeof SalesReportsRoute
+  SalesTransactionsRoute: typeof SalesTransactionsRoute
+  SalesIndexRoute: typeof SalesIndexRoute
+}
+
+const SalesRouteChildren: SalesRouteChildren = {
+  SalesAdSpendRoute: SalesAdSpendRoute,
+  SalesProfitRoute: SalesProfitRoute,
+  SalesReportsRoute: SalesReportsRoute,
+  SalesTransactionsRoute: SalesTransactionsRoute,
+  SalesIndexRoute: SalesIndexRoute,
+}
+
+const SalesRouteWithChildren = SalesRoute._addFileChildren(SalesRouteChildren)
+
 interface HrmsEmployeesRouteChildren {
   HrmsEmployeesIdRoute: typeof HrmsEmployeesIdRoute
 }
@@ -1148,6 +1300,7 @@ const rootRouteChildren: RootRouteChildren = {
   HabitsRoute: HabitsRouteWithChildren,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
+  SalesRoute: SalesRouteWithChildren,
   TasksRoute: TasksRoute,
   HrmsAnnouncementsRoute: HrmsAnnouncementsRoute,
   HrmsAttendanceRoute: HrmsAttendanceRoute,
@@ -1165,6 +1318,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsUsersRoute: SettingsUsersRoute,
   HrmsIndexRoute: HrmsIndexRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   HrmsAdminAnalyticsRoute: HrmsAdminAnalyticsRoute,
   HrmsAdminAttendanceRoute: HrmsAdminAttendanceRoute,
   HrmsAdminAuditRoute: HrmsAdminAuditRoute,
