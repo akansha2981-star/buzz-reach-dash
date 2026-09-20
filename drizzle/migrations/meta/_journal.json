@@ -22,6 +22,13 @@
       "when": 1789932665252,
       "tag": "0002_sales_test_payments_and_overall_targets",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789932890858,
+      "tag": "0003_sales_realtime_adspend_expenses",
+      "breakpoints": true
     }
   ]
 }
