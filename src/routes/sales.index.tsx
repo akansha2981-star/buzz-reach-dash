@@ -165,7 +165,8 @@ function OverviewPage() {
 
       {/* Scoped KPI grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-        <KpiCard label="Net Revenue" value={scoped.netRevenue} format={(n) => inr(n)} sub="selected range" icon={IndianRupee} />
+        <KpiCard label="Gross Revenue" value={scoped.grossRevenue} format={(n) => inr(n)} sub="selected range" accent="primary" icon={IndianRupee} />
+        <KpiCard label="Net Revenue" value={scoped.netRevenue} format={(n) => inr(n)} sub="after refunds" icon={IndianRupee} />
         <KpiCard label="Ad Spend" value={scoped.adSpend} format={(n) => inr(n)} icon={Megaphone} />
         <KpiCard label="Gross Profit" value={scoped.grossProfit} format={(n) => inr(n)} />
         <KpiCard label="Net Profit" value={scoped.netProfit} format={(n) => inr(n)}
@@ -181,8 +182,8 @@ function OverviewPage() {
       </div>
 
       {/* Targets */}
-      {settings && (settings.daily_revenue_target > 0 || settings.monthly_revenue_target > 0) && (
-        <div className="grid gap-3 md:grid-cols-2">
+      {settings && (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <SectionCard title="Today's targets" subtitle="Daily goals">
             <div className="space-y-3">
               <TargetRow label="Revenue" value={todayM.netRevenue} target={settings.daily_revenue_target} fmt={inr} />
@@ -195,6 +196,24 @@ function OverviewPage() {
             <div className="space-y-3">
               <TargetRow label="Revenue" value={monthM.netRevenue} target={settings.monthly_revenue_target} fmt={inr} />
               <TargetRow label="Net profit" value={monthM.netProfit} target={settings.monthly_profit_target} fmt={inr} />
+              {!settings.monthly_revenue_target && !settings.monthly_profit_target && (
+                <p className="text-xs text-muted-foreground">Set monthly targets in Settings to track progress here.</p>
+              )}
+            </div>
+          </SectionCard>
+          <SectionCard title="Overall target achieved" subtitle="All time, against total targets">
+            <div className="space-y-3">
+              <TargetRow label="Total sales" value={allM.sales} target={settings.total_sales_target} fmt={(n) => num(n)} />
+              <TargetRow label="Gross revenue" value={allM.grossRevenue} target={settings.total_revenue_target} fmt={inr} />
+              <TargetRow label="Net profit" value={allM.netProfit} target={settings.total_profit_target} fmt={inr} />
+              {!settings.total_sales_target && !settings.total_revenue_target && !settings.total_profit_target && (
+                <p className="text-xs text-muted-foreground">Add total sales, gross revenue and net profit targets in Settings.</p>
+              )}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <Achieved label="Sales" value={num(allM.sales)} />
+              <Achieved label="Gross revenue" value={inr(allM.grossRevenue)} />
+              <Achieved label="Net profit" value={inr(allM.netProfit)} />
             </div>
           </SectionCard>
         </div>
@@ -398,6 +417,15 @@ function SectionAnchor({ id, title }: { id: string; title: string }) {
         <h2 className="font-display text-lg font-semibold sm:text-xl">{title}</h2>
         <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
       </div>
+    </div>
+  );
+}
+
+function Achieved({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label} achieved</p>
+      <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-emerald-600">{value}</p>
     </div>
   );
 }
