@@ -101,7 +101,7 @@ export function SalesFilterBar({ campaigns = [] }: { campaigns?: string[] }) {
   const { data: courses = [] } = useCourses();
 
   return (
-    <Card className="border-border/60 p-3 shadow-sm">
+    <Card className="border-border/60 bg-background/95 p-3 shadow-sm backdrop-blur">
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-[150px] flex-1">
           <Label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">Date range</Label>
