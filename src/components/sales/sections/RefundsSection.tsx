@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Download } from "lucide-react";
 import {
@@ -10,21 +9,8 @@ import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } fro
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/sales/refunds")({
-  component: RefundsPage,
-  head: () => ({
-    meta: [
-      { title: "Refunds · Live Sales Tracker" },
-      { name: "description", content: "Refund volume, refund rate and revenue adjusted for refunds." },
-      { property: "og:title", content: "Refunds" },
-      { property: "og:description", content: "Refund volume, refund rate and revenue adjusted for refunds." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
-function RefundsPage() {
+export function RefundsSection() {
   const f = useSalesFilters();
   const { data: refunds = [] } = useRefunds();
   const { data: payments = [] } = usePayments();

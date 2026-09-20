@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Download } from "lucide-react";
 import {
@@ -10,21 +9,8 @@ import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } fro
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/sales/reports")({
-  component: ReportsPage,
-  head: () => ({
-    meta: [
-      { title: "Daily & Monthly Reports · Live Sales Tracker" },
-      { name: "description", content: "Day-by-day and month-by-month revenue, ad spend and profit reporting." },
-      { property: "og:title", content: "Sales Reports" },
-      { property: "og:description", content: "Day-by-day and month-by-month revenue, ad spend and profit reporting." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
-function ReportsPage() {
+export function ReportsSection() {
   const f = useSalesFilters();
   const [tab, setTab] = useState<"daily" | "monthly" | "calendar">("daily");
   const { data: payments = [] } = usePayments();

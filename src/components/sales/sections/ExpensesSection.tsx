@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Plus, Trash2 } from "lucide-react";
@@ -16,23 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/sales/expenses")({
-  component: ExpensesPage,
-  head: () => ({
-    meta: [
-      { title: "Other Expenses · Live Sales Tracker" },
-      { name: "description", content: "Operational business expenses that feed into the net profit calculation." },
-      { property: "og:title", content: "Other Business Expenses" },
-      { property: "og:description", content: "Operational business expenses that feed into the net profit calculation." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
 const PIE = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#14b8a6", "#ef4444", "#8b5cf6", "#0ea5e9", "#84cc16"];
 
-function ExpensesPage() {
+export function ExpensesSection() {
   const f = useSalesFilters();
   const qc = useQueryClient();
   const { data: expenses = [] } = useSalesExpenses();
