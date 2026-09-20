@@ -68,36 +68,40 @@ function SalesLayout() {
       <AppShell title="Live Sales Tracker">
         <SalesFilterProvider>
           <div className="mx-auto w-full max-w-7xl space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-display text-xl font-semibold sm:text-2xl">Live Business Performance</h1>
-                  {connected ? <LiveDot /> : (
-                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600">
-                      Connection interrupted
-                    </span>
-                  )}
+            <div className="sticky top-0 z-30 -mx-2 space-y-2 border-b border-border/50 bg-background/85 px-2 pb-2 pt-1 backdrop-blur-xl">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display text-xl font-semibold sm:text-2xl">Live Business Performance</h1>
+                    {connected ? <LiveDot /> : (
+                      <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600">
+                        Connection interrupted
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {connected ? "Last updated" : "Last synced"}: {lastSync.toLocaleTimeString()}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {connected ? "Last updated" : "Last synced"}: {lastSync.toLocaleTimeString()}
-                </p>
+                <Button variant="outline" size="sm" onClick={retry}>
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                  {connected ? "Refresh" : "Retry connection"}
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={retry}>
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                {connected ? "Refresh" : "Retry connection"}
-              </Button>
-            </div>
 
-            <nav className="flex gap-1.5 overflow-x-auto rounded-2xl border border-border/60 bg-background/80 p-1.5 shadow-sm backdrop-blur-md">
-              {JUMPS.map((j) => (
-                <a key={j.id} href={`#${j.id}`} className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all",
-                  "hover:bg-muted hover:text-foreground",
-                )}>
-                  <j.icon className="h-3.5 w-3.5" /><span>{j.label}</span>
-                </a>
-              ))}
-            </nav>
+              <nav className="flex gap-1.5 overflow-x-auto rounded-2xl border border-border/60 bg-background/80 p-1.5 shadow-sm">
+                {JUMPS.map((j) => (
+                  <a key={j.id} href={`#${j.id}`} className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all",
+                    active === j.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}>
+                    <j.icon className="h-3.5 w-3.5" /><span>{j.label}</span>
+                  </a>
+                ))}
+              </nav>
+            </div>
 
             <Outlet />
           </div>
