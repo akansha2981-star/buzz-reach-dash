@@ -41,6 +41,7 @@ export type SalesPayment = {
   utm_term: string | null;
   paid_at: string;
   created_at: string;
+  is_test?: boolean | null;
 };
 
 export type SalesRefund = {
@@ -83,6 +84,9 @@ export type SalesSettings = {
   daily_sales_target: number;
   monthly_revenue_target: number;
   monthly_profit_target: number;
+  total_sales_target: number;
+  total_revenue_target: number;
+  total_profit_target: number;
   expense_categories: string[];
 };
 
