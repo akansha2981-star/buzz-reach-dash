@@ -69,6 +69,14 @@ function SalesLayout() {
         qc.invalidateQueries({ queryKey: ["sales"] });
         setLastSync(new Date());
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "sales_ad_spend" }, () => {
+        qc.invalidateQueries({ queryKey: ["sales"] });
+        setLastSync(new Date());
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "sales_expenses" }, () => {
+        qc.invalidateQueries({ queryKey: ["sales"] });
+        setLastSync(new Date());
+      })
       .subscribe((status) => setConnected(status === "SUBSCRIBED"));
     return () => { supabase.removeChannel(channel); };
   }, [qc]);
