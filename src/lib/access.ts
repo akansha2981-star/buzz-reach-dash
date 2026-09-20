@@ -14,12 +14,14 @@ export type Permissions = {
   can_ceo_desk: boolean;
   can_timeline: boolean;
   can_accounts: boolean;
+  can_sales_tracker: boolean;
 };
 
 export const ADMIN_PERMS: Permissions = {
   can_dashboard: true, can_colleges: true, can_coaching: true,
   can_meetings: true, can_stages: true, can_users: true, can_logs: true,
   can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true, can_accounts: true,
+  can_sales_tracker: true,
 };
 
 export async function fetchMyPermissions(userId: string): Promise<Permissions> {
@@ -29,6 +31,7 @@ export async function fetchMyPermissions(userId: string): Promise<Permissions> {
       can_dashboard: true, can_colleges: true, can_coaching: true, can_meetings: true,
       can_stages: false, can_users: false, can_logs: false,
       can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true, can_accounts: false,
+      can_sales_tracker: false,
     };
   }
   return data as Permissions;
