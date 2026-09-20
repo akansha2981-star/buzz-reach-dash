@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, Copy, History, Plus, Trash2 } from "lucide-react";
@@ -14,21 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/sales/settings")({
-  component: SalesSettingsPage,
-  head: () => ({
-    meta: [
-      { title: "Sales Tracker Settings · Live Sales Tracker" },
-      { name: "description", content: "Configure Razorpay, websites, course costs, gateway fees and business targets." },
-      { property: "og:title", content: "Sales Tracker Settings" },
-      { property: "og:description", content: "Configure Razorpay, websites, course costs, gateway fees and business targets." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
-function SalesSettingsPage() {
+export function SettingsSection() {
   const qc = useQueryClient();
   const { data: settings } = useSalesSettings();
   const { data: websites = [] } = useWebsites();

@@ -1,26 +1,12 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { Download, Search } from "lucide-react";
 import { csvDownload, filterPayments, inr, num, usePayments } from "@/lib/sales";
-import { EmptyState, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const Route = createFileRoute("/sales/transactions")({
-  component: TransactionsPage,
-  head: () => ({
-    meta: [
-      { title: "Live Transactions · Live Sales Tracker" },
-      { name: "description", content: "Real-time feed of every Razorpay payment, refund and failed attempt." },
-      { property: "og:title", content: "Live Transactions" },
-      { property: "og:description", content: "Real-time feed of every Razorpay payment, refund and failed attempt." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
 const STATUS_LABEL: Record<string, string> = {
   captured: "Successful",
@@ -32,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const PAGE = 25;
 
-function TransactionsPage() {
+export function TransactionsSection() {
   const f = useSalesFilters();
   const { data: payments = [], isLoading } = usePayments();
   const [q, setQ] = useState("");
@@ -83,7 +69,6 @@ function TransactionsPage() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
       <SectionCard
         title="Live transactions"
         subtitle={`${num(rows.length)} transactions in range`}

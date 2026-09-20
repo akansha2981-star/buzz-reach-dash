@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -11,7 +10,7 @@ import {
   AD_PLATFORMS, campaignPacing, filterAdSpend, inr, num, resolveRange, useAdSpend,
   useCampaigns, useCourses, useWebsites, ymd, type SalesAdSpend,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, ProgressBar, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, ProgressBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,19 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/sales/ad-spend")({
-  component: AdSpendPage,
-  head: () => ({
-    meta: [
-      { title: "Ad Spend · Live Sales Tracker" },
-      { name: "description", content: "Track advertising budgets, daily pacing and campaign spend across platforms." },
-      { property: "og:title", content: "Ad Spend Tracker" },
-      { property: "og:description", content: "Track advertising budgets, daily pacing and campaign spend across platforms." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
 type Form = {
   spend_date: string; platform: string; campaign_name: string; campaign_ref: string;
@@ -47,7 +33,7 @@ const emptyForm = (): Form => ({
   start_date: ymd(new Date()), end_date: "", notes: "",
 });
 
-function AdSpendPage() {
+export function AdSpendSection() {
   const f = useSalesFilters();
   const qc = useQueryClient();
   const { data: spend = [] } = useAdSpend();
@@ -147,7 +133,6 @@ function AdSpendPage() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Today's ad spend" value={sum(filterAdSpend(spend, { ...f.filters, from: today, to: today }))} format={(n) => inr(n)} accent="primary" />

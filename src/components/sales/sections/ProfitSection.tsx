@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -8,25 +7,12 @@ import {
   buildDaily, computeMetrics, groupMetricsBy, inr, num, pct, useAdSpend, useCourses,
   usePayments, useSalesExpenses, useSalesSettings,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 
-export const Route = createFileRoute("/sales/profit")({
-  component: ProfitPage,
-  head: () => ({
-    meta: [
-      { title: "Profit Analytics · Live Sales Tracker" },
-      { name: "description", content: "Gross and net profit breakdown by course, campaign and day." },
-      { property: "og:title", content: "Profit Analytics" },
-      { property: "og:description", content: "Gross and net profit breakdown by course, campaign and day." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
 const PIE = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#14b8a6", "#ef4444"];
 
-function ProfitPage() {
+export function ProfitSection() {
   const f = useSalesFilters();
   const { data: payments = [] } = usePayments();
   const { data: adSpend = [] } = useAdSpend();
@@ -66,7 +52,6 @@ function ProfitPage() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
         <KpiCard label="Gross revenue" value={m.grossRevenue} format={(n) => inr(n)} />

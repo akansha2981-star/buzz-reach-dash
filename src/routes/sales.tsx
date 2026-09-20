@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -16,19 +16,18 @@ import { LiveDot, SalesFilterProvider } from "@/components/sales/SalesUI";
 
 export const Route = createFileRoute("/sales")({ component: SalesLayout });
 
-const TABS = [
-  { to: "/sales", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/sales/transactions", label: "Live Transactions", icon: Activity },
-  { to: "/sales/ad-spend", label: "Ad Spend", icon: Megaphone },
-  { to: "/sales/profit", label: "Profit Analytics", icon: Gauge },
-  { to: "/sales/reports", label: "Reports", icon: BarChart3 },
-  { to: "/sales/expenses", label: "Expenses", icon: Receipt },
-  { to: "/sales/refunds", label: "Refunds", icon: Wallet },
-  { to: "/sales/settings", label: "Settings", icon: SettingsIcon },
+const JUMPS = [
+  { id: "sales-overview", label: "Overview", icon: LayoutDashboard },
+  { id: "sales-transactions", label: "Transactions", icon: Activity },
+  { id: "sales-ad-spend", label: "Ad Spend", icon: Megaphone },
+  { id: "sales-profit", label: "Profit", icon: Gauge },
+  { id: "sales-reports", label: "Reports", icon: BarChart3 },
+  { id: "sales-expenses", label: "Expenses", icon: Receipt },
+  { id: "sales-refunds", label: "Refunds", icon: Wallet },
+  { id: "sales-settings", label: "Settings", icon: SettingsIcon },
 ];
 
 function SalesLayout() {
-  const path = useRouterState({ select: (s) => s.location.pathname });
   const qc = useQueryClient();
   const [connected, setConnected] = useState(true);
   const [lastSync, setLastSync] = useState<Date>(new Date());
@@ -89,20 +88,15 @@ function SalesLayout() {
               </Button>
             </div>
 
-            <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-border/60 bg-background/80 p-1 shadow-sm backdrop-blur-md">
-              {TABS.map((t) => {
-                const active = t.exact ? path === t.to : path.startsWith(t.to);
-                return (
-                  <Link key={t.to} to={t.to} className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all",
-                    active
-                      ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}>
-                    <t.icon className="h-4 w-4" /><span>{t.label}</span>
-                  </Link>
-                );
-              })}
+            <nav className="flex gap-1.5 overflow-x-auto rounded-2xl border border-border/60 bg-background/80 p-1.5 shadow-sm backdrop-blur-md">
+              {JUMPS.map((j) => (
+                <a key={j.id} href={`#${j.id}`} className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all",
+                  "hover:bg-muted hover:text-foreground",
+                )}>
+                  <j.icon className="h-3.5 w-3.5" /><span>{j.label}</span>
+                </a>
+              ))}
             </nav>
 
             <Outlet />

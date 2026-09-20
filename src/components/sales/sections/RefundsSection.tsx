@@ -1,30 +1,16 @@
 import { useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Download } from "lucide-react";
 import {
   buildDaily, computeMetrics, csvDownload, inr, num, pct, useAdSpend, useCourses,
   usePayments, useRefunds, useSalesExpenses, useSalesSettings,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/sales/refunds")({
-  component: RefundsPage,
-  head: () => ({
-    meta: [
-      { title: "Refunds · Live Sales Tracker" },
-      { name: "description", content: "Refund volume, refund rate and revenue adjusted for refunds." },
-      { property: "og:title", content: "Refunds" },
-      { property: "og:description", content: "Refund volume, refund rate and revenue adjusted for refunds." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
 
-function RefundsPage() {
+export function RefundsSection() {
   const f = useSalesFilters();
   const { data: refunds = [] } = useRefunds();
   const { data: payments = [] } = usePayments();
@@ -60,7 +46,6 @@ function RefundsPage() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard label="Total refunds" value={rows.length} format={(n) => num(n)} />
