@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, CalendarRange, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
