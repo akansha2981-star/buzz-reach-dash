@@ -2550,6 +2550,7 @@ export type Database = {
           final_amount: number
           gateway_fee: number
           id: string
+          is_test: boolean
           paid_at: string
           payment_method: string | null
           product_name: string | null
@@ -2582,6 +2583,7 @@ export type Database = {
           final_amount?: number
           gateway_fee?: number
           id?: string
+          is_test?: boolean
           paid_at?: string
           payment_method?: string | null
           product_name?: string | null
@@ -2614,6 +2616,7 @@ export type Database = {
           final_amount?: number
           gateway_fee?: number
           id?: string
+          is_test?: boolean
           paid_at?: string
           payment_method?: string | null
           product_name?: string | null
@@ -2712,6 +2715,9 @@ export type Database = {
           monthly_profit_target: number
           monthly_revenue_target: number
           singleton: boolean
+          total_profit_target: number
+          total_revenue_target: number
+          total_sales_target: number
           updated_at: string
         }
         Insert: {
@@ -2728,6 +2734,9 @@ export type Database = {
           monthly_profit_target?: number
           monthly_revenue_target?: number
           singleton?: boolean
+          total_profit_target?: number
+          total_revenue_target?: number
+          total_sales_target?: number
           updated_at?: string
         }
         Update: {
@@ -2744,6 +2753,9 @@ export type Database = {
           monthly_profit_target?: number
           monthly_revenue_target?: number
           singleton?: boolean
+          total_profit_target?: number
+          total_revenue_target?: number
+          total_sales_target?: number
           updated_at?: string
         }
         Relationships: []
