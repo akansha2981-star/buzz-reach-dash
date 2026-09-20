@@ -8,6 +8,13 @@
       "when": 1789930526796,
       "tag": "0000_create_live_sales_tracker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789932008364,
+      "tag": "0001_fix_hr_employees_select_recursion",
+      "breakpoints": true
     }
   ]
 }
