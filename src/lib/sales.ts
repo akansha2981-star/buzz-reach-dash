@@ -193,6 +193,7 @@ export function useSalesSettings() {
       return (data as unknown as SalesSettings) ?? null;
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -205,6 +206,7 @@ export function useWebsites() {
       return (data ?? []) as unknown as SalesWebsite[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -217,6 +219,7 @@ export function useCourses() {
       return (data ?? []) as unknown as SalesCourse[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -229,6 +232,7 @@ export function useCampaigns() {
       return (data ?? []) as unknown as SalesCampaign[];
     },
     staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 }
 
@@ -242,7 +246,9 @@ export function usePayments() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesPayment[];
     },
-    staleTime: 15_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -255,7 +261,9 @@ export function useRefunds() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesRefund[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -268,7 +276,9 @@ export function useAdSpend() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesAdSpend[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -281,7 +291,9 @@ export function useSalesExpenses() {
       if (error) throw error;
       return (data ?? []) as unknown as SalesExpense[];
     },
-    staleTime: 30_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
