@@ -7,7 +7,7 @@ import {
   buildDaily, computeMetrics, groupMetricsBy, inr, num, pct, useAdSpend, useCourses,
   usePayments, useSalesExpenses, useSalesSettings,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 
 
 const PIE = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#14b8a6", "#ef4444"];
@@ -52,7 +52,6 @@ export function ProfitSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
         <KpiCard label="Gross revenue" value={m.grossRevenue} format={(n) => inr(n)} />

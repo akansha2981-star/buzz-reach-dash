@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import { csvDownload, filterPayments, inr, num, usePayments } from "@/lib/sales";
-import { EmptyState, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,6 @@ export function TransactionsSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
       <SectionCard
         title="Live transactions"
         subtitle={`${num(rows.length)} transactions in range`}

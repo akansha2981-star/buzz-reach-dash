@@ -10,7 +10,7 @@ import {
   AD_PLATFORMS, campaignPacing, filterAdSpend, inr, num, resolveRange, useAdSpend,
   useCampaigns, useCourses, useWebsites, ymd, type SalesAdSpend,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, ProgressBar, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, ProgressBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -133,7 +133,6 @@ export function AdSpendSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Today's ad spend" value={sum(filterAdSpend(spend, { ...f.filters, from: today, to: today }))} format={(n) => inr(n)} accent="primary" />

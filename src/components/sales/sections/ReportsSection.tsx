@@ -5,7 +5,7 @@ import {
   buildDaily, computeMetrics, csvDownload, inr, num, pct, useAdSpend, useCourses,
   usePayments, useSalesExpenses, useSalesSettings, ymd,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +60,6 @@ export function ReportsSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="flex gap-1 rounded-xl border border-border/60 bg-background/80 p-1 shadow-sm">
         {(["daily", "monthly", "calendar"] as const).map((t) => (

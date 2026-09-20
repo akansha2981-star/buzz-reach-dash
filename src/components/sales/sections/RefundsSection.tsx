@@ -5,7 +5,7 @@ import {
   buildDaily, computeMetrics, csvDownload, inr, num, pct, useAdSpend, useCourses,
   usePayments, useRefunds, useSalesExpenses, useSalesSettings,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -46,7 +46,6 @@ export function RefundsSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard label="Total refunds" value={rows.length} format={(n) => num(n)} />

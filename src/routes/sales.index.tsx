@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -15,6 +15,13 @@ import {
 } from "@/components/sales/SalesUI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TransactionsSection } from "@/components/sales/sections/TransactionsSection";
+import { AdSpendSection } from "@/components/sales/sections/AdSpendSection";
+import { ProfitSection } from "@/components/sales/sections/ProfitSection";
+import { ReportsSection } from "@/components/sales/sections/ReportsSection";
+import { ExpensesSection } from "@/components/sales/sections/ExpensesSection";
+import { RefundsSection } from "@/components/sales/sections/RefundsSection";
+import { SettingsSection } from "@/components/sales/sections/SettingsSection";
 
 export const Route = createFileRoute("/sales/")({
   component: OverviewPage,
@@ -118,8 +125,8 @@ function OverviewPage() {
             hint="Once the Razorpay webhook is connected in Settings, every successful payment will appear here automatically. Ad spend can be added right away."
           />
           <div className="flex justify-center gap-2">
-            <Button asChild size="sm"><Link to="/sales/settings">Open settings</Link></Button>
-            <Button asChild size="sm" variant="outline"><Link to="/sales/ad-spend">Add ad spend</Link></Button>
+            <Button asChild size="sm"><a href="#sales-settings">Open settings</a></Button>
+            <Button asChild size="sm" variant="outline"><a href="#sales-ad-spend">Add ad spend</a></Button>
           </div>
         </SectionCard>
       )}
@@ -255,7 +262,7 @@ function OverviewPage() {
 
       {/* Course performance */}
       <SectionCard title="Course performance" subtitle="Revenue, cost and profitability per course"
-        action={<Button asChild size="sm" variant="outline"><Link to="/sales/profit">Full analytics</Link></Button>}>
+        action={<Button asChild size="sm" variant="outline"><a href="#sales-profit">Full analytics</a></Button>}>
         {byCourse.length === 0 ? <EmptyState title="No course sales in this range" /> : (
           <div className="-mx-4 overflow-x-auto px-4">
             <table className="w-full min-w-[820px] text-sm">
@@ -322,7 +329,7 @@ function OverviewPage() {
 
       {/* Recent transactions */}
       <SectionCard title="Live transactions" subtitle="Most recent payments in range"
-        action={<Button asChild size="sm" variant="outline"><Link to="/sales/transactions">View all</Link></Button>}>
+        action={<Button asChild size="sm" variant="outline"><a href="#sales-transactions">View all</a></Button>}>
         {recent.length === 0 ? <EmptyState title="No transactions in this range" /> : (
           <ul className="divide-y divide-border/50">
             {recent.map((p) => (
@@ -358,6 +365,38 @@ function OverviewPage() {
           <Health label="Refund rate" value={pct(allM.refundRate)} />
         </div>
       </SectionCard>
+
+      <SectionAnchor id="sales-transactions" title="Live transactions" />
+      <TransactionsSection />
+
+      <SectionAnchor id="sales-ad-spend" title="Ad spend" />
+      <AdSpendSection />
+
+      <SectionAnchor id="sales-profit" title="Profit analytics" />
+      <ProfitSection />
+
+      <SectionAnchor id="sales-reports" title="Reports & profit calendar" />
+      <ReportsSection />
+
+      <SectionAnchor id="sales-expenses" title="Other expenses" />
+      <ExpensesSection />
+
+      <SectionAnchor id="sales-refunds" title="Refunds" />
+      <RefundsSection />
+
+      <SectionAnchor id="sales-settings" title="Settings & integration" />
+      <SettingsSection />
+    </div>
+  );
+}
+
+function SectionAnchor({ id, title }: { id: string; title: string }) {
+  return (
+    <div id={id} className="scroll-mt-24 pt-2">
+      <div className="flex items-center gap-3">
+        <h2 className="font-display text-lg font-semibold sm:text-xl">{title}</h2>
+        <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+      </div>
     </div>
   );
 }

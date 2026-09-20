@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   EXPENSE_CATEGORIES, inr, num, useCourses, useSalesExpenses, useSalesSettings, useWebsites, ymd,
 } from "@/lib/sales";
-import { EmptyState, KpiCard, SalesFilterBar, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
+import { EmptyState, KpiCard, SectionCard, useSalesFilters } from "@/components/sales/SalesUI";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,6 @@ export function ExpensesSection() {
 
   return (
     <div className="space-y-4">
-      <SalesFilterBar />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Expenses in range" value={total} format={(n) => inr(n)} accent="warning" />
