@@ -116,6 +116,7 @@ function OverviewPage() {
 
   return (
     <div className="space-y-4">
+      <div id="sales-overview" className="scroll-mt-24" />
       <SalesFilterBar campaigns={campaignNames} />
 
       {!hasData && !isLoading && (
