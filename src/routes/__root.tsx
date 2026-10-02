@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { NotificationsBootstrap } from "@/components/NotificationsBootstrap";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +143,7 @@ function RootComponent() {
       <ThemeProvider>
         <AuthProvider>
           <NotificationsBootstrap />
+          <AutoRefresh />
           <Outlet />
           <Toaster />
         </AuthProvider>
