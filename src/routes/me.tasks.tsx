@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MeShell } from "@/components/me/MeShell";
 import { TaskCard } from "@/components/me/TaskCard";
 import { CategoryManager } from "@/components/me/CategoryManager";
+import { RecurringTasksManager, ResetAllTasksButton } from "@/components/me/TaskTools";
 import { useMyTasks, useCreateTask, deriveStatus, useUpdateTask, type MeTask, type MeTaskStatus, type MeTaskPriority } from "@/lib/me";
 import { useMyCategories, iconFor } from "@/lib/me-categories";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
@@ -154,6 +155,9 @@ function TasksPage() {
               </Button>
             }
           />
+          <RecurringTasksManager />
+          <ResetAllTasksButton />
+
           <div className="flex rounded-lg border p-0.5">
             <Button size="sm" variant={view === "list" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setView("list")}>
               <ListIcon className="h-4 w-4" />
