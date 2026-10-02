@@ -1,6 +1,9 @@
 import { useTaskNotifications } from "@/hooks/useTaskNotifications";
+import { useTaskReminderEngine } from "@/hooks/useTaskReminderEngine";
+import { EnableNotificationsBanner } from "@/components/EnableNotificationsBanner";
 
 export function NotificationsBootstrap() {
   useTaskNotifications();
-  return null;
+  useTaskReminderEngine();
+  return <EnableNotificationsBanner />;
 }
