@@ -9,100 +9,65 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as SalesRouteImport } from './routes/sales'
-import { Route as MeetingsRouteImport } from './routes/meetings'
-import { Route as MeRouteImport } from './routes/me'
-import { Route as HabitsRouteImport } from './routes/habits'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SalesIndexRouteImport } from './routes/sales.index'
-import { Route as MeIndexRouteImport } from './routes/me.index'
-import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
-import { Route as HabitsIndexRouteImport } from './routes/habits.index'
+import { Route as AccountsRouteImport } from './routes/accounts'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
+import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as HabitsRouteImport } from './routes/habits'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as MeetingsRouteImport } from './routes/meetings'
+import { Route as SalesRouteImport } from './routes/sales'
+import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as AccountsIndexRouteImport } from './routes/accounts.index'
-import { Route as SettingsUsersRouteImport } from './routes/settings.users'
-import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
-import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
-import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline'
-import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
-import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
-import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
-import { Route as MeTasksRouteImport } from './routes/me.tasks'
-import { Route as MeScheduleRouteImport } from './routes/me.schedule'
-import { Route as MeFocusRouteImport } from './routes/me.focus'
-import { Route as MeConfidentialRouteImport } from './routes/me.confidential'
-import { Route as MeCalendarRouteImport } from './routes/me.calendar'
-import { Route as MeAnalyticsRouteImport } from './routes/me.analytics'
-import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
-import { Route as HrmsProductivityRouteImport } from './routes/hrms.productivity'
-import { Route as HrmsMeRouteImport } from './routes/hrms.me'
-import { Route as HrmsLeavesRouteImport } from './routes/hrms.leaves'
-import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
-import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
-import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcements'
-import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
-import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
-import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
-import { Route as AccountsPersonalRouteImport } from './routes/accounts.personal'
-import { Route as AccountsLedgerRouteImport } from './routes/accounts.ledger'
-import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
-import { Route as AccountsInvestmentsRouteImport } from './routes/accounts.investments'
-import { Route as AccountsIncomeRouteImport } from './routes/accounts.income'
-import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
-import { Route as AccountsCompanyRouteImport } from './routes/accounts.company'
-import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
 import { Route as AccountsBankAccountsRouteImport } from './routes/accounts.bank-accounts'
-import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
-import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
-import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
-import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
-import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
-import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
-import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
+import { Route as AccountsCompanyRouteImport } from './routes/accounts.company'
+import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
+import { Route as AccountsIncomeRouteImport } from './routes/accounts.income'
+import { Route as AccountsInvestmentsRouteImport } from './routes/accounts.investments'
+import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
+import { Route as AccountsLedgerRouteImport } from './routes/accounts.ledger'
+import { Route as AccountsPersonalRouteImport } from './routes/accounts.personal'
+import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
+import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
+import { Route as HabitsIndexRouteImport } from './routes/habits.index'
+import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
+import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
+import { Route as HrmsAnnouncementsRouteImport } from './routes/hrms.announcements'
+import { Route as HrmsAttendanceRouteImport } from './routes/hrms.attendance'
+import { Route as HrmsEmployeesRouteImport } from './routes/hrms.employees'
+import { Route as HrmsLeavesRouteImport } from './routes/hrms.leaves'
+import { Route as HrmsMeRouteImport } from './routes/hrms.me'
+import { Route as HrmsProductivityRouteImport } from './routes/hrms.productivity'
+import { Route as HrmsTasksRouteImport } from './routes/hrms.tasks'
+import { Route as MeIndexRouteImport } from './routes/me.index'
+import { Route as MeAnalyticsRouteImport } from './routes/me.analytics'
+import { Route as MeCalendarRouteImport } from './routes/me.calendar'
+import { Route as MeConfidentialRouteImport } from './routes/me.confidential'
+import { Route as MeFocusRouteImport } from './routes/me.focus'
+import { Route as MeScheduleRouteImport } from './routes/me.schedule'
+import { Route as MeTasksRouteImport } from './routes/me.tasks'
+import { Route as OutreachTypeRouteImport } from './routes/outreach.$type'
+import { Route as OutreachCoachingRouteImport } from './routes/outreach.coaching'
+import { Route as OutreachCollegesRouteImport } from './routes/outreach.colleges'
+import { Route as OutreachTimelineRouteImport } from './routes/outreach.timeline'
+import { Route as SalesIndexRouteImport } from './routes/sales.index'
+import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
+import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
+import { Route as SettingsUsersRouteImport } from './routes/settings.users'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
+import { Route as HrmsAdminAttendanceRouteImport } from './routes/hrms.admin.attendance'
+import { Route as HrmsAdminAuditRouteImport } from './routes/hrms.admin.audit'
+import { Route as HrmsAdminLeavesRouteImport } from './routes/hrms.admin.leaves'
+import { Route as HrmsEmployeesIdRouteImport } from './routes/hrms.employees.$id'
+import { Route as OutreachTypeIdRouteImport } from './routes/outreach.$type.$id'
 
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalesRoute = SalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeetingsRoute = MeetingsRouteImport.update({
-  id: '/meetings',
-  path: '/meetings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeRoute = MeRouteImport.update({
-  id: '/me',
-  path: '/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HabitsRoute = HabitsRouteImport.update({
-  id: '/habits',
-  path: '/habits',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CeoDeskRoute = CeoDeskRouteImport.update({
-  id: '/ceo-desk',
-  path: '/ceo-desk',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountsRoute = AccountsRouteImport.update({
@@ -110,189 +75,49 @@ const AccountsRoute = AccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SalesIndexRoute = SalesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SalesRoute,
-} as any)
-const MeIndexRoute = MeIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MeRoute,
-} as any)
-const HrmsIndexRoute = HrmsIndexRouteImport.update({
-  id: '/hrms/',
-  path: '/hrms/',
+const CeoDeskRoute = CeoDeskRouteImport.update({
+  id: '/ceo-desk',
+  path: '/ceo-desk',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HabitsIndexRoute = HabitsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => HabitsRoute,
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsRoute = HabitsRouteImport.update({
+  id: '/habits',
+  path: '/habits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeetingsRoute = MeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountsIndexRoute = AccountsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const SettingsUsersRoute = SettingsUsersRouteImport.update({
-  id: '/settings/users',
-  path: '/settings/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsStagesRoute = SettingsStagesRouteImport.update({
-  id: '/settings/stages',
-  path: '/settings/stages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsLogsRoute = SettingsLogsRouteImport.update({
-  id: '/settings/logs',
-  path: '/settings/logs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OutreachTimelineRoute = OutreachTimelineRouteImport.update({
-  id: '/outreach/timeline',
-  path: '/outreach/timeline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OutreachCollegesRoute = OutreachCollegesRouteImport.update({
-  id: '/outreach/colleges',
-  path: '/outreach/colleges',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OutreachCoachingRoute = OutreachCoachingRouteImport.update({
-  id: '/outreach/coaching',
-  path: '/outreach/coaching',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OutreachTypeRoute = OutreachTypeRouteImport.update({
-  id: '/outreach/$type',
-  path: '/outreach/$type',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeTasksRoute = MeTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeScheduleRoute = MeScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeFocusRoute = MeFocusRouteImport.update({
-  id: '/focus',
-  path: '/focus',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeConfidentialRoute = MeConfidentialRouteImport.update({
-  id: '/confidential',
-  path: '/confidential',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeCalendarRoute = MeCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => MeRoute,
-} as any)
-const MeAnalyticsRoute = MeAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => MeRoute,
-} as any)
-const HrmsTasksRoute = HrmsTasksRouteImport.update({
-  id: '/hrms/tasks',
-  path: '/hrms/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsProductivityRoute = HrmsProductivityRouteImport.update({
-  id: '/hrms/productivity',
-  path: '/hrms/productivity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsMeRoute = HrmsMeRouteImport.update({
-  id: '/hrms/me',
-  path: '/hrms/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsLeavesRoute = HrmsLeavesRouteImport.update({
-  id: '/hrms/leaves',
-  path: '/hrms/leaves',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsEmployeesRoute = HrmsEmployeesRouteImport.update({
-  id: '/hrms/employees',
-  path: '/hrms/employees',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsAttendanceRoute = HrmsAttendanceRouteImport.update({
-  id: '/hrms/attendance',
-  path: '/hrms/attendance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HrmsAnnouncementsRoute = HrmsAnnouncementsRouteImport.update({
-  id: '/hrms/announcements',
-  path: '/hrms/announcements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
-  id: '/$habitId',
-  path: '/$habitId',
-  getParentRoute: () => HabitsRoute,
-} as any)
-const AccountsSummaryRoute = AccountsSummaryRouteImport.update({
-  id: '/summary',
-  path: '/summary',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
-  id: '/recurring',
-  path: '/recurring',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsPersonalRoute = AccountsPersonalRouteImport.update({
-  id: '/personal',
-  path: '/personal',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsLedgerRoute = AccountsLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsInvoicesRoute = AccountsInvoicesRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsInvestmentsRoute = AccountsInvestmentsRouteImport.update({
-  id: '/investments',
-  path: '/investments',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsIncomeRoute = AccountsIncomeRouteImport.update({
-  id: '/income',
-  path: '/income',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsCompanyRoute = AccountsCompanyRouteImport.update({
-  id: '/company',
-  path: '/company',
-  getParentRoute: () => AccountsRoute,
-} as any)
-const AccountsClientsRoute = AccountsClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
   getParentRoute: () => AccountsRoute,
 } as any)
 const AccountsBankAccountsRoute = AccountsBankAccountsRouteImport.update({
@@ -300,34 +125,184 @@ const AccountsBankAccountsRoute = AccountsBankAccountsRouteImport.update({
   path: '/bank-accounts',
   getParentRoute: () => AccountsRoute,
 } as any)
-const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => OutreachTypeRoute,
+const AccountsClientsRoute = AccountsClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AccountsRoute,
 } as any)
-const HrmsEmployeesIdRoute = HrmsEmployeesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => HrmsEmployeesRoute,
+const AccountsCompanyRoute = AccountsCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => AccountsRoute,
 } as any)
-const HrmsAdminLeavesRoute = HrmsAdminLeavesRouteImport.update({
-  id: '/hrms/admin/leaves',
-  path: '/hrms/admin/leaves',
+const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsIncomeRoute = AccountsIncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsInvestmentsRoute = AccountsInvestmentsRouteImport.update({
+  id: '/investments',
+  path: '/investments',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsInvoicesRoute = AccountsInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsLedgerRoute = AccountsLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsPersonalRoute = AccountsPersonalRouteImport.update({
+  id: '/personal',
+  path: '/personal',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsSummaryRoute = AccountsSummaryRouteImport.update({
+  id: '/summary',
+  path: '/summary',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const HabitsIndexRoute = HabitsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HabitsRoute,
+} as any)
+const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
+  id: '/$habitId',
+  path: '/$habitId',
+  getParentRoute: () => HabitsRoute,
+} as any)
+const HrmsIndexRoute = HrmsIndexRouteImport.update({
+  id: '/hrms/',
+  path: '/hrms/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HrmsAdminAuditRoute = HrmsAdminAuditRouteImport.update({
-  id: '/hrms/admin/audit',
-  path: '/hrms/admin/audit',
+const HrmsAnnouncementsRoute = HrmsAnnouncementsRouteImport.update({
+  id: '/hrms/announcements',
+  path: '/hrms/announcements',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HrmsAdminAttendanceRoute = HrmsAdminAttendanceRouteImport.update({
-  id: '/hrms/admin/attendance',
-  path: '/hrms/admin/attendance',
+const HrmsAttendanceRoute = HrmsAttendanceRouteImport.update({
+  id: '/hrms/attendance',
+  path: '/hrms/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HrmsAdminAnalyticsRoute = HrmsAdminAnalyticsRouteImport.update({
-  id: '/hrms/admin/analytics',
-  path: '/hrms/admin/analytics',
+const HrmsEmployeesRoute = HrmsEmployeesRouteImport.update({
+  id: '/hrms/employees',
+  path: '/hrms/employees',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsLeavesRoute = HrmsLeavesRouteImport.update({
+  id: '/hrms/leaves',
+  path: '/hrms/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsMeRoute = HrmsMeRouteImport.update({
+  id: '/hrms/me',
+  path: '/hrms/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsProductivityRoute = HrmsProductivityRouteImport.update({
+  id: '/hrms/productivity',
+  path: '/hrms/productivity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsTasksRoute = HrmsTasksRouteImport.update({
+  id: '/hrms/tasks',
+  path: '/hrms/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeIndexRoute = MeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeAnalyticsRoute = MeAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeCalendarRoute = MeCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeConfidentialRoute = MeConfidentialRouteImport.update({
+  id: '/confidential',
+  path: '/confidential',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeFocusRoute = MeFocusRouteImport.update({
+  id: '/focus',
+  path: '/focus',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeScheduleRoute = MeScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeTasksRoute = MeTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => MeRoute,
+} as any)
+const OutreachTypeRoute = OutreachTypeRouteImport.update({
+  id: '/outreach/$type',
+  path: '/outreach/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachCoachingRoute = OutreachCoachingRouteImport.update({
+  id: '/outreach/coaching',
+  path: '/outreach/coaching',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachCollegesRoute = OutreachCollegesRouteImport.update({
+  id: '/outreach/colleges',
+  path: '/outreach/colleges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachTimelineRoute = OutreachTimelineRouteImport.update({
+  id: '/outreach/timeline',
+  path: '/outreach/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesIndexRoute = SalesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SalesRoute,
+} as any)
+const SettingsLogsRoute = SettingsLogsRouteImport.update({
+  id: '/settings/logs',
+  path: '/settings/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsStagesRoute = SettingsStagesRouteImport.update({
+  id: '/settings/stages',
+  path: '/settings/stages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsUsersRoute = SettingsUsersRouteImport.update({
+  id: '/settings/users',
+  path: '/settings/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
+  id: '/api/public/bootstrap-admin',
+  path: '/api/public/bootstrap-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicRazorpayWebhookRoute =
@@ -336,10 +311,35 @@ const ApiPublicRazorpayWebhookRoute =
     path: '/api/public/razorpay-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
-  id: '/api/public/bootstrap-admin',
-  path: '/api/public/bootstrap-admin',
+const HrmsAdminAnalyticsRoute = HrmsAdminAnalyticsRouteImport.update({
+  id: '/hrms/admin/analytics',
+  path: '/hrms/admin/analytics',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsAdminAttendanceRoute = HrmsAdminAttendanceRouteImport.update({
+  id: '/hrms/admin/attendance',
+  path: '/hrms/admin/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsAdminAuditRoute = HrmsAdminAuditRouteImport.update({
+  id: '/hrms/admin/audit',
+  path: '/hrms/admin/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsAdminLeavesRoute = HrmsAdminLeavesRouteImport.update({
+  id: '/hrms/admin/leaves',
+  path: '/hrms/admin/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrmsEmployeesIdRoute = HrmsEmployeesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => HrmsEmployeesRoute,
+} as any)
+const OutreachTypeIdRoute = OutreachTypeIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OutreachTypeRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -716,60 +716,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sales': {
-      id: '/sales'
-      path: '/sales'
-      fullPath: '/sales'
-      preLoaderRoute: typeof SalesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meetings': {
-      id: '/meetings'
-      path: '/meetings'
-      fullPath: '/meetings'
-      preLoaderRoute: typeof MeetingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/me': {
-      id: '/me'
-      path: '/me'
-      fullPath: '/me'
-      preLoaderRoute: typeof MeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/habits': {
-      id: '/habits'
-      path: '/habits'
-      fullPath: '/habits'
-      preLoaderRoute: typeof HabitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ceo-desk': {
-      id: '/ceo-desk'
-      path: '/ceo-desk'
-      fullPath: '/ceo-desk'
-      preLoaderRoute: typeof CeoDeskRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accounts': {
@@ -779,263 +730,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sales/': {
-      id: '/sales/'
-      path: '/'
-      fullPath: '/sales/'
-      preLoaderRoute: typeof SalesIndexRouteImport
-      parentRoute: typeof SalesRoute
-    }
-    '/me/': {
-      id: '/me/'
-      path: '/'
-      fullPath: '/me/'
-      preLoaderRoute: typeof MeIndexRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/hrms/': {
-      id: '/hrms/'
-      path: '/hrms'
-      fullPath: '/hrms/'
-      preLoaderRoute: typeof HrmsIndexRouteImport
+    '/ceo-desk': {
+      id: '/ceo-desk'
+      path: '/ceo-desk'
+      fullPath: '/ceo-desk'
+      preLoaderRoute: typeof CeoDeskRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/habits/': {
-      id: '/habits/'
-      path: '/'
-      fullPath: '/habits/'
-      preLoaderRoute: typeof HabitsIndexRouteImport
-      parentRoute: typeof HabitsRoute
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habits': {
+      id: '/habits'
+      path: '/habits'
+      fullPath: '/habits'
+      preLoaderRoute: typeof HabitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meetings': {
+      id: '/meetings'
+      path: '/meetings'
+      fullPath: '/meetings'
+      preLoaderRoute: typeof MeetingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/accounts/': {
       id: '/accounts/'
       path: '/'
       fullPath: '/accounts/'
       preLoaderRoute: typeof AccountsIndexRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/settings/users': {
-      id: '/settings/users'
-      path: '/settings/users'
-      fullPath: '/settings/users'
-      preLoaderRoute: typeof SettingsUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings/stages': {
-      id: '/settings/stages'
-      path: '/settings/stages'
-      fullPath: '/settings/stages'
-      preLoaderRoute: typeof SettingsStagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings/logs': {
-      id: '/settings/logs'
-      path: '/settings/logs'
-      fullPath: '/settings/logs'
-      preLoaderRoute: typeof SettingsLogsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/outreach/timeline': {
-      id: '/outreach/timeline'
-      path: '/outreach/timeline'
-      fullPath: '/outreach/timeline'
-      preLoaderRoute: typeof OutreachTimelineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/outreach/colleges': {
-      id: '/outreach/colleges'
-      path: '/outreach/colleges'
-      fullPath: '/outreach/colleges'
-      preLoaderRoute: typeof OutreachCollegesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/outreach/coaching': {
-      id: '/outreach/coaching'
-      path: '/outreach/coaching'
-      fullPath: '/outreach/coaching'
-      preLoaderRoute: typeof OutreachCoachingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/outreach/$type': {
-      id: '/outreach/$type'
-      path: '/outreach/$type'
-      fullPath: '/outreach/$type'
-      preLoaderRoute: typeof OutreachTypeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/me/tasks': {
-      id: '/me/tasks'
-      path: '/tasks'
-      fullPath: '/me/tasks'
-      preLoaderRoute: typeof MeTasksRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/schedule': {
-      id: '/me/schedule'
-      path: '/schedule'
-      fullPath: '/me/schedule'
-      preLoaderRoute: typeof MeScheduleRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/focus': {
-      id: '/me/focus'
-      path: '/focus'
-      fullPath: '/me/focus'
-      preLoaderRoute: typeof MeFocusRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/confidential': {
-      id: '/me/confidential'
-      path: '/confidential'
-      fullPath: '/me/confidential'
-      preLoaderRoute: typeof MeConfidentialRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/calendar': {
-      id: '/me/calendar'
-      path: '/calendar'
-      fullPath: '/me/calendar'
-      preLoaderRoute: typeof MeCalendarRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/me/analytics': {
-      id: '/me/analytics'
-      path: '/analytics'
-      fullPath: '/me/analytics'
-      preLoaderRoute: typeof MeAnalyticsRouteImport
-      parentRoute: typeof MeRoute
-    }
-    '/hrms/tasks': {
-      id: '/hrms/tasks'
-      path: '/hrms/tasks'
-      fullPath: '/hrms/tasks'
-      preLoaderRoute: typeof HrmsTasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/productivity': {
-      id: '/hrms/productivity'
-      path: '/hrms/productivity'
-      fullPath: '/hrms/productivity'
-      preLoaderRoute: typeof HrmsProductivityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/me': {
-      id: '/hrms/me'
-      path: '/hrms/me'
-      fullPath: '/hrms/me'
-      preLoaderRoute: typeof HrmsMeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/leaves': {
-      id: '/hrms/leaves'
-      path: '/hrms/leaves'
-      fullPath: '/hrms/leaves'
-      preLoaderRoute: typeof HrmsLeavesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/employees': {
-      id: '/hrms/employees'
-      path: '/hrms/employees'
-      fullPath: '/hrms/employees'
-      preLoaderRoute: typeof HrmsEmployeesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/attendance': {
-      id: '/hrms/attendance'
-      path: '/hrms/attendance'
-      fullPath: '/hrms/attendance'
-      preLoaderRoute: typeof HrmsAttendanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hrms/announcements': {
-      id: '/hrms/announcements'
-      path: '/hrms/announcements'
-      fullPath: '/hrms/announcements'
-      preLoaderRoute: typeof HrmsAnnouncementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/habits/$habitId': {
-      id: '/habits/$habitId'
-      path: '/$habitId'
-      fullPath: '/habits/$habitId'
-      preLoaderRoute: typeof HabitsHabitIdRouteImport
-      parentRoute: typeof HabitsRoute
-    }
-    '/accounts/summary': {
-      id: '/accounts/summary'
-      path: '/summary'
-      fullPath: '/accounts/summary'
-      preLoaderRoute: typeof AccountsSummaryRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/recurring': {
-      id: '/accounts/recurring'
-      path: '/recurring'
-      fullPath: '/accounts/recurring'
-      preLoaderRoute: typeof AccountsRecurringRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/personal': {
-      id: '/accounts/personal'
-      path: '/personal'
-      fullPath: '/accounts/personal'
-      preLoaderRoute: typeof AccountsPersonalRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/ledger': {
-      id: '/accounts/ledger'
-      path: '/ledger'
-      fullPath: '/accounts/ledger'
-      preLoaderRoute: typeof AccountsLedgerRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/invoices': {
-      id: '/accounts/invoices'
-      path: '/invoices'
-      fullPath: '/accounts/invoices'
-      preLoaderRoute: typeof AccountsInvoicesRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/investments': {
-      id: '/accounts/investments'
-      path: '/investments'
-      fullPath: '/accounts/investments'
-      preLoaderRoute: typeof AccountsInvestmentsRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/income': {
-      id: '/accounts/income'
-      path: '/income'
-      fullPath: '/accounts/income'
-      preLoaderRoute: typeof AccountsIncomeRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/expenses': {
-      id: '/accounts/expenses'
-      path: '/expenses'
-      fullPath: '/accounts/expenses'
-      preLoaderRoute: typeof AccountsExpensesRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/company': {
-      id: '/accounts/company'
-      path: '/company'
-      fullPath: '/accounts/company'
-      preLoaderRoute: typeof AccountsCompanyRouteImport
-      parentRoute: typeof AccountsRoute
-    }
-    '/accounts/clients': {
-      id: '/accounts/clients'
-      path: '/clients'
-      fullPath: '/accounts/clients'
-      preLoaderRoute: typeof AccountsClientsRouteImport
       parentRoute: typeof AccountsRoute
     }
     '/accounts/bank-accounts': {
@@ -1045,46 +800,256 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsBankAccountsRouteImport
       parentRoute: typeof AccountsRoute
     }
-    '/outreach/$type/$id': {
-      id: '/outreach/$type/$id'
-      path: '/$id'
-      fullPath: '/outreach/$type/$id'
-      preLoaderRoute: typeof OutreachTypeIdRouteImport
-      parentRoute: typeof OutreachTypeRoute
+    '/accounts/clients': {
+      id: '/accounts/clients'
+      path: '/clients'
+      fullPath: '/accounts/clients'
+      preLoaderRoute: typeof AccountsClientsRouteImport
+      parentRoute: typeof AccountsRoute
     }
-    '/hrms/employees/$id': {
-      id: '/hrms/employees/$id'
-      path: '/$id'
-      fullPath: '/hrms/employees/$id'
-      preLoaderRoute: typeof HrmsEmployeesIdRouteImport
-      parentRoute: typeof HrmsEmployeesRoute
+    '/accounts/company': {
+      id: '/accounts/company'
+      path: '/company'
+      fullPath: '/accounts/company'
+      preLoaderRoute: typeof AccountsCompanyRouteImport
+      parentRoute: typeof AccountsRoute
     }
-    '/hrms/admin/leaves': {
-      id: '/hrms/admin/leaves'
-      path: '/hrms/admin/leaves'
-      fullPath: '/hrms/admin/leaves'
-      preLoaderRoute: typeof HrmsAdminLeavesRouteImport
+    '/accounts/expenses': {
+      id: '/accounts/expenses'
+      path: '/expenses'
+      fullPath: '/accounts/expenses'
+      preLoaderRoute: typeof AccountsExpensesRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/income': {
+      id: '/accounts/income'
+      path: '/income'
+      fullPath: '/accounts/income'
+      preLoaderRoute: typeof AccountsIncomeRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/investments': {
+      id: '/accounts/investments'
+      path: '/investments'
+      fullPath: '/accounts/investments'
+      preLoaderRoute: typeof AccountsInvestmentsRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/invoices': {
+      id: '/accounts/invoices'
+      path: '/invoices'
+      fullPath: '/accounts/invoices'
+      preLoaderRoute: typeof AccountsInvoicesRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/ledger': {
+      id: '/accounts/ledger'
+      path: '/ledger'
+      fullPath: '/accounts/ledger'
+      preLoaderRoute: typeof AccountsLedgerRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/personal': {
+      id: '/accounts/personal'
+      path: '/personal'
+      fullPath: '/accounts/personal'
+      preLoaderRoute: typeof AccountsPersonalRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/recurring': {
+      id: '/accounts/recurring'
+      path: '/recurring'
+      fullPath: '/accounts/recurring'
+      preLoaderRoute: typeof AccountsRecurringRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/summary': {
+      id: '/accounts/summary'
+      path: '/summary'
+      fullPath: '/accounts/summary'
+      preLoaderRoute: typeof AccountsSummaryRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/habits/': {
+      id: '/habits/'
+      path: '/'
+      fullPath: '/habits/'
+      preLoaderRoute: typeof HabitsIndexRouteImport
+      parentRoute: typeof HabitsRoute
+    }
+    '/habits/$habitId': {
+      id: '/habits/$habitId'
+      path: '/$habitId'
+      fullPath: '/habits/$habitId'
+      preLoaderRoute: typeof HabitsHabitIdRouteImport
+      parentRoute: typeof HabitsRoute
+    }
+    '/hrms/': {
+      id: '/hrms/'
+      path: '/hrms'
+      fullPath: '/hrms/'
+      preLoaderRoute: typeof HrmsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hrms/admin/audit': {
-      id: '/hrms/admin/audit'
-      path: '/hrms/admin/audit'
-      fullPath: '/hrms/admin/audit'
-      preLoaderRoute: typeof HrmsAdminAuditRouteImport
+    '/hrms/announcements': {
+      id: '/hrms/announcements'
+      path: '/hrms/announcements'
+      fullPath: '/hrms/announcements'
+      preLoaderRoute: typeof HrmsAnnouncementsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hrms/admin/attendance': {
-      id: '/hrms/admin/attendance'
-      path: '/hrms/admin/attendance'
-      fullPath: '/hrms/admin/attendance'
-      preLoaderRoute: typeof HrmsAdminAttendanceRouteImport
+    '/hrms/attendance': {
+      id: '/hrms/attendance'
+      path: '/hrms/attendance'
+      fullPath: '/hrms/attendance'
+      preLoaderRoute: typeof HrmsAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hrms/admin/analytics': {
-      id: '/hrms/admin/analytics'
-      path: '/hrms/admin/analytics'
-      fullPath: '/hrms/admin/analytics'
-      preLoaderRoute: typeof HrmsAdminAnalyticsRouteImport
+    '/hrms/employees': {
+      id: '/hrms/employees'
+      path: '/hrms/employees'
+      fullPath: '/hrms/employees'
+      preLoaderRoute: typeof HrmsEmployeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/leaves': {
+      id: '/hrms/leaves'
+      path: '/hrms/leaves'
+      fullPath: '/hrms/leaves'
+      preLoaderRoute: typeof HrmsLeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/me': {
+      id: '/hrms/me'
+      path: '/hrms/me'
+      fullPath: '/hrms/me'
+      preLoaderRoute: typeof HrmsMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/productivity': {
+      id: '/hrms/productivity'
+      path: '/hrms/productivity'
+      fullPath: '/hrms/productivity'
+      preLoaderRoute: typeof HrmsProductivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/tasks': {
+      id: '/hrms/tasks'
+      path: '/hrms/tasks'
+      fullPath: '/hrms/tasks'
+      preLoaderRoute: typeof HrmsTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/': {
+      id: '/me/'
+      path: '/'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/analytics': {
+      id: '/me/analytics'
+      path: '/analytics'
+      fullPath: '/me/analytics'
+      preLoaderRoute: typeof MeAnalyticsRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/calendar': {
+      id: '/me/calendar'
+      path: '/calendar'
+      fullPath: '/me/calendar'
+      preLoaderRoute: typeof MeCalendarRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/confidential': {
+      id: '/me/confidential'
+      path: '/confidential'
+      fullPath: '/me/confidential'
+      preLoaderRoute: typeof MeConfidentialRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/focus': {
+      id: '/me/focus'
+      path: '/focus'
+      fullPath: '/me/focus'
+      preLoaderRoute: typeof MeFocusRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/schedule': {
+      id: '/me/schedule'
+      path: '/schedule'
+      fullPath: '/me/schedule'
+      preLoaderRoute: typeof MeScheduleRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/tasks': {
+      id: '/me/tasks'
+      path: '/tasks'
+      fullPath: '/me/tasks'
+      preLoaderRoute: typeof MeTasksRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/outreach/$type': {
+      id: '/outreach/$type'
+      path: '/outreach/$type'
+      fullPath: '/outreach/$type'
+      preLoaderRoute: typeof OutreachTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/coaching': {
+      id: '/outreach/coaching'
+      path: '/outreach/coaching'
+      fullPath: '/outreach/coaching'
+      preLoaderRoute: typeof OutreachCoachingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/colleges': {
+      id: '/outreach/colleges'
+      path: '/outreach/colleges'
+      fullPath: '/outreach/colleges'
+      preLoaderRoute: typeof OutreachCollegesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/timeline': {
+      id: '/outreach/timeline'
+      path: '/outreach/timeline'
+      fullPath: '/outreach/timeline'
+      preLoaderRoute: typeof OutreachTimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales/': {
+      id: '/sales/'
+      path: '/'
+      fullPath: '/sales/'
+      preLoaderRoute: typeof SalesIndexRouteImport
+      parentRoute: typeof SalesRoute
+    }
+    '/settings/logs': {
+      id: '/settings/logs'
+      path: '/settings/logs'
+      fullPath: '/settings/logs'
+      preLoaderRoute: typeof SettingsLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/stages': {
+      id: '/settings/stages'
+      path: '/settings/stages'
+      fullPath: '/settings/stages'
+      preLoaderRoute: typeof SettingsStagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/users': {
+      id: '/settings/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof SettingsUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bootstrap-admin': {
+      id: '/api/public/bootstrap-admin'
+      path: '/api/public/bootstrap-admin'
+      fullPath: '/api/public/bootstrap-admin'
+      preLoaderRoute: typeof ApiPublicBootstrapAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/razorpay-webhook': {
@@ -1094,12 +1059,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/bootstrap-admin': {
-      id: '/api/public/bootstrap-admin'
-      path: '/api/public/bootstrap-admin'
-      fullPath: '/api/public/bootstrap-admin'
-      preLoaderRoute: typeof ApiPublicBootstrapAdminRouteImport
+    '/hrms/admin/analytics': {
+      id: '/hrms/admin/analytics'
+      path: '/hrms/admin/analytics'
+      fullPath: '/hrms/admin/analytics'
+      preLoaderRoute: typeof HrmsAdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/hrms/admin/attendance': {
+      id: '/hrms/admin/attendance'
+      path: '/hrms/admin/attendance'
+      fullPath: '/hrms/admin/attendance'
+      preLoaderRoute: typeof HrmsAdminAttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/admin/audit': {
+      id: '/hrms/admin/audit'
+      path: '/hrms/admin/audit'
+      fullPath: '/hrms/admin/audit'
+      preLoaderRoute: typeof HrmsAdminAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/admin/leaves': {
+      id: '/hrms/admin/leaves'
+      path: '/hrms/admin/leaves'
+      fullPath: '/hrms/admin/leaves'
+      preLoaderRoute: typeof HrmsAdminLeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hrms/employees/$id': {
+      id: '/hrms/employees/$id'
+      path: '/$id'
+      fullPath: '/hrms/employees/$id'
+      preLoaderRoute: typeof HrmsEmployeesIdRouteImport
+      parentRoute: typeof HrmsEmployeesRoute
+    }
+    '/outreach/$type/$id': {
+      id: '/outreach/$type/$id'
+      path: '/$id'
+      fullPath: '/outreach/$type/$id'
+      preLoaderRoute: typeof OutreachTypeIdRouteImport
+      parentRoute: typeof OutreachTypeRoute
     }
   }
 }
