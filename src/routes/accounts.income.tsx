@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { GstBox } from "@/components/accounts/GstBox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, HandCoins, TrendingUp, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -240,6 +241,7 @@ function IncomeDialog({
             <div><Label>Amount</Label><Input type="number" value={form.amount ?? 0} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} /></div>
             <div><Label>Date received</Label><Input type="date" value={form.received_on ?? ""} onChange={(e) => setForm({ ...form, received_on: e.target.value })} /></div>
           </div>
+          <GstBox applicable={!!(form as any).gst_applicable} amount={Number(form.amount || 0)} onChange={(v) => setForm({ ...form, gst_applicable: v } as any)} />
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Received from</Label><Input value={form.payer ?? ""} onChange={(e) => setForm({ ...form, payer: e.target.value })} /></div>
             <div><Label>Category</Label>
