@@ -605,6 +605,36 @@ export type Database = {
         }
         Relationships: []
       }
+      accounts_tds: {
+        Row: {
+          amount: number
+          company_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          tds_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tds_date: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tds_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
