@@ -31,6 +31,7 @@ import { Route as AccountsLedgerRouteImport } from './routes/accounts.ledger'
 import { Route as AccountsPersonalRouteImport } from './routes/accounts.personal'
 import { Route as AccountsRecurringRouteImport } from './routes/accounts.recurring'
 import { Route as AccountsSummaryRouteImport } from './routes/accounts.summary'
+import { Route as AccountsTdsRouteImport } from './routes/accounts.tds'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 import { Route as HrmsIndexRouteImport } from './routes/hrms.index'
@@ -173,6 +174,11 @@ const AccountsRecurringRoute = AccountsRecurringRouteImport.update({
 const AccountsSummaryRoute = AccountsSummaryRouteImport.update({
   id: '/summary',
   path: '/summary',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsTdsRoute = AccountsTdsRouteImport.update({
+  id: '/tds',
+  path: '/tds',
   getParentRoute: () => AccountsRoute,
 } as any)
 const HabitsIndexRoute = HabitsIndexRouteImport.update({
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
+  '/accounts/tds': typeof AccountsTdsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
+  '/accounts/tds': typeof AccountsTdsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -475,6 +483,7 @@ export interface FileRoutesById {
   '/accounts/personal': typeof AccountsPersonalRoute
   '/accounts/recurring': typeof AccountsRecurringRoute
   '/accounts/summary': typeof AccountsSummaryRoute
+  '/accounts/tds': typeof AccountsTdsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/hrms/announcements': typeof HrmsAnnouncementsRoute
   '/hrms/attendance': typeof HrmsAttendanceRoute
@@ -534,6 +543,7 @@ export interface FileRouteTypes {
     | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
+    | '/accounts/tds'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
     | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
+    | '/accounts/tds'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/accounts/personal'
     | '/accounts/recurring'
     | '/accounts/summary'
+    | '/accounts/tds'
     | '/habits/$habitId'
     | '/hrms/announcements'
     | '/hrms/attendance'
@@ -868,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/summary'
       fullPath: '/accounts/summary'
       preLoaderRoute: typeof AccountsSummaryRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/tds': {
+      id: '/accounts/tds'
+      path: '/tds'
+      fullPath: '/accounts/tds'
+      preLoaderRoute: typeof AccountsTdsRouteImport
       parentRoute: typeof AccountsRoute
     }
     '/habits/': {
@@ -1116,6 +1135,7 @@ interface AccountsRouteChildren {
   AccountsPersonalRoute: typeof AccountsPersonalRoute
   AccountsRecurringRoute: typeof AccountsRecurringRoute
   AccountsSummaryRoute: typeof AccountsSummaryRoute
+  AccountsTdsRoute: typeof AccountsTdsRoute
   AccountsIndexRoute: typeof AccountsIndexRoute
 }
 
@@ -1131,6 +1151,7 @@ const AccountsRouteChildren: AccountsRouteChildren = {
   AccountsPersonalRoute: AccountsPersonalRoute,
   AccountsRecurringRoute: AccountsRecurringRoute,
   AccountsSummaryRoute: AccountsSummaryRoute,
+  AccountsTdsRoute: AccountsTdsRoute,
   AccountsIndexRoute: AccountsIndexRoute,
 }
 
