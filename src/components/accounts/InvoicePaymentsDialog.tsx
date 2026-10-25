@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GstBox } from "@/components/accounts/GstBox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, IndianRupee, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ export function InvoicePaymentsDialog({
   const [method, setMethod] = useState("Bank Transfer");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
+  const [gst, setGst] = useState(false);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["invoice_payments", invoice?.id],
@@ -92,6 +94,7 @@ export function InvoicePaymentsDialog({
         method: method || null,
         reference: reference || null,
         note: note || null,
+        gst_applicable: gst,
         created_by: userRes.user?.id ?? null,
       });
       if (error) throw error;
@@ -199,6 +202,9 @@ export function InvoicePaymentsDialog({
             <div className="sm:col-span-2">
               <Label>Note</Label>
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="sm:col-span-2">
+              <GstBox applicable={gst} amount={Number(amount || 0)} onChange={setGst} />
             </div>
           </div>
           <div className="flex justify-end">

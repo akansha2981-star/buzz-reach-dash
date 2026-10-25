@@ -140,6 +140,9 @@ function SummaryPage() {
 
   const netProfit = totalCollected - totalExpenses;
 
+  // GST breakdown (18% inclusive on GST-applicable receipts)
+  const gstOf = (rows: any[]) => rows.reduce((a, r) => { const s = splitGst(Number(r.amount || 0), !!r.gst_applicable); return { base: a.base + s.base, gst: a.gst + s.gst, total: a.total + s.total }; }, { base: 0, gst: 0, total: 0 });
+
   // Investments (range-filtered + all-time for bank balance)
   const filteredInvestments = useMemo(
     () => investments.filter((i: any) => inRange(i.invested_on) && (category === "all" || i.category === category)),
@@ -155,6 +158,8 @@ function SummaryPage() {
     [manualIncome, rangeStart, category]
   );
   const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+  const gstSplit = gstOf([...filteredPayments, ...filteredManualIncome]);
+  const netAfterGst = gstSplit.base - totalExpenses;
 
   // Personal (non-business) spend — excluded from business expenses, deducted from bank balance
   const filteredPersonal = useMemo(
@@ -291,6 +296,16 @@ function SummaryPage() {
       </div>
 
       {/* KPI Grid */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="mb-3 text-sm font-semibold">GST breakdown (selected range)</div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <Kpi icon={TrendingUp} label="Total incl. GST" value={fmtINR(gstSplit.total)} tone="sky" sub="All money received" />
+          <Kpi icon={TrendingUp} label="Gross revenue (excl. GST)" value={fmtINR(gstSplit.base)} tone="emerald" sub="Base amount" />
+          <Kpi icon={Landmark} label="GST payable" value={fmtINR(gstSplit.gst)} tone="amber" sub="18% collected" />
+          <Kpi icon={TrendingDown} label="Expenses" value={fmtINR(totalExpenses)} tone="red" sub="One-time + recurring" />
+          <Kpi icon={Wallet} label="Net profit after GST" value={fmtINR(netAfterGst)} tone={netAfterGst >= 0 ? "emerald" : "red"} sub="Revenue excl. GST − expenses" />
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
 
         <Kpi icon={Wallet} label="Net profit" value={fmtINR(netProfit)} tone={netProfit >= 0 ? "emerald" : "red"} sub={`Avg/mo ${fmtINR(monthAvgRevenue - monthAvgExpense)}`} />
