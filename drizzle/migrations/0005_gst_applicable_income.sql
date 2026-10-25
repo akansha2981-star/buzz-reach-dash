@@ -1,0 +1,2 @@
+ALTER TABLE public.accounts_manual_income ADD COLUMN IF NOT EXISTS gst_applicable boolean NOT NULL DEFAULT false;
+ALTER TABLE public.accounts_invoice_payments ADD COLUMN IF NOT EXISTS gst_applicable boolean NOT NULL DEFAULT false;

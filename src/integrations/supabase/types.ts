@@ -276,6 +276,7 @@ export type Database = {
           amount: number
           created_at: string
           created_by: string | null
+          gst_applicable: boolean
           id: string
           invoice_id: string
           method: string | null
@@ -288,6 +289,7 @@ export type Database = {
           amount: number
           created_at?: string
           created_by?: string | null
+          gst_applicable?: boolean
           id?: string
           invoice_id: string
           method?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           amount?: number
           created_at?: string
           created_by?: string | null
+          gst_applicable?: boolean
           id?: string
           invoice_id?: string
           method?: string | null
@@ -409,6 +412,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          gst_applicable: boolean
           id: string
           notes: string | null
           payer: string | null
@@ -425,6 +429,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          gst_applicable?: boolean
           id?: string
           notes?: string | null
           payer?: string | null
@@ -441,6 +446,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          gst_applicable?: boolean
           id?: string
           notes?: string | null
           payer?: string | null

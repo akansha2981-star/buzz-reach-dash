@@ -36,6 +36,13 @@
       "when": 1792925986296,
       "tag": "0004_accounts_tds",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792926572235,
+      "tag": "0005_gst_applicable_income",
+      "breakpoints": true
     }
   ]
 }
