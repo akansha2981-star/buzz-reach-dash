@@ -1571,6 +1571,42 @@ export type Database = {
           },
         ]
       }
+      lms_lead_tags: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lms_lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "lms_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lms_lead_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "lms_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lms_leads: {
         Row: {
           created_at: string
@@ -1609,6 +1645,65 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      lms_tag_categories: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lms_tags: {
+        Row: {
+          category_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lms_tags_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "lms_tag_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       me_badges: {
         Row: {
