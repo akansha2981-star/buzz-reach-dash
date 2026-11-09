@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] LMS advanced filters: tags/categories, source/year/dates, ascending/descending sorting, missing-field filters without deleting records; verify.
+
 ## In progress
 - [ ] LMS section: daily data upload (Name, Number, Email) with year tag 2020–2029
   - [x] DB: lms_leads table + can_lms permission + has_lms_access()
