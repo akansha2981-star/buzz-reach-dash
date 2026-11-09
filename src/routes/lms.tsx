@@ -1,426 +1,1324 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Plus, Pencil, Trash2, Search, Upload, Download, GraduationCap,
-  Users, CalendarDays, AlertTriangle, FileSpreadsheet, Tags,
-} from "lucide-react";
-import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { AppShell } from "@/components/AppShell";
-import { RequireAuth } from "@/components/RequireAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { toast } from "sonner";
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import {
-  LMS_YEARS, LMS_CSV_TEMPLATE, type LmsLead, type LeadInput,
-  isFullDuplicate, splitDuplicates, parseLeadCsv,
-} from "@/lib/lms";
-import { TagManagerDialog, useTagData } from "@/components/lms/TagManager";
-import { LeadTagPicker, LeadTagBadges } from "@/components/lms/LeadTagPicker";
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  GraduationCap,
+  Pencil,
+  Plus,
+  Search,
+  Tag as TagIcon,
+  Tags,
+  Trash2,
+  TrendingUp,
+  Upload,
+  Users,
+  X,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/lib/permissions';
+import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute("/lms")({
-  component: () => (
-    <RequireAuth perm="can_lms">
-      <AppShell title="LMS Data"><LmsPage /></AppShell>
-    </RequireAuth>
-  ),
-  head: () => ({ meta: [
-    { title: "LMS Data | Works" },
-    { name: "description", content: "Upload and manage daily LMS lead data by year." },
-    { property: "og:title", content: "LMS Data | Works" },
-    { property: "og:description", content: "Upload and manage daily LMS lead data by year." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+export const Route = createFileRoute('/lms')({
+  head: () => ({
+    meta: [
+      { title: 'LMS Leads — MBA Compass Admin' },
+      { name: 'description', content: 'Lead database with yearly tracking, tagging and analytics.' },
+    ],
+  }),
+  component: LmsPage,
 });
 
+const YEARS = Array.from({ length: 10 }, (_, i) => 2020 + i);
+const PAGE_SIZE = 100;
+const COLORS = ['#4f46e5', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d'];
+
+type LeadRow = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  year: number;
+  source: string;
+  created_at: string;
+};
+
+type TagCategory = { id: string; name: string; color: string };
+type Tag = { id: string; category_id: string; name: string };
+type LeadTag = { lead_id: string; tag_id: string };
+
+type Stats = {
+  total: number;
+  by_year: Record<string, number>;
+  by_source: Record<string, number>;
+  by_tag: { tag: string; category: string; color: string; count: number }[];
+  by_day: { day: string; count: number }[];
+  first_day: string | null;
+  last_7: number;
+  last_30: number;
+};
+
+type ParsedLead = { name: string; phone: string; email: string; year: number; source: string; tags: string[] };
+type ImportReport = { ready: ParsedLead[]; dups: ParsedLead[]; invalid: { line: string; reason: string }[] };
+
+function normalizePhone(p: string) {
+  const d = p.replace(/\D/g, '');
+  if (/^(91|0)\d{10}$/.test(d)) return d.slice(-10);
+  return d;
+}
+function normalizeEmail(e: string) {
+  return e.trim().toLowerCase();
+}
+function leadKey(p: string, e: string) {
+  return `${normalizePhone(p)}|${normalizeEmail(e)}`;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseCsvText(text: string, defaultYear: number): { rows: ParsedLead[]; invalid: { line: string; reason: string }[] } {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const rows: ParsedLead[] = [];
+  const invalid: { line: string; reason: string }[] = [];
+  for (const raw of lines) {
+    if (/^name\s*[,;\t]/i.test(raw)) continue; // header
+    const parts = raw.split(/[,;\t]/).map((p) => p.trim());
+    const [name = '', phone = '', email = '', source = '', tagsRaw = ''] = parts;
+    if (!name && !phone && !email) continue;
+    if (!name) { invalid.push({ line: raw, reason: 'Missing name' }); continue; }
+    if (!phone) { invalid.push({ line: raw, reason: 'Missing phone' }); continue; }
+    if (email && !EMAIL_RE.test(email)) { invalid.push({ line: raw, reason: 'Invalid email' }); continue; }
+    const tags = tagsRaw ? tagsRaw.split('|').map((t) => t.trim()).filter(Boolean) : [];
+    rows.push({ name, phone, email, year: defaultYear, source, tags });
+  }
+  return { rows, invalid };
+}
+
+const SAMPLE_CSV = [
+  'name,phone,email,source,tags',
+  'Aarav Sharma,9876543210,aarav.sharma@gmail.com,Website,Stage: Hot Lead|Source Tag: Organic',
+  'Priya Verma,9123456780,priya.verma@yahoo.com,Instagram Ads,Stage: Warm|Exam: CAT 2026',
+  'Rohit Gupta,9988776655,rohit.gupta@outlook.com,Referral,Stage: Cold|Exam: XAT 2026',
+  'Sneha Iyer,9090909090,sneha.iyer@gmail.com,Google Ads,Stage: Hot Lead|City: Delhi',
+  'Karan Mehta,9812345678,karan.mehta@gmail.com,Walk-in,Stage: Enrolled|Course: CAT Full Course',
+].join('\n');
+
 function LmsPage() {
-  const qc = useQueryClient();
-  const [yearFilter, setYearFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
+  const { has, loaded } = usePermissions();
+  const allowed = has('can_lms');
+
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [categories, setCategories] = useState<TagCategory[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [leadTags, setLeadTags] = useState<LeadTag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [yearFilter, setYearFilter] = useState<'all' | number>('all');
+  const [tagFilter, setTagFilter] = useState<string>('all');
+
   const [addOpen, setAddOpen] = useState(false);
-  const [uploadOpen, setUploadOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [editing, setEditing] = useState<LmsLead | null>(null);
-  const [deleting, setDeleting] = useState<LmsLead | null>(null);
-  const { tags } = useTagData();
+  const [bulkTagOpen, setBulkTagOpen] = useState(false);
+  const [assignFor, setAssignFor] = useState<LeadRow | null>(null);
+  const [editing, setEditing] = useState<LeadRow | null>(null);
 
-  const leadTags = useQuery({
-    queryKey: ["lms_lead_tags_all"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("lms_lead_tags").select("lead_id, tag_id");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  const leadIdsWithTag = useMemo(() => {
-    if (tagFilter === "all") return null;
-    return new Set((leadTags.data ?? []).filter((r) => r.tag_id === tagFilter).map((r) => r.lead_id));
-  }, [leadTags.data, tagFilter]);
+  async function loadStats() {
+    const { data, error } = await supabase.rpc('lms_stats');
+    if (!error && data) setStats(data as unknown as Stats);
+  }
 
-  const leads = useQuery({
-    queryKey: ["lms_leads"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lms_leads").select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  async function loadTaxonomy() {
+    const [{ data: cats }, { data: tgs }] = await Promise.all([
+      supabase.from('lms_tag_categories').select('*').order('name'),
+      supabase.from('lms_tags').select('*').order('name'),
+    ]);
+    setCategories((cats as TagCategory[]) ?? []);
+    setTags((tgs as Tag[]) ?? []);
+  }
 
-  const rows = leads.data ?? [];
-  const existing: LeadInput[] = rows.map((r) => ({ name: r.name, phone: r.phone ?? "", email: r.email ?? "" }));
+  async function loadLeads() {
+    setLeadsLoading(true);
+    let q = supabase
+      .from('lms_leads')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+    if (yearFilter !== 'all') q = q.eq('year', yearFilter);
+    if (search) q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    if (tagFilter !== 'all') {
+      const { data: lt } = await supabase.from('lms_lead_tags').select('lead_id').eq('tag_id', tagFilter);
+      const ids = (lt ?? []).map((r) => r.lead_id);
+      if (ids.length === 0) {
+        setLeads([]); setTotalCount(0); setLeadsLoading(false); return;
+      }
+      q = q.in('id', ids);
+    }
+    const { data, count, error } = await q;
+    if (error) toast.error(error.message);
+    const rows = (data as LeadRow[]) ?? [];
+    setLeads(rows);
+    setTotalCount(count ?? 0);
+    if (rows.length) {
+      const { data: lt } = await supabase
+        .from('lms_lead_tags')
+        .select('lead_id, tag_id')
+        .in('lead_id', rows.map((r) => r.id));
+      setLeadTags((lt as LeadTag[]) ?? []);
+    } else {
+      setLeadTags([]);
+    }
+    setLeadsLoading(false);
+  }
 
-  const perYear = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const r of rows) map.set(r.year, (map.get(r.year) ?? 0) + 1);
-    return map;
-  }, [rows]);
+  useEffect(() => {
+    if (!allowed) return;
+    (async () => {
+      setLoading(true);
+      await Promise.all([loadStats(), loadTaxonomy()]);
+      setLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowed]);
 
-  const filtered = rows.filter((r) => {
-    if (yearFilter !== "all" && r.year !== Number(yearFilter)) return false;
-    if (leadIdsWithTag && !leadIdsWithTag.has(r.id)) return false;
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return r.name.toLowerCase().includes(q) || (r.phone ?? "").includes(q) || (r.email ?? "").toLowerCase().includes(q);
-  });
+  useEffect(() => {
+    if (!allowed || loading) return;
+    loadLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowed, loading, page, yearFilter, search, tagFilter]);
 
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("lms_leads").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["lms_leads"] }); setDeleting(null); toast.success("Entry deleted"); },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  async function refreshAll() {
+    await Promise.all([loadStats(), loadLeads()]);
+  }
+
+  // ---------- derived dashboard data ----------
+  const cumulative = useMemo(() => {
+    if (!stats) return [];
+    const days = [...stats.by_day].sort((a, b) => a.day.localeCompare(b.day));
+    let run = (stats.total - days.reduce((s, d) => s + d.count, 0));
+    return days.map((d) => {
+      run += d.count;
+      return { day: d.day.slice(5), added: d.count, total: run };
+    });
+  }, [stats]);
+
+  const averages = useMemo(() => {
+    if (!stats || stats.total === 0) return { daily: 0, weekly: 0, monthly: 0 };
+    const first = stats.first_day ? new Date(stats.first_day).getTime() : Date.now();
+    const days = Math.max(1, Math.ceil((Date.now() - first) / 86400000));
+    const daily = stats.total / days;
+    return {
+      daily: Math.round(daily * 10) / 10,
+      weekly: Math.round(daily * 7 * 10) / 10,
+      monthly: Math.round(daily * 30.4 * 10) / 10,
+    };
+  }, [stats]);
+
+  const sourceRows = useMemo(() => {
+    if (!stats) return [];
+    return Object.entries(stats.by_source)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+  }, [stats]);
+
+  const yearRows = useMemo(() => {
+    if (!stats) return [];
+    return YEARS.map((y) => ({ year: String(y), count: stats.by_year[String(y)] ?? 0 })).filter((r) => r.count > 0);
+  }, [stats]);
+
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const tagsById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+  const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+  const leadTagMap = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const lt of leadTags) {
+      const arr = m.get(lt.lead_id) ?? [];
+      arr.push(lt.tag_id);
+      m.set(lt.lead_id, arr);
+    }
+    return m;
+  }, [leadTags]);
+
+  if (!loaded) return null;
+  if (!allowed) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <GraduationCap className="mx-auto h-10 w-10 text-muted-foreground" />
+        <h1 className="mt-3 text-lg font-semibold">No access</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Ask the master admin to enable LMS access for your account.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto w-full max-w-6xl space-y-5 px-3 py-6 sm:px-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">LMS Data</h1>
-          <p className="text-sm text-muted-foreground">Upload daily lead data — name, number, email — tagged by year.</p>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">LMS Leads</h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            Daily lead data with yearly cohorts, tagging and analytics
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setTagsOpen(true)}><Tags className="mr-1.5 h-4 w-4" />Tags</Button>
-          <Button variant="outline" onClick={() => setUploadOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Bulk upload</Button>
-          <Button onClick={() => { setEditing(null); setAddOpen(true); }}><Plus className="mr-1.5 h-4 w-4" />Add entry</Button>
+          <button
+            onClick={() => setTagsOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-muted sm:text-sm"
+          >
+            <Tags className="h-4 w-4" /> Tags
+          </button>
+          <button
+            onClick={() => setBulkTagOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-muted sm:text-sm"
+          >
+            <TagIcon className="h-4 w-4" /> Bulk Tag
+          </button>
+          <button
+            onClick={() => setImportOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-muted sm:text-sm"
+          >
+            <Upload className="h-4 w-4" /> Import
+          </button>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 sm:text-sm"
+          >
+            <Plus className="h-4 w-4" /> Add Lead
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 border-y border-border py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Total entries</p>
-            <p className="mt-1 text-2xl font-semibold text-primary">{rows.length}</p>
+      {/* Dashboard */}
+      {stats && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <KpiCard icon={<Users className="h-4 w-4" />} label="Total Leads" value={stats.total.toLocaleString('en-IN')} sub={`+${stats.last_7.toLocaleString('en-IN')} last 7 days`} />
+            <KpiCard icon={<TrendingUp className="h-4 w-4" />} label="Daily Average" value={String(averages.daily)} sub="leads per day" />
+            <KpiCard icon={<BarChart3 className="h-4 w-4" />} label="Weekly Average" value={averages.weekly.toLocaleString('en-IN')} sub={`+${stats.last_30.toLocaleString('en-IN')} last 30 days`} />
+            <KpiCard icon={<BarChart3 className="h-4 w-4" />} label="Monthly Average" value={averages.monthly.toLocaleString('en-IN')} sub="leads per month" />
           </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Showing</p>
-            <p className="mt-1 text-2xl font-semibold">{filtered.length}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-full sm:w-40" aria-label="Filter by year"><SelectValue placeholder="All years" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All years</SelectItem>
-              {LMS_YEARS.map((y) => (
-                <SelectItem key={y} value={String(y)}>{y}{perYear.has(y) ? ` (${perYear.get(y)})` : ""}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input aria-label="Search entries" placeholder="Search name, number, email…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          {tags.length > 0 && (
-            <Select value={tagFilter} onValueChange={setTagFilter}>
-              <SelectTrigger className="w-full sm:w-44" aria-label="Filter by tag"><SelectValue placeholder="All tags" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All tags</SelectItem>
-                {tags.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      </div>
 
-      {leads.isLoading ? <p className="py-8 text-center text-muted-foreground">Loading entries…</p>
-        : leads.isError ? <div className="space-y-3 py-8 text-center"><p className="text-destructive">Entries could not be loaded.</p><Button variant="outline" onClick={() => leads.refetch()}>Retry</Button></div>
-        : filtered.length === 0 ? <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground"><GraduationCap className="h-8 w-8" /><p>{search || yearFilter !== "all" ? "No matching entries." : "No data yet — add an entry or bulk upload a CSV."}</p></div>
-        : (
-          <div className="divide-y divide-border">
-            <div className="hidden grid-cols-[1fr_150px_1fr_90px_150px_88px] gap-4 pb-3 text-xs font-medium text-muted-foreground lg:grid">
-              <span>Name</span><span>Number</span><span>Email</span><span>Year</span><span>Added</span><span className="text-right">Actions</span>
-            </div>
-            {filtered.map((row) => (
-              <div key={row.id} className="grid grid-cols-[1fr_auto] items-center gap-2 py-3.5 lg:grid-cols-[1fr_150px_1fr_90px_150px_88px] lg:gap-4">
-                <div className="min-w-0 break-words font-medium">{row.name}</div>
-                <div className="col-start-1 row-start-2 text-sm text-muted-foreground lg:col-start-2 lg:row-start-1">{row.phone || "—"}</div>
-                <div className="col-start-1 row-start-3 min-w-0 break-all text-sm text-muted-foreground lg:col-start-3 lg:row-start-1">{row.email || "—"}</div>
-                <div className="col-start-1 row-start-4 lg:col-start-4 lg:row-start-1"><Badge variant="secondary">{row.year}</Badge></div>
-                <div className="col-start-1 row-start-5 text-xs text-muted-foreground lg:col-start-5 lg:row-start-1">
-                  <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{format(new Date(row.created_at), "dd MMM yyyy")}</span>
-                </div>
-                <div className="col-start-1 row-start-6 flex flex-wrap items-center gap-1.5 lg:col-span-5 lg:row-start-2">
-                  <LeadTagBadges leadId={row.id} />
-                  <LeadTagPicker leadId={row.id} />
-                </div>
-                <div className="col-start-2 row-start-1 flex justify-end lg:col-start-6">
-                  <Button size="icon" variant="ghost" aria-label={`Edit ${row.name}`} title="Edit" onClick={() => { setEditing(row); setAddOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" aria-label={`Delete ${row.name}`} title="Delete" onClick={() => setDeleting(row)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* Cumulative chart */}
+            <div className="rounded-xl border border-border bg-card p-4 lg:col-span-2">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Cumulative Lead Growth</h3>
+                <span className="text-[10px] text-muted-foreground">last 180 days</span>
               </div>
-            ))}
-          </div>
-        )}
+              {cumulative.length ? (
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={cumulative} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="lmsCum" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))' }}
+                        formatter={(v: number, name: string) => [v.toLocaleString('en-IN'), name === 'total' ? 'Total leads' : 'Added']}
+                      />
+                      <Area type="monotone" dataKey="total" stroke="#4f46e5" strokeWidth={2} fill="url(#lmsCum)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="py-10 text-center text-xs text-muted-foreground">No lead activity yet.</p>
+              )}
+            </div>
 
-      <LeadFormDialog
-        open={addOpen}
-        onOpenChange={(v) => { setAddOpen(v); if (!v) setEditing(null); }}
-        editing={editing}
-        existing={existing}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["lms_leads"] })}
-      />
-      <BulkUploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        existing={existing}
-        onDone={() => qc.invalidateQueries({ queryKey: ["lms_leads"] })}
-      />
-      <TagManagerDialog open={tagsOpen} onOpenChange={setTagsOpen} />
-      <Dialog open={!!deleting} onOpenChange={(v) => { if (!v && !remove.isPending) setDeleting(null); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Delete entry?</DialogTitle><DialogDescription>This permanently deletes {deleting?.name} ({deleting?.year}).</DialogDescription></DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" disabled={remove.isPending} onClick={() => setDeleting(null)}>Cancel</Button>
-            <Button variant="destructive" disabled={remove.isPending} onClick={() => { if (deleting) remove.mutate(deleting.id); }}>{remove.isPending ? "Deleting…" : "Delete"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            {/* Source-wise */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-semibold">Source-wise Leads</h3>
+              {sourceRows.length ? (
+                <div className="space-y-2">
+                  {sourceRows.map((s, i) => (
+                    <div key={s.name}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="truncate font-medium">{s.name}</span>
+                        <span className="text-muted-foreground">{s.count.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${Math.max(3, (s.count / Math.max(1, stats.total)) * 100)}%`, background: COLORS[i % COLORS.length] }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-8 text-center text-xs text-muted-foreground">No sources recorded yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Year-wise */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-2 text-sm font-semibold">Year-wise Distribution</h3>
+              {yearRows.length ? (
+                <div className="h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={yearRows} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="year" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [v.toLocaleString('en-IN'), 'Leads']} />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                        {yearRows.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="py-8 text-center text-xs text-muted-foreground">No data yet.</p>
+              )}
+            </div>
+
+            {/* Tag-wise */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-semibold">Tag-wise Leads</h3>
+              {stats.by_tag.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {stats.by_tag.slice(0, 24).map((t) => (
+                    <span
+                      key={`${t.category}-${t.tag}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[11px] font-medium"
+                    >
+                      <span className="h-2 w-2 rounded-full" style={{ background: t.color }} />
+                      {t.category}: {t.tag}
+                      <span className="text-muted-foreground">({t.count.toLocaleString('en-IN')})</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-8 text-center text-xs text-muted-foreground">No tags assigned yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <form
+          className="relative flex-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(0);
+            setSearch(searchInput.trim());
+          }}
+        >
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search name, phone or email…"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+        <select
+          value={yearFilter === 'all' ? 'all' : String(yearFilter)}
+          onChange={(e) => { setPage(0); setYearFilter(e.target.value === 'all' ? 'all' : Number(e.target.value)); }}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="all">All years</option>
+          {YEARS.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <select
+          value={tagFilter}
+          onChange={(e) => { setPage(0); setTagFilter(e.target.value); }}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="all">All tags</option>
+          {categories.map((c) => (
+            <optgroup key={c.id} label={c.name}>
+              {tags.filter((t) => t.category_id === c.id).map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
+                <th className="px-4 py-2.5 font-medium">Name</th>
+                <th className="px-4 py-2.5 font-medium">Phone</th>
+                <th className="px-4 py-2.5 font-medium">Email</th>
+                <th className="px-4 py-2.5 font-medium">Source</th>
+                <th className="px-4 py-2.5 font-medium">Year</th>
+                <th className="px-4 py-2.5 font-medium">Tags</th>
+                <th className="px-4 py-2.5 font-medium">Added</th>
+                <th className="px-4 py-2.5 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((l) => (
+                <tr key={l.id} className="border-b border-border/60 last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-2.5 font-medium">{l.name}</td>
+                  <td className="px-4 py-2.5">{l.phone}</td>
+                  <td className="max-w-[180px] truncate px-4 py-2.5">{l.email || '—'}</td>
+                  <td className="px-4 py-2.5 text-xs">{l.source || '—'}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">{l.year}</span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex max-w-[220px] flex-wrap gap-1">
+                      {(leadTagMap.get(l.id) ?? []).slice(0, 3).map((tid) => {
+                        const t = tagsById.get(tid);
+                        const c = t ? catById.get(t.category_id) : undefined;
+                        if (!t) return null;
+                        return (
+                          <span key={tid} className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] font-medium">
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: c?.color ?? '#94a3b8' }} />
+                            {t.name}
+                          </span>
+                        );
+                      })}
+                      {(leadTagMap.get(l.id) ?? []).length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{(leadTagMap.get(l.id) ?? []).length - 3}</span>
+                      )}
+                      <button
+                        onClick={() => setAssignFor(l)}
+                        className="rounded-full border border-dashed border-border px-1.5 py-0.5 text-[10px] text-muted-foreground hover:border-indigo-400 hover:text-indigo-600"
+                      >
+                        + tag
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString('en-IN')}</td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => setEditing(l)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Delete lead "${l.name}"?`)) return;
+                          const { error } = await supabase.from('lms_leads').delete().eq('id', l.id);
+                          if (error) { toast.error(error.message); return; }
+                          toast.success('Lead deleted');
+                          refreshAll();
+                        }}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!leadsLoading && leads.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    No leads found. Add one or import a CSV.
+                  </td>
+                </tr>
+              )}
+              {leadsLoading && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">Loading…</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+          <span>
+            {totalCount.toLocaleString('en-IN')} leads · page {page + 1} of {pageCount}
+          </span>
+          <div className="flex gap-1">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="rounded-lg border border-border p-1.5 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              disabled={page >= pageCount - 1}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-lg border border-border p-1.5 disabled:opacity-40"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {addOpen && (
+        <LeadForm
+          onClose={() => setAddOpen(false)}
+          onSaved={() => { setAddOpen(false); refreshAll(); }}
+        />
+      )}
+      {editing && (
+        <LeadForm
+          lead={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); refreshAll(); }}
+        />
+      )}
+      {importOpen && (
+        <ImportDialog
+          categories={categories}
+          tags={tags}
+          onClose={() => setImportOpen(false)}
+          onDone={() => { setImportOpen(false); refreshAll(); }}
+        />
+      )}
+      {tagsOpen && (
+        <TagManager
+          categories={categories}
+          tags={tags}
+          onClose={() => setTagsOpen(false)}
+          onChanged={() => { loadTaxonomy(); loadStats(); }}
+        />
+      )}
+      {assignFor && (
+        <AssignTags
+          lead={assignFor}
+          categories={categories}
+          tags={tags}
+          assigned={leadTagMap.get(assignFor.id) ?? []}
+          onClose={() => setAssignFor(null)}
+          onSaved={() => { setAssignFor(null); loadLeads(); loadStats(); }}
+        />
+      )}
+      {bulkTagOpen && (
+        <BulkTagDialog
+          categories={categories}
+          tags={tags}
+          onClose={() => setBulkTagOpen(false)}
+          onDone={() => { setBulkTagOpen(false); loadTaxonomy(); loadLeads(); loadStats(); }}
+        />
+      )}
     </div>
   );
 }
 
-function LeadFormDialog({ open, onOpenChange, editing, existing, onSaved }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  editing: LmsLead | null;
-  existing: LeadInput[];
-  onSaved: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [year, setYear] = useState<string>("");
-  const [lastKey, setLastKey] = useState<string | null>(null);
-
-  // Re-seed the form whenever a different entry (or "new") is opened.
-  const key = editing?.id ?? "new";
-  if (open && key !== lastKey) {
-    setLastKey(key);
-    setName(editing?.name ?? "");
-    setPhone(editing?.phone ?? "");
-    setEmail(editing?.email ?? "");
-    setYear(editing ? String(editing.year) : "");
-  }
-
-  const candidate: LeadInput = { name, phone, email };
-  const others = editing ? existing.filter((e) => !(e.name === editing.name && e.phone === (editing.phone ?? "") && e.email === (editing.email ?? ""))) : existing;
-  const wouldDuplicate = !editing && isFullDuplicate(candidate, others);
-
-  const save = useMutation({
-    mutationFn: async () => {
-      if (!name.trim()) throw new Error("Enter a name.");
-      if (!phone.trim() && !email.trim()) throw new Error("Enter at least a number or an email.");
-      if (!year) throw new Error("Select the year this data belongs to.");
-      const payload = { name: name.trim(), phone: phone.trim() || null, email: email.trim() || null, year: Number(year) };
-      if (editing) {
-        const { error } = await supabase.from("lms_leads").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        if (wouldDuplicate) throw new Error("This exact number and email combination already exists — not added.");
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError) throw authError;
-        if (!user) throw new Error("Please sign in again to save.");
-        const { error } = await supabase.from("lms_leads").insert({ ...payload, created_by: user.id });
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => { onSaved(); onOpenChange(false); toast.success(editing ? "Entry updated" : "Entry added"); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
+function KpiCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!save.isPending) onOpenChange(v); }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit entry" : "Add entry"}</DialogTitle>
-          <DialogDescription>Name, number, email and the year this data belongs to.</DialogDescription>
-        </DialogHeader>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
-          <div className="space-y-1.5">
-            <Label htmlFor="lms-name">Name</Label>
-            <Input id="lms-name" required placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="lms-phone">Number</Label>
-              <Input id="lms-phone" inputMode="tel" placeholder="9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lms-email">Email</Label>
-              <Input id="lms-email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Year</Label>
-            <Select value={year || undefined} onValueChange={setYear}>
-              <SelectTrigger aria-label="Select year"><SelectValue placeholder="Select year (2020–2029)" /></SelectTrigger>
-              <SelectContent>{LMS_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          {wouldDuplicate && (
-            <p className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              This number and email already exist together — it will not be added again.
-            </p>
-          )}
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" disabled={save.isPending} onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={save.isPending || !name.trim() || !year || wouldDuplicate}>{save.isPending ? "Saving…" : editing ? "Save changes" : "Add entry"}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {icon}
+        {label}
+      </div>
+      <div className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">{value}</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>
+    </div>
   );
 }
 
-function BulkUploadDialog({ open, onOpenChange, existing, onDone }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  existing: LeadInput[];
-  onDone: () => void;
-}) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [year, setYear] = useState<string>("");
-  const [parsed, setParsed] = useState<LeadInput[]>([]);
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
-  const [fileName, setFileName] = useState("");
+function LeadForm({ lead, onClose, onSaved }: { lead?: LeadRow; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(lead?.name ?? '');
+  const [phone, setPhone] = useState(lead?.phone ?? '');
+  const [email, setEmail] = useState(lead?.email ?? '');
+  const [source, setSource] = useState(lead?.source ?? '');
+  const [year, setYear] = useState(lead?.year ?? new Date().getFullYear());
+  const [saving, setSaving] = useState(false);
 
-  const { fresh, duplicates } = useMemo(() => splitDuplicates(parsed, existing), [parsed, existing]);
-
-  function reset() {
-    setParsed([]); setParseErrors([]); setFileName(""); setYear("");
-    if (fileRef.current) fileRef.current.value = "";
-  }
-
-  async function handleFile(file: File) {
-    setFileName(file.name);
-    const text = await file.text();
-    const { rows, errors } = parseLeadCsv(text);
-    setParsed(rows);
-    setParseErrors(errors);
-  }
-
-  const importRows = useMutation({
-    mutationFn: async () => {
-      if (!year) throw new Error("Select the year this data belongs to.");
-      if (fresh.length === 0) throw new Error("Nothing new to import — every row is a duplicate or invalid.");
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!user) throw new Error("Please sign in again to import.");
-      const payload = fresh.map((r) => ({
-        name: r.name, phone: r.phone || null, email: r.email || null,
-        year: Number(year), created_by: user.id,
-      }));
-      const { error } = await supabase.from("lms_leads").insert(payload);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      onDone();
-      toast.success(`Imported ${fresh.length} entries${duplicates.length ? `, skipped ${duplicates.length} duplicates` : ""}`);
-      onOpenChange(false);
-      reset();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  function downloadTemplate() {
-    const blob = new Blob([LMS_CSV_TEMPLATE], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "lms-data-template.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+  async function save() {
+    if (!name.trim() || !phone.trim()) { toast.error('Name and phone are required'); return; }
+    if (email && !EMAIL_RE.test(email)) { toast.error('Invalid email'); return; }
+    setSaving(true);
+    const payload = { name: name.trim(), phone: phone.trim(), email: email.trim(), source: source.trim(), year };
+    const { error } = lead
+      ? await supabase.from('lms_leads').update(payload).eq('id', lead.id)
+      : await supabase.from('lms_leads').insert(payload);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(lead ? 'Lead updated' : 'Lead added');
+    onSaved();
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!importRows.isPending) { onOpenChange(v); if (!v) reset(); } }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Bulk upload data</DialogTitle>
-          <DialogDescription>Upload a CSV with columns name, phone, email — then pick the year this batch belongs to.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={downloadTemplate}><Download className="mr-1.5 h-4 w-4" />CSV template</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}><FileSpreadsheet className="mr-1.5 h-4 w-4" />Choose file</Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv,.txt"
-              className="hidden"
-              aria-label="Upload CSV file"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); }}
-            />
-            {fileName && <span className="text-xs text-muted-foreground">{fileName}</span>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Year for this upload</Label>
-            <Select value={year || undefined} onValueChange={setYear}>
-              <SelectTrigger aria-label="Select year for upload"><SelectValue placeholder="Select year (2020–2029)" /></SelectTrigger>
-              <SelectContent>{LMS_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold">{lead ? 'Edit Lead' : 'Add Lead'}</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-3">
+          <Field label="Name *">
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </Field>
+          <Field label="Phone *">
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </Field>
+          <Field label="Email">
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </Field>
+          <Field label="Source">
+            <input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Website, Instagram Ads, Referral…" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </Field>
+          <Field label="Year">
+            <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </Field>
+        </div>
+        <button
+          onClick={save}
+          disabled={saving}
+          className="mt-5 w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : lead ? 'Save changes' : 'Add lead'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-          {parsed.length > 0 && (
-            <div className="space-y-2 rounded-md border border-border p-3 text-sm">
-              <p><span className="font-semibold text-primary">{fresh.length}</span> new entries will be imported</p>
-              {duplicates.length > 0 && (
-                <div>
-                  <p className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    <span className="font-semibold">{duplicates.length}</span> duplicates skipped (same number + email already exist)
-                  </p>
-                  <ul className="mt-1.5 max-h-28 space-y-0.5 overflow-y-auto text-xs text-muted-foreground">
-                    {duplicates.slice(0, 20).map((d, i) => <li key={i}>• {d.name} — {d.phone || d.email}</li>)}
-                    {duplicates.length > 20 && <li>…and {duplicates.length - 20} more</li>}
-                  </ul>
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ImportDialog({
+  categories,
+  tags,
+  onClose,
+  onDone,
+}: {
+  categories: TagCategory[];
+  tags: Tag[];
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [report, setReport] = useState<ImportReport | null>(null);
+  const [fileName, setFileName] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(f: File) {
+    setFileName(f.name);
+    setChecking(true);
+    const text = await f.text();
+    const { rows, invalid } = parseCsvText(text, year);
+
+    // In-batch duplicates (same phone+email twice in file)
+    const seen = new Set<string>();
+    const batchDups: ParsedLead[] = [];
+    const unique: ParsedLead[] = [];
+    for (const r of rows) {
+      const k = leadKey(r.phone, r.email);
+      if (r.email && seen.has(k)) batchDups.push(r);
+      else { seen.add(k); unique.push(r); }
+    }
+
+    // Server-side duplicates: only same phone AND same email blocks
+    const dbDups: ParsedLead[] = [];
+    const ready: ParsedLead[] = [];
+    const candidates = unique.filter((r) => r.email && normalizePhone(r.phone));
+    const dupKeys = new Set<string>();
+    for (let i = 0; i < candidates.length; i += 400) {
+      const chunk = candidates.slice(i, i + 400).map((r) => ({ email: r.email, phone: r.phone }));
+      const { data, error } = await supabase.rpc('lms_find_duplicate_pairs', { pairs: chunk });
+      if (error) { toast.error(error.message); break; }
+      for (const d of (data as { email: string; phone: string }[]) ?? []) {
+        dupKeys.add(`${d.phone}|${d.email}`);
+      }
+    }
+    for (const r of unique) {
+      const k = leadKey(r.phone, r.email);
+      if (r.email && dupKeys.has(k)) dbDups.push(r);
+      else ready.push(r);
+    }
+
+    setReport({ ready, dups: [...batchDups, ...dbDups], invalid });
+    setChecking(false);
+  }
+
+  async function doImport() {
+    if (!report || report.ready.length === 0) return;
+    setImporting(true);
+    let inserted = 0;
+    for (let i = 0; i < report.ready.length; i += 200) {
+      const chunk = report.ready.slice(i, i + 200);
+      const { data, error } = await supabase
+        .from('lms_leads')
+        .insert(chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: r.source, year: r.year })))
+        .select('id, email, phone');
+      if (error) { toast.error(error.message); setImporting(false); return; }
+      inserted += data?.length ?? 0;
+
+      // Attach tags from the tags column (Category: Tag|Category: Tag)
+      const tagInserts: { lead_id: string; tag_id: string }[] = [];
+      const byKey = new Map((data ?? []).map((d) => [leadKey(d.phone ?? '', d.email ?? ''), d.id]));
+      for (const r of chunk) {
+        if (!r.tags.length) continue;
+        const leadId = byKey.get(leadKey(r.phone, r.email));
+        if (!leadId) continue;
+        for (const spec of r.tags) {
+          const [catName, tagName] = spec.split(':').map((s) => s.trim());
+          if (!catName || !tagName) continue;
+          const cat = categories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+          const tag = cat && tags.find((t) => t.category_id === cat.id && t.name.toLowerCase() === tagName.toLowerCase());
+          if (tag) tagInserts.push({ lead_id: leadId, tag_id: tag.id });
+        }
+      }
+      if (tagInserts.length) {
+        await supabase.from('lms_lead_tags').upsert(tagInserts, { onConflict: 'lead_id,tag_id', ignoreDuplicates: true });
+      }
+    }
+    setImporting(false);
+    toast.success(`Imported ${inserted.toLocaleString('en-IN')} leads (${report.dups.length} duplicates skipped)`);
+    onDone();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Import Leads (CSV)</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900">
+          <p className="font-semibold">Format: name, phone, email, source, tags</p>
+          <p className="mt-1">
+            Tags are optional: <code>Category: Tag|Category: Tag</code>. Duplicates are skipped only when{' '}
+            <strong>both phone and email</strong> match an existing lead — same number with a different email (or vice versa) is still added.
+          </p>
+          <button
+            onClick={() => {
+              const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = 'lms-leads-sample.csv';
+              a.click();
+            }}
+            className="mt-2 inline-flex items-center gap-1 rounded-md border border-indigo-300 bg-white px-2 py-1 font-semibold hover:bg-indigo-100"
+          >
+            <Download className="h-3.5 w-3.5" /> Download sample file (with sample categories & tags)
+          </button>
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Field label="Year for this batch">
+            <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </Field>
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            <Upload className="h-4 w-4" /> {fileName || 'Choose CSV / TXT'}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,.txt"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = '';
+            }}
+          />
+        </div>
+
+        {checking && <p className="py-6 text-center text-sm text-muted-foreground">Checking duplicates…</p>}
+
+        {report && !checking && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                <div className="text-lg font-bold text-emerald-700">{report.ready.length}</div>
+                <div className="text-[11px] text-emerald-700">Ready to import</div>
+              </div>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <div className="text-lg font-bold text-amber-700">{report.dups.length}</div>
+                <div className="text-[11px] text-amber-700">Duplicates skipped</div>
+              </div>
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                <div className="text-lg font-bold text-red-700">{report.invalid.length}</div>
+                <div className="text-[11px] text-red-700">Invalid rows</div>
+              </div>
+            </div>
+
+            {report.dups.length > 0 && (
+              <details className="rounded-lg border border-border">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-semibold">View duplicates ({report.dups.length})</summary>
+                <div className="max-h-40 overflow-y-auto border-t border-border px-3 py-2 text-xs">
+                  {report.dups.slice(0, 100).map((d, i) => (
+                    <div key={i} className="flex justify-between gap-2 py-0.5">
+                      <span className="truncate">{d.name} — {d.phone}</span>
+                      <span className="truncate text-muted-foreground">{d.email}</span>
+                    </div>
+                  ))}
+                  {report.dups.length > 100 && <p className="py-1 text-muted-foreground">…and {report.dups.length - 100} more</p>}
+                </div>
+              </details>
+            )}
+            {report.invalid.length > 0 && (
+              <details className="rounded-lg border border-border">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-semibold">View invalid rows ({report.invalid.length})</summary>
+                <div className="max-h-40 overflow-y-auto border-t border-border px-3 py-2 text-xs">
+                  {report.invalid.slice(0, 100).map((d, i) => (
+                    <div key={i} className="flex justify-between gap-2 py-0.5">
+                      <span className="truncate">{d.line}</span>
+                      <span className="text-red-600">{d.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+
+            <button
+              onClick={doImport}
+              disabled={importing || report.ready.length === 0}
+              className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {importing ? 'Importing…' : `Import ${report.ready.length.toLocaleString('en-IN')} leads`}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TagManager({
+  categories,
+  tags,
+  onClose,
+  onChanged,
+}: {
+  categories: TagCategory[];
+  tags: Tag[];
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const [newCat, setNewCat] = useState('');
+  const [newColor, setNewColor] = useState(COLORS[0]);
+  const [newTagFor, setNewTagFor] = useState<string | null>(null);
+  const [newTag, setNewTag] = useState('');
+
+  async function addCategory() {
+    if (!newCat.trim()) return;
+    const { error } = await supabase.from('lms_tag_categories').insert({ name: newCat.trim(), color: newColor });
+    if (error) { toast.error(error.message); return; }
+    setNewCat('');
+    onChanged();
+  }
+
+  async function addTag(categoryId: string) {
+    if (!newTag.trim()) return;
+    const { error } = await supabase.from('lms_tags').insert({ category_id: categoryId, name: newTag.trim() });
+    if (error) { toast.error(error.message); return; }
+    setNewTag('');
+    setNewTagFor(null);
+    onChanged();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Tag Categories & Tags</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="mb-4 flex gap-2">
+          <input
+            value={newCat}
+            onChange={(e) => setNewCat(e.target.value)}
+            placeholder="New category (e.g. Stage, Exam, City)"
+            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <div className="flex items-center gap-1">
+            {COLORS.slice(0, 5).map((c) => (
+              <button
+                key={c}
+                onClick={() => setNewColor(c)}
+                className={cn('h-6 w-6 rounded-full border-2', newColor === c ? 'border-foreground' : 'border-transparent')}
+                style={{ background: c }}
+              />
+            ))}
+          </div>
+          <button onClick={addCategory} className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Add</button>
+        </div>
+
+        <div className="space-y-3">
+          {categories.map((c) => (
+            <div key={c.id} className="rounded-lg border border-border p-3">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+                  {c.name}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { setNewTagFor(newTagFor === c.id ? null : c.id); setNewTag(''); }}
+                    className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+                  >
+                    + Tag
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Delete category "${c.name}" and all its tags?`)) return;
+                      const { error } = await supabase.from('lms_tag_categories').delete().eq('id', c.id);
+                      if (error) { toast.error(error.message); return; }
+                      onChanged();
+                    }}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {tags.filter((t) => t.category_id === c.id).map((t) => (
+                  <span key={t.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[11px]">
+                    {t.name}
+                    <button
+                      onClick={async () => {
+                        const { error } = await supabase.from('lms_tags').delete().eq('id', t.id);
+                        if (error) { toast.error(error.message); return; }
+                        onChanged();
+                      }}
+                      className="text-muted-foreground hover:text-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                {tags.filter((t) => t.category_id === c.id).length === 0 && (
+                  <span className="text-[11px] text-muted-foreground">No tags yet</span>
+                )}
+              </div>
+              {newTagFor === c.id && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Tag name"
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && addTag(c.id)}
+                    className="flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <button onClick={() => addTag(c.id)} className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground">Add</button>
                 </div>
               )}
-              {parseErrors.length > 0 && (
-                <p className="text-xs text-destructive">{parseErrors.length} lines skipped: {parseErrors.slice(0, 3).join("; ")}{parseErrors.length > 3 ? "…" : ""}</p>
-              )}
+            </div>
+          ))}
+          {categories.length === 0 && (
+            <p className="py-6 text-center text-xs text-muted-foreground">No categories yet. Create one above, e.g. "Stage", "Exam", "City".</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssignTags({
+  lead,
+  categories,
+  tags,
+  assigned,
+  onClose,
+  onSaved,
+}: {
+  lead: LeadRow;
+  categories: TagCategory[];
+  tags: Tag[];
+  assigned: string[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set(assigned));
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    const toAdd = [...selected].filter((id) => !assigned.includes(id));
+    const toRemove = assigned.filter((id) => !selected.has(id));
+    if (toAdd.length) {
+      const { error } = await supabase.from('lms_lead_tags').upsert(toAdd.map((tag_id) => ({ lead_id: lead.id, tag_id })), { onConflict: 'lead_id,tag_id', ignoreDuplicates: true });
+      if (error) { toast.error(error.message); setSaving(false); return; }
+    }
+    if (toRemove.length) {
+      const { error } = await supabase.from('lms_lead_tags').delete().eq('lead_id', lead.id).in('tag_id', toRemove);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+    }
+    setSaving(false);
+    toast.success('Tags updated');
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Tags for {lead.name}</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground">Select as many tags as you want.</p>
+        <div className="space-y-3">
+          {categories.map((c) => (
+            <div key={c.id}>
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold">
+                <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+                {c.name}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {tags.filter((t) => t.category_id === c.id).map((t) => {
+                  const on = selected.has(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        const next = new Set(selected);
+                        if (on) next.delete(t.id); else next.add(t.id);
+                        setSelected(next);
+                      }}
+                      className={cn(
+                        'rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors',
+                        on ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-border text-muted-foreground hover:border-indigo-300',
+                      )}
+                    >
+                      {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {categories.length === 0 && <p className="py-4 text-center text-xs text-muted-foreground">Create categories and tags first.</p>}
+        </div>
+        <button
+          onClick={save}
+          disabled={saving}
+          className="mt-5 w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save tags'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BulkTagDialog({
+  categories,
+  tags,
+  onClose,
+  onDone,
+}: {
+  categories: TagCategory[];
+  tags: Tag[];
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [emails, setEmails] = useState<string[]>([]);
+  const [fileName, setFileName] = useState('');
+  const [catId, setCatId] = useState('');
+  const [tagId, setTagId] = useState('');
+  const [newCat, setNewCat] = useState('');
+  const [newTag, setNewTag] = useState('');
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ matched: number; tagged: number; missing: number } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const catTags = tags.filter((t) => t.category_id === catId);
+
+  async function handleFile(f: File) {
+    setFileName(f.name);
+    const text = await f.text();
+    const found = text
+      .split(/[\r\n,;\t ]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => EMAIL_RE.test(s));
+    setEmails([...new Set(found)]);
+    setResult(null);
+  }
+
+  async function ensureTag(): Promise<string | null> {
+    let cId = catId;
+    if (!cId && newCat.trim()) {
+      const { data, error } = await supabase.from('lms_tag_categories').insert({ name: newCat.trim(), color: COLORS[categories.length % COLORS.length] }).select('id').single();
+      if (error) { toast.error(error.message); return null; }
+      cId = data.id;
+    }
+    if (!cId) { toast.error('Pick or create a category'); return null; }
+    let tId = tagId;
+    if (!tId && newTag.trim()) {
+      const { data, error } = await supabase.from('lms_tags').insert({ category_id: cId, name: newTag.trim() }).select('id').single();
+      if (error) { toast.error(error.message); return null; }
+      tId = data.id;
+    }
+    if (!tId) { toast.error('Pick or create a tag'); return null; }
+    return tId;
+  }
+
+  async function run() {
+    if (emails.length === 0) { toast.error('Upload an email list first'); return; }
+    setRunning(true);
+    const tId = await ensureTag();
+    if (!tId) { setRunning(false); return; }
+
+    let matched = 0;
+    let tagged = 0;
+    for (let i = 0; i < emails.length; i += 300) {
+      const chunk = emails.slice(i, i + 300);
+      const { data: leads, error } = await supabase.from('lms_leads').select('id').in('email', chunk);
+      if (error) { toast.error(error.message); setRunning(false); return; }
+      const ids = (leads ?? []).map((l) => l.id);
+      matched += ids.length;
+      if (ids.length) {
+        const { error: upErr } = await supabase
+          .from('lms_lead_tags')
+          .upsert(ids.map((lead_id) => ({ lead_id, tag_id: tId })), { onConflict: 'lead_id,tag_id', ignoreDuplicates: true });
+        if (upErr) { toast.error(upErr.message); setRunning(false); return; }
+        tagged += ids.length;
+      }
+    }
+    setResult({ matched, tagged, missing: emails.length - matched });
+    setRunning(false);
+    toast.success(`Tagged ${tagged.toLocaleString('en-IN')} leads`);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Bulk Tag by Email List</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900">
+          Upload a CSV/TXT of emails (one per line or comma-separated). Every existing lead with a matching email gets the selected tag.
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            <Upload className="h-4 w-4" /> {fileName || 'Choose email list'}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,.txt"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = '';
+            }}
+          />
+          {emails.length > 0 && <p className="text-xs text-muted-foreground">{emails.length.toLocaleString('en-IN')} unique emails found</p>}
+
+          <Field label="Tag category">
+            <select
+              value={catId}
+              onChange={(e) => { setCatId(e.target.value); setTagId(''); }}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">— select or create below —</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </Field>
+          {!catId && (
+            <Field label="Or new category">
+              <input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Campaign 2026" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </Field>
+          )}
+          {(catId || newCat.trim()) && (
+            <Field label="Tag">
+              <select
+                value={tagId}
+                onChange={(e) => setTagId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">— select or create below —</option>
+                {catTags.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </Field>
+          )}
+          {(catId || newCat.trim()) && !tagId && (
+            <Field label="Or new tag">
+              <input value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. Diwali Offer" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </Field>
+          )}
+
+          {result && (
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
+                <div className="text-base font-bold text-emerald-700">{result.tagged}</div>
+                <div className="text-[10px] text-emerald-700">Tagged</div>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/40 p-2.5">
+                <div className="text-base font-bold">{result.matched}</div>
+                <div className="text-[10px] text-muted-foreground">Matched</div>
+              </div>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                <div className="text-base font-bold text-amber-700">{result.missing}</div>
+                <div className="text-[10px] text-amber-700">Not in database</div>
+              </div>
             </div>
           )}
 
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" disabled={importRows.isPending} onClick={() => { onOpenChange(false); reset(); }}>Cancel</Button>
-            <Button type="button" disabled={importRows.isPending || !year || fresh.length === 0} onClick={() => importRows.mutate()}>
-              {importRows.isPending ? "Importing…" : `Import ${fresh.length || ""} entries`}
-            </Button>
-          </DialogFooter>
+          <button
+            onClick={run}
+            disabled={running || emails.length === 0}
+            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {running ? 'Applying tags…' : 'Apply tag to matching leads'}
+          </button>
+          {result && (
+            <button onClick={onDone} className="w-full rounded-lg border border-border py-2 text-sm font-semibold hover:bg-muted">
+              Done
+            </button>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
