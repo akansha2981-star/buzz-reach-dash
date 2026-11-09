@@ -547,7 +547,7 @@ function LmsPage() {
                 <th className="px-4 py-2.5 font-medium">Source</th>
                 <th className="px-4 py-2.5 font-medium">Year</th>
                 <th className="px-4 py-2.5 font-medium">Tags</th>
-                <th className="px-4 py-2.5 font-medium">Added</th>
+                <th className="px-4 py-2.5 font-medium">Lead date</th>
                 <th className="px-4 py-2.5 text-right font-medium">Actions</th>
               </tr>
             </thead>

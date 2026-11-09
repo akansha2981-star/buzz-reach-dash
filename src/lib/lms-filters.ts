@@ -37,7 +37,7 @@ export function buildLmsFilterQuery(f: LmsFilters) {
     if (state === 'blank') clauses.push(`or(${column}.is.null,${column}.eq."")`);
     if (state === 'filled') clauses.push(`and(${column}.not.is.null,${column}.neq."")`);
   }
-  const sort = ['name', 'email', 'phone', 'source', 'year', 'created_at', 'updated_at'].includes(f.sort) ? f.sort : 'created_at';
+  const sort = ['name', 'email', 'phone', 'source', 'year', 'created_at', 'updated_at', 'generated_at'].includes(f.sort) ? f.sort : 'created_at';
   return {
     select: ['*', ...joins].join(','), embedded,
     expression: clauses.length ? `and(${clauses.join(',')})` : '',
