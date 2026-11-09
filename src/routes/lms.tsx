@@ -89,6 +89,7 @@ type LeadRow = {
   year: number;
   source: string;
   created_at: string;
+  generated_at?: string | null;
 };
 
 type TagCategory = { id: string; name: string; color: string };
@@ -106,7 +107,7 @@ type Stats = {
   last_30: number;
 };
 
-type ParsedLead = { name: string; phone: string; email: string; year: number; source: string; tags: string[] };
+type ParsedLead = { name: string; phone: string; email: string; year: number; source: string; tags: string[]; generated_at?: string | null };
 type ImportReport = { ready: ParsedLead[]; dups: ParsedLead[]; invalid: { line: string; reason: string }[] };
 
 function normalizePhone(p: string) {
@@ -546,7 +547,7 @@ function LmsPage() {
                 <th className="px-4 py-2.5 font-medium">Source</th>
                 <th className="px-4 py-2.5 font-medium">Year</th>
                 <th className="px-4 py-2.5 font-medium">Tags</th>
-                <th className="px-4 py-2.5 font-medium">Added</th>
+                <th className="px-4 py-2.5 font-medium">Lead date</th>
                 <th className="px-4 py-2.5 text-right font-medium">Actions</th>
               </tr>
             </thead>
@@ -584,7 +585,14 @@ function LmsPage() {
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString('en-IN')}</td>
+                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {l.generated_at ? (
+                      <span title={`Uploaded ${new Date(l.created_at).toLocaleString('en-IN')}`}>
+                        <span className="font-medium text-foreground">{new Date(l.generated_at).toLocaleDateString('en-IN')}</span>
+                        <span className="block text-[10px]">{new Date(l.generated_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · lead date</span>
+                      </span>
+                    ) : new Date(l.created_at).toLocaleDateString('en-IN')}
+                  </td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-1">
                       <button onClick={() => setEditing(l)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="Edit">
@@ -820,8 +828,12 @@ function ImportDialog({
     const unique: ParsedLead[] = [];
     for (const r of rows) {
       const k = leadKey(r.phone, r.email);
-      if (seen.has(k)) batchDups.push(r);
-      else { seen.add(k); unique.push(r); }
+      if (seen.has(k)) {
+        batchDups.push(r);
+        // Keep the earliest generation time for the lead
+        const first = unique.find((u) => leadKey(u.phone, u.email) === k);
+        if (first && r.generated_at && (!first.generated_at || r.generated_at < first.generated_at)) first.generated_at = r.generated_at;
+      } else { seen.add(k); unique.push(r); }
     }
 
     const ready = unique;
@@ -838,7 +850,7 @@ function ImportDialog({
     for (let i = 0; i < report.ready.length; i += 200) {
       const chunk = report.ready.slice(i, i + 200);
       const { data: res, error } = await supabase.rpc('lms_upsert_leads', {
-        rows: chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: r.source || source.trim(), year: r.year })),
+        rows: chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: r.source || source.trim(), year: r.year, generated_at: r.generated_at ?? null })),
       });
       if (error) { toast.error(error.message); setImporting(false); return; }
       const out = res as { inserted: number; updated: number; merged: number; rows: { i: number; id: string }[] };
@@ -960,10 +972,10 @@ function ImportDialog({
             {report.ready.length > 0 && (
               <div className="max-h-48 overflow-auto rounded-lg border border-border text-xs">
                 <table className="w-full">
-                  <thead className="bg-muted/50 text-left"><tr><th className="px-2 py-1">Name</th><th className="px-2 py-1">Phone</th><th className="px-2 py-1">Email</th><th className="px-2 py-1">Source</th><th className="px-2 py-1">Year</th></tr></thead>
+                  <thead className="bg-muted/50 text-left"><tr><th className="px-2 py-1">Name</th><th className="px-2 py-1">Phone</th><th className="px-2 py-1">Email</th><th className="px-2 py-1">Source</th><th className="px-2 py-1">Year</th><th className="px-2 py-1">Lead date</th></tr></thead>
                   <tbody>
                     {report.ready.slice(0, 8).map((r, i) => (
-                      <tr key={i} className="border-t border-border"><td className="px-2 py-1">{r.name}</td><td className="px-2 py-1">{r.phone}</td><td className="px-2 py-1">{r.email}</td><td className="px-2 py-1">{r.source || source || '—'}</td><td className="px-2 py-1">{r.year}</td></tr>
+                      <tr key={i} className="border-t border-border"><td className="px-2 py-1">{r.name}</td><td className="px-2 py-1">{r.phone}</td><td className="px-2 py-1">{r.email}</td><td className="px-2 py-1">{r.source || source || '—'}</td><td className="px-2 py-1">{r.year}</td><td className="whitespace-nowrap px-2 py-1">{r.generated_at ? new Date(r.generated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td></tr>
                     ))}
                   </tbody>
                 </table>

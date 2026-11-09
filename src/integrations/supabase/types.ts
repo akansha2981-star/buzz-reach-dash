@@ -1612,6 +1612,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          generated_at: string | null
           id: string
           name: string
           notes: string | null
@@ -1624,6 +1625,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          generated_at?: string | null
           id?: string
           name: string
           notes?: string | null
@@ -1636,6 +1638,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          generated_at?: string | null
           id?: string
           name?: string
           notes?: string | null

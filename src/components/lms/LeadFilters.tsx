@@ -41,7 +41,7 @@ export function LeadFilters({ value, onChange, categories, tags, sources, count 
         {select('Email details', 'email', blankOptions)}
         {select('Phone details', 'phone', blankOptions)}
         {select('Source details', 'sourceDetails', blankOptions)}
-        {select('Sort by', 'sort', [['created_at', 'Upload date'], ['updated_at', 'Last updated'], ['name', 'Name'], ['year', 'Year'], ['source', 'Source'], ['email', 'Email'], ['phone', 'Phone']])}
+        {select('Sort by', 'sort', [['created_at', 'Upload date'], ['generated_at', 'Lead generated date'], ['updated_at', 'Last updated'], ['name', 'Name'], ['year', 'Year'], ['source', 'Source'], ['email', 'Email'], ['phone', 'Phone']])}
         <label className="space-y-1 text-xs font-medium text-muted-foreground"><span>Uploaded from</span><input aria-label="Uploaded from" type="date" className={inputClass} value={value.from} max={value.to || undefined} onChange={e => set('from', e.target.value)} /></label>
         <label className="space-y-1 text-xs font-medium text-muted-foreground"><span>Uploaded until</span><input aria-label="Uploaded until" type="date" className={inputClass} value={value.to} min={value.from || undefined} onChange={e => set('to', e.target.value)} /></label>
         {select('Sort direction', 'direction', [['asc', 'Ascending ↑'], ['desc', 'Descending ↓']])}
