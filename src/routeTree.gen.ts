@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CeoDeskRouteImport } from './routes/ceo-desk'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as HabitsRouteImport } from './routes/habits'
-import { Route as LmsRouteImport } from './routes/lms'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as SalesRouteImport } from './routes/sales'
@@ -95,11 +94,6 @@ const DocumentsRoute = DocumentsRouteImport.update({
 const HabitsRoute = HabitsRouteImport.update({
   id: '/habits',
   path: '/habits',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LmsRoute = LmsRouteImport.update({
-  id: '/lms',
-  path: '/lms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeRoute = MeRouteImport.update({
@@ -361,7 +355,6 @@ export interface FileRoutesByFullPath {
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
   '/habits': typeof HabitsRouteWithChildren
-  '/lms': typeof LmsRoute
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/sales': typeof SalesRouteWithChildren
@@ -418,7 +411,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
-  '/lms': typeof LmsRoute
   '/meetings': typeof MeetingsRoute
   '/tasks': typeof TasksRoute
   '/accounts/bank-accounts': typeof AccountsBankAccountsRoute
@@ -476,7 +468,6 @@ export interface FileRoutesById {
   '/ceo-desk': typeof CeoDeskRoute
   '/documents': typeof DocumentsRoute
   '/habits': typeof HabitsRouteWithChildren
-  '/lms': typeof LmsRoute
   '/me': typeof MeRouteWithChildren
   '/meetings': typeof MeetingsRoute
   '/sales': typeof SalesRouteWithChildren
@@ -537,7 +528,6 @@ export interface FileRouteTypes {
     | '/ceo-desk'
     | '/documents'
     | '/habits'
-    | '/lms'
     | '/me'
     | '/meetings'
     | '/sales'
@@ -594,7 +584,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/ceo-desk'
     | '/documents'
-    | '/lms'
     | '/meetings'
     | '/tasks'
     | '/accounts/bank-accounts'
@@ -651,7 +640,6 @@ export interface FileRouteTypes {
     | '/ceo-desk'
     | '/documents'
     | '/habits'
-    | '/lms'
     | '/me'
     | '/meetings'
     | '/sales'
@@ -711,7 +699,6 @@ export interface RootRouteChildren {
   CeoDeskRoute: typeof CeoDeskRoute
   DocumentsRoute: typeof DocumentsRoute
   HabitsRoute: typeof HabitsRouteWithChildren
-  LmsRoute: typeof LmsRoute
   MeRoute: typeof MeRouteWithChildren
   MeetingsRoute: typeof MeetingsRoute
   SalesRoute: typeof SalesRouteWithChildren
@@ -781,13 +768,6 @@ declare module '@tanstack/react-router' {
       path: '/habits'
       fullPath: '/habits'
       preLoaderRoute: typeof HabitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lms': {
-      id: '/lms'
-      path: '/lms'
-      fullPath: '/lms'
-      preLoaderRoute: typeof LmsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/me': {
@@ -1255,7 +1235,6 @@ const rootRouteChildren: RootRouteChildren = {
   CeoDeskRoute: CeoDeskRoute,
   DocumentsRoute: DocumentsRoute,
   HabitsRoute: HabitsRouteWithChildren,
-  LmsRoute: LmsRoute,
   MeRoute: MeRouteWithChildren,
   MeetingsRoute: MeetingsRoute,
   SalesRoute: SalesRouteWithChildren,
