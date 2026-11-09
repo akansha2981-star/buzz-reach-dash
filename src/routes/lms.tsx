@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Pencil, Trash2, Search, Upload, Download, GraduationCap,
-  Users, CalendarDays, AlertTriangle, FileSpreadsheet,
+  Users, CalendarDays, AlertTriangle, FileSpreadsheet, Tags,
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,8 @@ import {
   LMS_YEARS, LMS_CSV_TEMPLATE, type LmsLead, type LeadInput,
   isFullDuplicate, splitDuplicates, parseLeadCsv,
 } from "@/lib/lms";
+import { TagManagerDialog, useTagData } from "@/components/lms/TagManager";
+import { LeadTagPicker, LeadTagBadges } from "@/components/lms/LeadTagPicker";
 
 export const Route = createFileRoute("/lms")({
   component: () => (
@@ -43,8 +45,24 @@ function LmsPage() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [tagFilter, setTagFilter] = useState<string>("all");
   const [editing, setEditing] = useState<LmsLead | null>(null);
   const [deleting, setDeleting] = useState<LmsLead | null>(null);
+  const { tags } = useTagData();
+
+  const leadTags = useQuery({
+    queryKey: ["lms_lead_tags_all"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("lms_lead_tags").select("lead_id, tag_id");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const leadIdsWithTag = useMemo(() => {
+    if (tagFilter === "all") return null;
+    return new Set((leadTags.data ?? []).filter((r) => r.tag_id === tagFilter).map((r) => r.lead_id));
+  }, [leadTags.data, tagFilter]);
 
   const leads = useQuery({
     queryKey: ["lms_leads"],
@@ -68,6 +86,7 @@ function LmsPage() {
 
   const filtered = rows.filter((r) => {
     if (yearFilter !== "all" && r.year !== Number(yearFilter)) return false;
+    if (leadIdsWithTag && !leadIdsWithTag.has(r.id)) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return r.name.toLowerCase().includes(q) || (r.phone ?? "").includes(q) || (r.email ?? "").toLowerCase().includes(q);
@@ -89,7 +108,8 @@ function LmsPage() {
           <h1 className="text-xl font-semibold">LMS Data</h1>
           <p className="text-sm text-muted-foreground">Upload daily lead data — name, number, email — tagged by year.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setTagsOpen(true)}><Tags className="mr-1.5 h-4 w-4" />Tags</Button>
           <Button variant="outline" onClick={() => setUploadOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Bulk upload</Button>
           <Button onClick={() => { setEditing(null); setAddOpen(true); }}><Plus className="mr-1.5 h-4 w-4" />Add entry</Button>
         </div>
@@ -120,6 +140,15 @@ function LmsPage() {
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input aria-label="Search entries" placeholder="Search name, number, email…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
+          {tags.length > 0 && (
+            <Select value={tagFilter} onValueChange={setTagFilter}>
+              <SelectTrigger className="w-full sm:w-44" aria-label="Filter by tag"><SelectValue placeholder="All tags" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All tags</SelectItem>
+                {tags.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
@@ -139,6 +168,10 @@ function LmsPage() {
                 <div className="col-start-1 row-start-4 lg:col-start-4 lg:row-start-1"><Badge variant="secondary">{row.year}</Badge></div>
                 <div className="col-start-1 row-start-5 text-xs text-muted-foreground lg:col-start-5 lg:row-start-1">
                   <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{format(new Date(row.created_at), "dd MMM yyyy")}</span>
+                </div>
+                <div className="col-start-1 row-start-6 flex flex-wrap items-center gap-1.5 lg:col-span-5 lg:row-start-2">
+                  <LeadTagBadges leadId={row.id} />
+                  <LeadTagPicker leadId={row.id} />
                 </div>
                 <div className="col-start-2 row-start-1 flex justify-end lg:col-start-6">
                   <Button size="icon" variant="ghost" aria-label={`Edit ${row.name}`} title="Edit" onClick={() => { setEditing(row); setAddOpen(true); }}><Pencil className="h-4 w-4" /></Button>
@@ -162,6 +195,7 @@ function LmsPage() {
         existing={existing}
         onDone={() => qc.invalidateQueries({ queryKey: ["lms_leads"] })}
       />
+      <TagManagerDialog open={tagsOpen} onOpenChange={setTagsOpen} />
       <Dialog open={!!deleting} onOpenChange={(v) => { if (!v && !remove.isPending) setDeleting(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Delete entry?</DialogTitle><DialogDescription>This permanently deletes {deleting?.name} ({deleting?.year}).</DialogDescription></DialogHeader>
