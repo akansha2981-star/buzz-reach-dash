@@ -19,3 +19,25 @@ describe('smart lead parser', () => {
     expect(r.rows[0]).toMatchObject({ email: 'neha@ex.com', phone: '9812345678', source: 'B School Buzz' });
   });
 });
+import { parseLeadDate } from './lms-file-parser';
+describe('lead generation date', () => {
+  it('parses Indian DD/MM with time as IST', () => {
+    expect(parseLeadDate('05/03/2026 10:30 AM')).toBe('2026-03-05T05:00:00.000Z');
+  });
+  it('parses named months and ISO', () => {
+    expect(parseLeadDate('12 Mar 2026')).toBe('2026-03-11T18:30:00.000Z');
+    expect(parseLeadDate('2026-03-12T10:00:00Z')).toBe('2026-03-12T10:00:00.000Z');
+  });
+  it('picks the earliest date column and detects date headers', () => {
+    const r = parseGrid([
+      ['Email', 'Phone', 'Enquiry Time', 'Updated On'],
+      ['a@x.com', '9876543210', '10/02/2026 09:00', '01/02/2026 08:00'],
+    ], 2026, 'Ninja');
+    expect(r.rows[0].generated_at).toBe('2026-02-01T02:30:00.000Z');
+    expect(r.rows[0].phone).toBe('9876543210');
+  });
+  it('combines separate date and time columns', () => {
+    const r = parseGrid([['Name', 'Email', 'Created Date', 'Time'], ['Asha', 'a@x.com', '2026-04-01', '6:15 PM']], 2026, 'Ninja');
+    expect(r.rows[0].generated_at).toBe('2026-04-01T12:45:00.000Z');
+  });
+});
