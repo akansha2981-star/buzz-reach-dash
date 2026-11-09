@@ -797,12 +797,21 @@ function ImportDialog({
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [mapping, setMapping] = useState<{ column: string; field: string | null }[]>([]);
   async function handleFile(f: File) {
-    if (!source.trim()) { toast.error('Select a source first'); return; }
     setFileName(f.name);
     setChecking(true);
-    const text = await f.text();
-    const { rows, invalid } = parseCsvText(text, year);
+    let rows: ParsedLead[] = [], invalid: { line: string; reason: string }[] = [];
+    try {
+      const res = await readLeadFile(f, year, source.trim());
+      rows = res.rows; invalid = res.invalid; setMapping(res.mapping);
+    } catch (e) {
+      toast.error(`Could not read this file: ${(e as Error).message}`);
+      setChecking(false);
+      return;
+    }
+    const noSource = rows.filter((r) => !r.source).length;
+    if (noSource && !source.trim()) toast.warning(`${noSource} rows have no source in file — pick a batch source before importing`);
 
     // In-batch duplicates (same phone+email twice in file)
     const seen = new Set<string>();
@@ -823,12 +832,12 @@ function ImportDialog({
   async function doImport() {
     if (!report || report.ready.length === 0) return;
     setImporting(true);
-    if (!source.trim()) { toast.error('Select a source first'); setImporting(false); return; }
+    if (!source.trim() && report.ready.some((r) => !r.source)) { toast.error('Some rows have no source — select a batch source'); setImporting(false); return; }
     let inserted = 0, updated = 0, merged = 0;
     for (let i = 0; i < report.ready.length; i += 200) {
       const chunk = report.ready.slice(i, i + 200);
       const { data: res, error } = await supabase.rpc('lms_upsert_leads', {
-        rows: chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: source.trim(), year })),
+        rows: chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: r.source || source.trim(), year: r.year })),
       });
       if (error) { toast.error(error.message); setImporting(false); return; }
       const out = res as { inserted: number; updated: number; merged: number; rows: { i: number; id: string }[] };
@@ -862,12 +871,13 @@ function ImportDialog({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
       <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl border border-border bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Import Leads (CSV)</h2>
+          <h2 className="text-base font-semibold">Smart Import — any file</h2>
           <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900">
-          <p className="font-semibold">Format: name, phone, email, source, tags</p>
+          <p className="font-semibold">Upload Excel, CSV, TXT, JSON, PDF, Word or contacts (VCF) — columns are detected automatically in any order.</p>
+          <p className="mt-1">Email, phone, name, source (Ninja, Profile Portal, MBA Compass, B School Buzz), year and tags are found per row. Batch source/year below are used only where the file has none.</p>
           <p className="mt-1">
             Tags are optional: <code>Category: Tag|Category: Tag</code>. Leads already in the system are <strong>updated</strong> with the latest year &amp; source (no new lead). If an earlier
             lead was missing its phone or email and this file has it, the detail is filled into the earlier lead. Same number with a
@@ -888,7 +898,7 @@ function ImportDialog({
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Field label="Source for this batch *">
+          <Field label="Default source (if not in file)">
             <div className="min-w-[200px]"><SourcePicker value={source} onChange={setSource} /></div>
           </Field>
           <Field label="Year for this batch">
@@ -900,12 +910,12 @@ function ImportDialog({
             onClick={() => fileRef.current?.click()}
             className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted"
           >
-            <Upload className="h-4 w-4" /> {fileName || 'Choose CSV / TXT'}
+            <Upload className="h-4 w-4" /> {fileName || 'Choose any file'}
           </button>
           <input
             ref={fileRef}
             type="file"
-            accept=".csv,.txt"
+            accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm,.ods,.json,.pdf,.docx,.vcf"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -934,6 +944,30 @@ function ImportDialog({
               </div>
             </div>
 
+            {mapping.length > 0 && (
+              <div className="rounded-lg border border-border p-3 text-xs">
+                <p className="mb-2 font-semibold">Auto-detected columns</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {mapping.map((m, i) => (
+                    <span key={i} className={`rounded-full border px-2 py-0.5 ${m.field ? 'border-primary/40 bg-primary/10' : 'border-border text-muted-foreground'}`}>
+                      {m.column} → <strong>{m.field ?? 'ignored'}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {report.ready.length > 0 && (
+              <div className="max-h-48 overflow-auto rounded-lg border border-border text-xs">
+                <table className="w-full">
+                  <thead className="bg-muted/50 text-left"><tr><th className="px-2 py-1">Name</th><th className="px-2 py-1">Phone</th><th className="px-2 py-1">Email</th><th className="px-2 py-1">Source</th><th className="px-2 py-1">Year</th></tr></thead>
+                  <tbody>
+                    {report.ready.slice(0, 8).map((r, i) => (
+                      <tr key={i} className="border-t border-border"><td className="px-2 py-1">{r.name}</td><td className="px-2 py-1">{r.phone}</td><td className="px-2 py-1">{r.email}</td><td className="px-2 py-1">{r.source || source || '—'}</td><td className="px-2 py-1">{r.year}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             {report.dups.length > 0 && (
               <details className="rounded-lg border border-border">
                 <summary className="cursor-pointer px-3 py-2 text-xs font-semibold">View duplicates ({report.dups.length})</summary>
