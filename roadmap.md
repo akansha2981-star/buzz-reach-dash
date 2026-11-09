@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] LMS advanced filters: combined tags/categories, source/year/dates, ascending/descending sorting, missing-field filters without deleting records; six filter tests passed and preview compiled.
+- [ ] Verify LMS filters against signed-in lead data on desktop/mobile — blocked: requesting user has no matching account available for automatic sign-in; preview opens login.
+
 ## In progress
 - [ ] LMS section: daily data upload (Name, Number, Email) with year tag 2020–2029
   - [x] DB: lms_leads table + can_lms permission + has_lms_access()
