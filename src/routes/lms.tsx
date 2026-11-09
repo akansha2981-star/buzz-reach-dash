@@ -45,6 +45,30 @@ export const Route = createFileRoute('/lms')({
 });
 
 const YEARS = Array.from({ length: 10 }, (_, i) => 2020 + i);
+const SOURCES = ['Ninja', 'Profile Portal', 'MBA Compass', 'B School Buzz'] as const;
+
+function SourcePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const isPreset = (SOURCES as readonly string[]).includes(value);
+  const [other, setOther] = useState(!isPreset && value !== '');
+  const cls = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring';
+  return (
+    <div className="space-y-2">
+      <select
+        value={other ? '__other' : value}
+        onChange={(e) => {
+          if (e.target.value === '__other') { setOther(true); onChange(''); }
+          else { setOther(false); onChange(e.target.value); }
+        }}
+        className={cls}
+      >
+        <option value="">Select source…</option>
+        {SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+        <option value="__other">Others (enter manually)</option>
+      </select>
+      {other && <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Type source name" className={cls} />}
+    </div>
+  );
+}
 const PAGE_SIZE = 100;
 const COLORS = ['#4f46e5', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d'];
 
@@ -100,7 +124,7 @@ function parseCsvText(text: string, defaultYear: number): { rows: ParsedLead[]; 
     const [name = '', phone = '', email = '', source = '', tagsRaw = ''] = parts;
     if (!name && !phone && !email) continue;
     if (!name) { invalid.push({ line: raw, reason: 'Missing name' }); continue; }
-    if (!phone) { invalid.push({ line: raw, reason: 'Missing phone' }); continue; }
+    if (!phone && !email) { invalid.push({ line: raw, reason: 'Missing phone and email' }); continue; }
     if (email && !EMAIL_RE.test(email)) { invalid.push({ line: raw, reason: 'Invalid email' }); continue; }
     const tags = tagsRaw ? tagsRaw.split('|').map((t) => t.trim()).filter(Boolean) : [];
     rows.push({ name, phone, email, year: defaultYear, source, tags });
@@ -657,7 +681,7 @@ function LeadForm({ lead, onClose, onSaved }: { lead?: LeadRow; onClose: () => v
   const [saving, setSaving] = useState(false);
 
   async function save() {
-    if (!name.trim() || !phone.trim()) { toast.error('Name and phone are required'); return; }
+    if (!name.trim() || (!phone.trim() && !email.trim())) { toast.error('Name and phone or email are required'); return; }
     if (email && !EMAIL_RE.test(email)) { toast.error('Invalid email'); return; }
     setSaving(true);
     const payload = { name: name.trim(), phone: phone.trim(), email: email.trim(), source: source.trim(), year };
@@ -681,14 +705,14 @@ function LeadForm({ lead, onClose, onSaved }: { lead?: LeadRow; onClose: () => v
           <Field label="Name *">
             <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </Field>
-          <Field label="Phone *">
+          <Field label="Phone">
             <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </Field>
           <Field label="Email">
             <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </Field>
           <Field label="Source">
-            <input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Website, Instagram Ads, Referral…" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <SourcePicker value={source} onChange={setSource} />
           </Field>
           <Field label="Year">
             <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
@@ -729,6 +753,7 @@ function ImportDialog({
   onDone: () => void;
 }) {
   const [year, setYear] = useState(new Date().getFullYear());
+  const [source, setSource] = useState('');
   const [report, setReport] = useState<ImportReport | null>(null);
   const [fileName, setFileName] = useState('');
   const [checking, setChecking] = useState(false);
@@ -736,6 +761,7 @@ function ImportDialog({
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(f: File) {
+    if (!source.trim()) { toast.error('Select a source first'); return; }
     setFileName(f.name);
     setChecking(true);
     const text = await f.text();
@@ -747,29 +773,12 @@ function ImportDialog({
     const unique: ParsedLead[] = [];
     for (const r of rows) {
       const k = leadKey(r.phone, r.email);
-      if (r.email && seen.has(k)) batchDups.push(r);
+      if (seen.has(k)) batchDups.push(r);
       else { seen.add(k); unique.push(r); }
     }
 
-    // Server-side duplicates: only same phone AND same email blocks
+    const ready = unique;
     const dbDups: ParsedLead[] = [];
-    const ready: ParsedLead[] = [];
-    const candidates = unique.filter((r) => r.email && normalizePhone(r.phone));
-    const dupKeys = new Set<string>();
-    for (let i = 0; i < candidates.length; i += 400) {
-      const chunk = candidates.slice(i, i + 400).map((r) => ({ email: r.email, phone: r.phone }));
-      const { data, error } = await supabase.rpc('lms_find_duplicate_pairs', { pairs: chunk });
-      if (error) { toast.error(error.message); break; }
-      for (const d of (data as { email: string; phone: string }[]) ?? []) {
-        dupKeys.add(`${d.phone}|${d.email}`);
-      }
-    }
-    for (const r of unique) {
-      const k = leadKey(r.phone, r.email);
-      if (r.email && dupKeys.has(k)) dbDups.push(r);
-      else ready.push(r);
-    }
-
     setReport({ ready, dups: [...batchDups, ...dbDups], invalid });
     setChecking(false);
   }
@@ -777,22 +786,23 @@ function ImportDialog({
   async function doImport() {
     if (!report || report.ready.length === 0) return;
     setImporting(true);
-    let inserted = 0;
+    if (!source.trim()) { toast.error('Select a source first'); setImporting(false); return; }
+    let inserted = 0, updated = 0, merged = 0;
     for (let i = 0; i < report.ready.length; i += 200) {
       const chunk = report.ready.slice(i, i + 200);
-      const { data, error } = await supabase
-        .from('lms_leads')
-        .insert(chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: r.source, year: r.year })))
-        .select('id, email, phone');
+      const { data: res, error } = await supabase.rpc('lms_upsert_leads', {
+        rows: chunk.map((r) => ({ name: r.name, phone: r.phone, email: r.email, source: source.trim(), year })),
+      });
       if (error) { toast.error(error.message); setImporting(false); return; }
-      inserted += data?.length ?? 0;
+      const out = res as { inserted: number; updated: number; merged: number; rows: { i: number; id: string }[] };
+      inserted += out.inserted; updated += out.updated; merged += out.merged;
+      const idByIdx = new Map(out.rows.map((x) => [x.i, x.id]));
 
       // Attach tags from the tags column (Category: Tag|Category: Tag)
       const tagInserts: { lead_id: string; tag_id: string }[] = [];
-      const byKey = new Map((data ?? []).map((d) => [leadKey(d.phone ?? '', d.email ?? ''), d.id]));
-      for (const r of chunk) {
+      for (const [ri, r] of chunk.entries()) {
         if (!r.tags.length) continue;
-        const leadId = byKey.get(leadKey(r.phone, r.email));
+        const leadId = idByIdx.get(ri);
         if (!leadId) continue;
         for (const spec of r.tags) {
           const [catName, tagName] = spec.split(':').map((s) => s.trim());
@@ -807,7 +817,7 @@ function ImportDialog({
       }
     }
     setImporting(false);
-    toast.success(`Imported ${inserted.toLocaleString('en-IN')} leads (${report.dups.length} duplicates skipped)`);
+    toast.success(`${inserted.toLocaleString('en-IN')} new · ${updated.toLocaleString('en-IN')} updated (year & source) · ${merged.toLocaleString('en-IN')} merged (missing details filled)`);
     onDone();
   }
 
@@ -822,8 +832,9 @@ function ImportDialog({
         <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900">
           <p className="font-semibold">Format: name, phone, email, source, tags</p>
           <p className="mt-1">
-            Tags are optional: <code>Category: Tag|Category: Tag</code>. Duplicates are skipped only when{' '}
-            <strong>both phone and email</strong> match an existing lead — same number with a different email (or vice versa) is still added.
+            Tags are optional: <code>Category: Tag|Category: Tag</code>. Leads already in the system are <strong>updated</strong> with the latest year &amp; source (no new lead). If an earlier
+            lead was missing its phone or email and this file has it, the detail is filled into the earlier lead. Same number with a
+            different email (or vice versa) is still added as a new lead.
           </p>
           <button
             onClick={() => {
@@ -840,6 +851,9 @@ function ImportDialog({
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Field label="Source for this batch *">
+            <div className="min-w-[200px]"><SourcePicker value={source} onChange={setSource} /></div>
+          </Field>
           <Field label="Year for this batch">
             <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
               {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -871,11 +885,11 @@ function ImportDialog({
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                 <div className="text-lg font-bold text-emerald-700">{report.ready.length}</div>
-                <div className="text-[11px] text-emerald-700">Ready to import</div>
+                <div className="text-[11px] text-emerald-700">Rows to process</div>
               </div>
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 <div className="text-lg font-bold text-amber-700">{report.dups.length}</div>
-                <div className="text-[11px] text-amber-700">Duplicates skipped</div>
+                <div className="text-[11px] text-amber-700">Repeated in file</div>
               </div>
               <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                 <div className="text-lg font-bold text-red-700">{report.invalid.length}</div>
@@ -916,7 +930,7 @@ function ImportDialog({
               disabled={importing || report.ready.length === 0}
               className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {importing ? 'Importing…' : `Import ${report.ready.length.toLocaleString('en-IN')} leads`}
+              {importing ? 'Importing…' : `Import ${report.ready.length.toLocaleString('en-IN')} rows`}
             </button>
           </div>
         )}

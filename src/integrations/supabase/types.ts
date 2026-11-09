@@ -3144,7 +3144,9 @@ export type Database = {
       is_manager_of: { Args: { _employee_id: string }; Returns: boolean }
       is_people_manager: { Args: never; Returns: boolean }
       lms_find_duplicate_pairs: { Args: { pairs: Json }; Returns: Json }
+      lms_norm_phone: { Args: { p: string }; Returns: string }
       lms_stats: { Args: never; Returns: Json }
+      lms_upsert_leads: { Args: { rows: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
