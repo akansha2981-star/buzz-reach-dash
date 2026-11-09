@@ -35,12 +35,18 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { RequireAuth } from '@/components/RequireAuth';
 import { AppShell } from '@/components/AppShell';
+import { LeadFilters } from '@/components/lms/LeadFilters';
+import { buildLmsFilterQuery, defaultLmsFilters } from '@/lib/lms-filters';
 
 export const Route = createFileRoute('/lms')({
   head: () => ({
     meta: [
       { title: 'LMS Leads — MBA Compass Admin' },
       { name: 'description', content: 'Lead database with yearly tracking, tagging and analytics.' },
+      { property: 'og:title', content: 'LMS Leads — MBA Compass Admin' },
+      { property: 'og:description', content: 'Manage and filter leads by source, year, categories, tags and contact details.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
     ],
   }),
   component: LmsRoute,
@@ -218,10 +224,13 @@ function LmsPage() {
   const [loading, setLoading] = useState(true);
   const [leadsLoading, setLeadsLoading] = useState(false);
 
+  const [filters, setFilters] = useState(defaultLmsFilters);
   const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [yearFilter, setYearFilter] = useState<'all' | number>('all');
-  const [tagFilter, setTagFilter] = useState<string>('all');
+  const requestId = useRef(0);
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(filters.search), 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
 
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -245,25 +254,29 @@ function LmsPage() {
   }
 
   async function loadLeads() {
+    const currentRequest = ++requestId.current;
     setLeadsLoading(true);
+    const spec = buildLmsFilterQuery({ ...filters, search });
     let q = supabase
       .from('lms_leads')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .select(spec.select, { count: 'exact' })
+      .order(spec.sort, { ascending: spec.ascending, nullsFirst: false })
+      .order('id', { ascending: spec.ascending })
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-    if (yearFilter !== 'all') q = q.eq('year', yearFilter);
-    if (search) q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
-    if (tagFilter !== 'all') {
-      const { data: lt } = await supabase.from('lms_lead_tags').select('lead_id').eq('tag_id', tagFilter);
-      const ids = (lt ?? []).map((r) => r.lead_id);
-      if (ids.length === 0) {
-        setLeads([]); setTotalCount(0); setLeadsLoading(false); return;
-      }
-      q = q.in('id', ids);
+    if (filters.year !== 'all') q = q.eq('year', Number(filters.year));
+    if (filters.source !== 'all') q = q.eq('source', filters.source);
+    if (filters.from) q = q.gte('created_at', new Date(`${filters.from}T00:00:00`).toISOString());
+    if (filters.to) {
+      const end = new Date(`${filters.to}T00:00:00`);
+      end.setDate(end.getDate() + 1);
+      q = q.lt('created_at', end.toISOString());
     }
+    if (spec.expression) q = q.or(spec.expression);
+    for (const filter of spec.embedded) q = q.filter(filter.path, filter.op, filter.value);
     const { data, count, error } = await q;
+    if (currentRequest !== requestId.current) return;
     if (error) toast.error(error.message);
-    const rows = (data as LeadRow[]) ?? [];
+    const rows = (data as unknown as LeadRow[]) ?? [];
     setLeads(rows);
     setTotalCount(count ?? 0);
     if (rows.length) {
@@ -271,6 +284,7 @@ function LmsPage() {
         .from('lms_lead_tags')
         .select('lead_id, tag_id')
         .in('lead_id', rows.map((r) => r.id));
+      if (currentRequest !== requestId.current) return;
       setLeadTags((lt as LeadTag[]) ?? []);
     } else {
       setLeadTags([]);
@@ -292,7 +306,7 @@ function LmsPage() {
     if (!allowed || loading) return;
     loadLeads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowed, loading, page, yearFilter, search, tagFilter]);
+  }, [allowed, loading, page, search, filters.year, filters.source, filters.category, filters.tags, filters.tagMode, filters.tagging, filters.email, filters.phone, filters.sourceDetails, filters.from, filters.to, filters.sort, filters.direction]);
 
   async function refreshAll() {
     await Promise.all([loadStats(), loadLeads()]);
@@ -515,48 +529,9 @@ function LmsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <form
-          className="relative flex-1"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setPage(0);
-            setSearch(searchInput.trim());
-          }}
-        >
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search name, phone or email…"
-            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-        </form>
-        <select
-          value={yearFilter === 'all' ? 'all' : String(yearFilter)}
-          onChange={(e) => { setPage(0); setYearFilter(e.target.value === 'all' ? 'all' : Number(e.target.value)); }}
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="all">All years</option>
-          {YEARS.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
-        <select
-          value={tagFilter}
-          onChange={(e) => { setPage(0); setTagFilter(e.target.value); }}
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="all">All tags</option>
-          {categories.map((c) => (
-            <optgroup key={c.id} label={c.name}>
-              {tags.filter((t) => t.category_id === c.id).map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
+      <LeadFilters value={filters} onChange={value => { setPage(0); setFilters(value); }} categories={categories} tags={tags}
+        sources={[...new Set<string>([...SOURCES, ...Object.keys(stats?.by_source ?? {}).filter(s => s !== 'Unspecified')])].sort()}
+        count={totalCount} />
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-border bg-card">
