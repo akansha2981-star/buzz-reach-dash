@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/lib/permissions';
+import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/lms')({
