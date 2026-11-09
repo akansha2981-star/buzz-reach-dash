@@ -33,6 +33,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { RequireAuth } from '@/components/RequireAuth';
+import { AppShell } from '@/components/AppShell';
 
 export const Route = createFileRoute('/lms')({
   head: () => ({
@@ -41,7 +43,7 @@ export const Route = createFileRoute('/lms')({
       { name: 'description', content: 'Lead database with yearly tracking, tagging and analytics.' },
     ],
   }),
-  component: LmsPage,
+  component: LmsRoute,
 });
 
 const YEARS = Array.from({ length: 10 }, (_, i) => 2020 + i);
@@ -140,6 +142,16 @@ const SAMPLE_CSV = [
   'Sneha Iyer,9090909090,sneha.iyer@gmail.com,Google Ads,Stage: Hot Lead|City: Delhi',
   'Karan Mehta,9812345678,karan.mehta@gmail.com,Walk-in,Stage: Enrolled|Course: CAT Full Course',
 ].join('\n');
+
+function LmsRoute() {
+  return (
+    <RequireAuth>
+      <AppShell title="LMS">
+        <LmsPage />
+      </AppShell>
+    </RequireAuth>
+  );
+}
 
 function LmsPage() {
   const { isAdmin, perms, loading: authLoading } = useAuth();
