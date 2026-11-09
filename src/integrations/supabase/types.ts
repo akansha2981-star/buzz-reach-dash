@@ -1571,6 +1571,140 @@ export type Database = {
           },
         ]
       }
+      lms_lead_tags: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lms_lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "lms_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lms_lead_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "lms_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lms_leads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      lms_tag_categories: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lms_tags: {
+        Row: {
+          category_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lms_tags_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "lms_tag_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       me_badges: {
         Row: {
           code: string
@@ -2917,6 +3051,7 @@ export type Database = {
           can_colleges: boolean
           can_dashboard: boolean
           can_documents: boolean
+          can_lms: boolean
           can_logs: boolean
           can_meetings: boolean
           can_my_workspace: boolean
@@ -2935,6 +3070,7 @@ export type Database = {
           can_colleges?: boolean
           can_dashboard?: boolean
           can_documents?: boolean
+          can_lms?: boolean
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
@@ -2953,6 +3089,7 @@ export type Database = {
           can_colleges?: boolean
           can_dashboard?: boolean
           can_documents?: boolean
+          can_lms?: boolean
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
@@ -2994,6 +3131,7 @@ export type Database = {
     Functions: {
       current_employee_id: { Args: never; Returns: string }
       has_accounts_access: { Args: { _uid: string }; Returns: boolean }
+      has_lms_access: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -233,6 +233,24 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {can("can_lms") && (
+          <SidebarGroup>
+            <SidebarGroupLabel>LMS</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith("/lms")}>
+                    <Link to="/lms">
+                      <Users />
+                      <span className="font-semibold">LMS Data</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {can("can_sales_tracker") && (
           <SidebarGroup>
             <SidebarGroupLabel>Sales Intelligence</SidebarGroupLabel>

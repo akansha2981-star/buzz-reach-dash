@@ -43,6 +43,20 @@
       "when": 1792926572235,
       "tag": "0005_gst_applicable_income",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794234677598,
+      "tag": "0006_create_lms_leads",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794234799035,
+      "tag": "0007_create_lms_tags",
+      "breakpoints": true
     }
   ]
 }

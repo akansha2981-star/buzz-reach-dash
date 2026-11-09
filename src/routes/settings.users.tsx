@@ -38,6 +38,7 @@ const PERM_OPTIONS: { key: string; label: string; desc: string; group: string }[
   { key: "can_ceo_desk", label: "CEO Desk", desc: "Submit and view CEO requests", group: "Workspace" },
   { key: "can_accounts", label: "Accounts", desc: "Invoices, expenses & recurring expenses", group: "Workspace" },
   { key: "can_sales_tracker", label: "Live Sales Tracker", desc: "Revenue, ad spend & profit intelligence", group: "Workspace" },
+  { key: "can_lms", label: "LMS Data", desc: "Upload & manage daily lead data by year", group: "Workspace" },
   { key: "can_stages", label: "Stage Settings", desc: "Configure outreach pipeline stages", group: "Admin" },
   { key: "can_users", label: "User Management", desc: "Create and edit team accounts", group: "Admin" },
   { key: "can_logs", label: "Activity Logs", desc: "View full audit trail", group: "Admin" },
@@ -47,7 +48,7 @@ const DEFAULT_PERMS = {
   can_dashboard: true, can_colleges: true, can_coaching: true,
   can_meetings: true, can_stages: false, can_users: false, can_logs: false,
   can_tasks: true, can_documents: true, can_my_workspace: true, can_ceo_desk: true, can_timeline: true, can_accounts: false,
-  can_sales_tracker: false,
+  can_sales_tracker: false, can_lms: false,
 };
 
 function UsersPage() {
