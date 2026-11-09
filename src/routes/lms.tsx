@@ -116,14 +116,64 @@ function leadKey(p: string, e: string) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function looksLikePhone(v: string) {
+  return normalizePhone(v).length >= 7;
+}
+
+// Map a header cell to a field name, or null if unknown
+function headerField(h: string): 'name' | 'phone' | 'email' | 'source' | 'tags' | null {
+  const s = h.trim().toLowerCase();
+  if (!s) return null;
+  if (/e-?mail/.test(s)) return 'email';
+  if (/phone|mobile|number|contact|whatsapp/.test(s)) return 'phone';
+  if (/source/.test(s)) return 'source';
+  if (/tag/.test(s)) return 'tags';
+  if (/name/.test(s)) return 'name';
+  return null;
+}
+
 function parseCsvText(text: string, defaultYear: number): { rows: ParsedLead[]; invalid: { line: string; reason: string }[] } {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const rows: ParsedLead[] = [];
   const invalid: { line: string; reason: string }[] = [];
-  for (const raw of lines) {
-    if (/^name\s*[,;\t]/i.test(raw)) continue; // header
+
+  // Detect a header row and build a column map from it (any column order works)
+  let colMap: ('name' | 'phone' | 'email' | 'source' | 'tags' | null)[] | null = null;
+  let startIdx = 0;
+  if (lines.length > 0) {
+    const first = lines[0].split(/[,;\t]/).map((p) => p.trim());
+    const mapped = first.map(headerField);
+    if (mapped.some((m) => m !== null)) {
+      colMap = mapped;
+      startIdx = 1;
+    }
+  }
+
+  for (let i = startIdx; i < lines.length; i++) {
+    const raw = lines[i];
     const parts = raw.split(/[,;\t]/).map((p) => p.trim());
-    const [name = '', phone = '', email = '', source = '', tagsRaw = ''] = parts;
+    let name = '', phone = '', email = '', source = '', tagsRaw = '';
+
+    if (colMap) {
+      parts.forEach((p, idx) => {
+        const f = colMap![idx];
+        if (f === 'name') name = p;
+        else if (f === 'phone') phone = p;
+        else if (f === 'email') email = p;
+        else if (f === 'source') source = p;
+        else if (f === 'tags') tagsRaw = p;
+      });
+    } else {
+      // No header: assume name, phone, email, source, tags — but auto-correct
+      // swapped phone/email columns by looking at the content.
+      [name = '', phone = '', email = '', source = '', tagsRaw = ''] = parts;
+      if (EMAIL_RE.test(phone) && !EMAIL_RE.test(email)) {
+        [phone, email] = [email, phone];
+      } else if (!EMAIL_RE.test(email) && looksLikePhone(email) && !looksLikePhone(phone)) {
+        [phone, email] = [email, phone];
+      }
+    }
+
     if (!name && !phone && !email) continue;
     if (!name) { invalid.push({ line: raw, reason: 'Missing name' }); continue; }
     if (!phone && !email) { invalid.push({ line: raw, reason: 'Missing phone and email' }); continue; }
