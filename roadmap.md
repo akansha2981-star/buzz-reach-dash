@@ -8,3 +8,6 @@
   - [ ] /lms page: add form, CSV bulk upload, year filter, search, edit/delete
   - [ ] Duplicate rule: skip row only when BOTH phone and email match an existing row; if only one matches, still add. Show skipped duplicates to the user.
   - [ ] Typecheck + verify in preview
+- [ ] LMS tagging system: manual tag categories, multiple tags per category, multiple tags per data entry
+  - [ ] DB: lms_tag_categories, lms_tags, lms_lead_tags + RLS
+  - [ ] UI: manage categories/tags, assign multiple tags to entries, filter by tag
