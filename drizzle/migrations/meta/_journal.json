@@ -64,6 +64,13 @@
       "when": 1794236066189,
       "tag": "0008_lms_stats_and_duplicates",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794236570131,
+      "tag": "0009_lms_cleanup_test_rows",
+      "breakpoints": true
     }
   ]
 }
