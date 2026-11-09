@@ -1571,6 +1571,45 @@ export type Database = {
           },
         ]
       }
+      lms_leads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       me_badges: {
         Row: {
           code: string
@@ -2917,6 +2956,7 @@ export type Database = {
           can_colleges: boolean
           can_dashboard: boolean
           can_documents: boolean
+          can_lms: boolean
           can_logs: boolean
           can_meetings: boolean
           can_my_workspace: boolean
@@ -2935,6 +2975,7 @@ export type Database = {
           can_colleges?: boolean
           can_dashboard?: boolean
           can_documents?: boolean
+          can_lms?: boolean
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
@@ -2953,6 +2994,7 @@ export type Database = {
           can_colleges?: boolean
           can_dashboard?: boolean
           can_documents?: boolean
+          can_lms?: boolean
           can_logs?: boolean
           can_meetings?: boolean
           can_my_workspace?: boolean
@@ -2994,6 +3036,7 @@ export type Database = {
     Functions: {
       current_employee_id: { Args: never; Returns: string }
       has_accounts_access: { Args: { _uid: string }; Returns: boolean }
+      has_lms_access: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
