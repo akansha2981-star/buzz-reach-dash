@@ -118,8 +118,9 @@ const SAMPLE_CSV = [
 ].join('\n');
 
 function LmsPage() {
-  const { has, loaded } = usePermissions();
-  const allowed = has('can_lms');
+  const { isAdmin, perms, loading: authLoading } = useAuth();
+  const allowed = isAdmin || perms.can_lms;
+  const loaded = !authLoading;
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [leads, setLeads] = useState<LeadRow[]>([]);
