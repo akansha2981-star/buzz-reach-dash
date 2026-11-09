@@ -1,0 +1,2 @@
+DELETE FROM public.lms_leads WHERE email IN ('aarav.sharma@gmail.com','priya.verma@yahoo.com','rohit.gupta@outlook.com','sneha.iyer@gmail.com','karan.mehta@gmail.com','aarav.sharma+2@gmail.com');
+DELETE FROM public.lms_tag_categories WHERE name = 'Stage' AND id IN (SELECT category_id FROM public.lms_tags WHERE name = 'Hot Lead');
