@@ -1183,7 +1183,6 @@ function BulkTagDialog({
   const catTags = tags.filter((t) => t.category_id === catId);
 
   async function handleFile(f: File) {
-    if (!source.trim()) { toast.error('Select a source first'); return; }
     setFileName(f.name);
     const text = await f.text();
     const found = text
