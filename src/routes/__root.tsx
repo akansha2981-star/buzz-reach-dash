@@ -110,6 +110,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
     scripts: [
+      // Dev-only: the dev server's code-split chunks run before the client entry's
+      // react-refresh preamble and throw "can't detect preamble". These no-op stubs
+      // let hydration proceed; the real preamble overwrites them when the entry runs.
+      ...(import.meta.env.DEV
+        ? [{
+            children:
+              "window.$RefreshReg$=window.$RefreshReg$||function(){};window.$RefreshSig$=window.$RefreshSig$||function(){return function(t){return t};};",
+          }]
+        : []),
       {
         children:
           "requestAnimationFrame(function(){document.querySelectorAll('link[rel=\\'stylesheet\\'][media=\\'print\\']').forEach(function(l){l.media='all'});});",
