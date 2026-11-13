@@ -85,6 +85,13 @@
       "when": 1794252113816,
       "tag": "0011_lms_lead_generated_at",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794585882337,
+      "tag": "0012_tighten_reference_and_docs_read_policies",
+      "breakpoints": true
     }
   ]
 }
