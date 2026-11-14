@@ -335,6 +335,7 @@ export type Database = {
           created_by: string | null
           currency: string
           due_date: string | null
+          gst_mode: string
           id: string
           invoice_number: string | null
           issue_date: string
@@ -359,6 +360,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           due_date?: string | null
+          gst_mode?: string
           id?: string
           invoice_number?: string | null
           issue_date?: string
@@ -383,6 +385,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           due_date?: string | null
+          gst_mode?: string
           id?: string
           invoice_number?: string | null
           issue_date?: string
