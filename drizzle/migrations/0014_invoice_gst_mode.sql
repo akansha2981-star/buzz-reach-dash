@@ -1,0 +1,2 @@
+ALTER TABLE public.accounts_invoices ADD COLUMN IF NOT EXISTS gst_mode text NOT NULL DEFAULT 'none';
+ALTER TABLE public.accounts_invoices ADD CONSTRAINT accounts_invoices_gst_mode_chk CHECK (gst_mode IN ('none','inclusive','additional'));

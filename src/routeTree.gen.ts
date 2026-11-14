@@ -25,6 +25,7 @@ import { Route as AccountsBankAccountsRouteImport } from './routes/accounts.bank
 import { Route as AccountsClientsRouteImport } from './routes/accounts.clients'
 import { Route as AccountsCompanyRouteImport } from './routes/accounts.company'
 import { Route as AccountsExpensesRouteImport } from './routes/accounts.expenses'
+import { Route as AccountsGstRouteImport } from './routes/accounts.gst'
 import { Route as AccountsIncomeRouteImport } from './routes/accounts.income'
 import { Route as AccountsInvestmentsRouteImport } from './routes/accounts.investments'
 import { Route as AccountsInvoicesRouteImport } from './routes/accounts.invoices'
@@ -145,6 +146,11 @@ const AccountsCompanyRoute = AccountsCompanyRouteImport.update({
 const AccountsExpensesRoute = AccountsExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
+  getParentRoute: () => AccountsRoute,
+} as any)
+const AccountsGstRoute = AccountsGstRouteImport.update({
+  id: '/gst',
+  path: '/gst',
   getParentRoute: () => AccountsRoute,
 } as any)
 const AccountsIncomeRoute = AccountsIncomeRouteImport.update({
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/gst': typeof AccountsGstRoute
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -425,6 +432,7 @@ export interface FileRoutesByTo {
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/gst': typeof AccountsGstRoute
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -485,6 +493,7 @@ export interface FileRoutesById {
   '/accounts/clients': typeof AccountsClientsRoute
   '/accounts/company': typeof AccountsCompanyRoute
   '/accounts/expenses': typeof AccountsExpensesRoute
+  '/accounts/gst': typeof AccountsGstRoute
   '/accounts/income': typeof AccountsIncomeRoute
   '/accounts/investments': typeof AccountsInvestmentsRoute
   '/accounts/invoices': typeof AccountsInvoicesRoute
@@ -546,6 +555,7 @@ export interface FileRouteTypes {
     | '/accounts/clients'
     | '/accounts/company'
     | '/accounts/expenses'
+    | '/accounts/gst'
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
@@ -601,6 +611,7 @@ export interface FileRouteTypes {
     | '/accounts/clients'
     | '/accounts/company'
     | '/accounts/expenses'
+    | '/accounts/gst'
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
@@ -660,6 +671,7 @@ export interface FileRouteTypes {
     | '/accounts/clients'
     | '/accounts/company'
     | '/accounts/expenses'
+    | '/accounts/gst'
     | '/accounts/income'
     | '/accounts/investments'
     | '/accounts/invoices'
@@ -851,6 +863,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/accounts/expenses'
       preLoaderRoute: typeof AccountsExpensesRouteImport
+      parentRoute: typeof AccountsRoute
+    }
+    '/accounts/gst': {
+      id: '/accounts/gst'
+      path: '/gst'
+      fullPath: '/accounts/gst'
+      preLoaderRoute: typeof AccountsGstRouteImport
       parentRoute: typeof AccountsRoute
     }
     '/accounts/income': {
@@ -1148,6 +1167,7 @@ interface AccountsRouteChildren {
   AccountsClientsRoute: typeof AccountsClientsRoute
   AccountsCompanyRoute: typeof AccountsCompanyRoute
   AccountsExpensesRoute: typeof AccountsExpensesRoute
+  AccountsGstRoute: typeof AccountsGstRoute
   AccountsIncomeRoute: typeof AccountsIncomeRoute
   AccountsInvestmentsRoute: typeof AccountsInvestmentsRoute
   AccountsInvoicesRoute: typeof AccountsInvoicesRoute
@@ -1164,6 +1184,7 @@ const AccountsRouteChildren: AccountsRouteChildren = {
   AccountsClientsRoute: AccountsClientsRoute,
   AccountsCompanyRoute: AccountsCompanyRoute,
   AccountsExpensesRoute: AccountsExpensesRoute,
+  AccountsGstRoute: AccountsGstRoute,
   AccountsIncomeRoute: AccountsIncomeRoute,
   AccountsInvestmentsRoute: AccountsInvestmentsRoute,
   AccountsInvoicesRoute: AccountsInvoicesRoute,

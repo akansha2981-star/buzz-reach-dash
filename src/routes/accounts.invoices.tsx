@@ -1,3 +1,4 @@
+import { invoiceGst, type GstMode } from "@/lib/gst";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ type Invoice = {
   client_location: string | null; client_email: string | null; client_phone: string | null;
   category: string | null; payment_mode: string | null;
   bank_account_id: string | null;
+  gst_mode?: string | null;
   items: InvoiceItem[];
 };
 
@@ -157,6 +159,8 @@ function InvoicesPage() {
       client_phone: inv.client_phone,
       items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
       currency: inv.currency,
+      base: Number(inv.amount), gst: Number(inv.tax), total: Number(inv.total),
+      gst_label: inv.gst_mode === "inclusive" ? "GST @ 18% (included)" : "GST @ 18%",
       notes: inv.notes || DEFAULT_NOTES,
       company: companyOverride,
       bank: b ? {
@@ -395,6 +399,7 @@ type FormState = {
   payment_mode: string;
   notes: string;
   bank_account_id: string | null;
+  gst_mode: GstMode;
   items: InvoiceItem[];
 };
 
@@ -405,6 +410,7 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
   status: "draft", category: "", payment_mode: "Bank Transfer",
   notes: DEFAULT_NOTES,
   bank_account_id: null,
+  gst_mode: "none",
   items: [{ name: "", description: "", amount: 0 }],
 });
 
@@ -432,6 +438,7 @@ function InvoiceDialog({
         category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
         notes: editing.notes || DEFAULT_NOTES,
         bank_account_id: editing.bank_account_id ?? null,
+        gst_mode: (editing.gst_mode as GstMode) || "none",
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
@@ -441,6 +448,7 @@ function InvoiceDialog({
   }, [open, editing, existingInvoices, bankAccounts]);
 
   const subtotal = form.items.reduce((s, it) => s + Number(it.amount || 0), 0);
+  const calc = invoiceGst(subtotal, form.gst_mode);
 
   const updateItem = (idx: number, patch: Partial<InvoiceItem>) => {
     setForm((f) => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
@@ -451,7 +459,7 @@ function InvoiceDialog({
   const save = useMutation({
     mutationFn: async () => {
       const cleanItems = form.items.filter((it) => it.name.trim() || Number(it.amount) > 0);
-      const total = cleanItems.reduce((s, it) => s + Number(it.amount || 0), 0);
+      const g = invoiceGst(cleanItems.reduce((s, it) => s + Number(it.amount || 0), 0), form.gst_mode);
       const payload = {
         client: form.client, client_location: form.client_location || null,
         client_email: form.client_email || null, client_phone: form.client_phone || null,
@@ -460,7 +468,7 @@ function InvoiceDialog({
         status: form.status, category: form.category || null,
         payment_mode: form.payment_mode || null, notes: form.notes || null,
         bank_account_id: form.bank_account_id,
-        items: cleanItems, amount: total, tax: 0, total,
+        items: cleanItems, amount: g.base, tax: g.gst, total: g.total, gst_mode: form.gst_mode,
       };
       if (isEdit) {
         const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing!.id).select("*").single();
@@ -604,10 +612,23 @@ function InvoiceDialog({
                 </div>
               ))}
             </div>
-            <div className="flex justify-end pt-2 border-t">
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Total</div>
-                <div className="text-xl font-bold">{form.currency} {subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="text-xs">GST</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {([["inclusive","Includes GST","Amount already has 18% GST"],["none","No GST","Final amount only"],["additional","Additional GST","Add 18% on top"]] as const).map(([v,l,d]) => (
+                  <button type="button" key={v} onClick={() => setForm({ ...form, gst_mode: v })}
+                    className={cn("rounded-md border p-2 text-left text-sm transition-colors", form.gst_mode === v ? "border-primary bg-primary/10" : "hover:bg-muted")}>
+                    <div className="font-medium">{l}</div><div className="text-xs text-muted-foreground">{d}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="text-right space-y-0.5 text-sm">
+                <div className="text-muted-foreground">Service amount: <span className="font-medium text-foreground">{form.currency} {calc.base.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
+                <div className="text-muted-foreground">GST (18%): <span className="font-medium text-foreground">{form.currency} {calc.gst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
+                <div className="text-xs text-muted-foreground pt-1">Total</div>
+                <div className="text-xl font-bold">{form.currency} {calc.total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
               </div>
             </div>
           </section>
@@ -623,7 +644,7 @@ function InvoiceDialog({
           <Button
             variant="secondary"
             onClick={() => onDownload({
-              id: "preview", status: form.status, amount: subtotal, tax: 0, total: subtotal,
+              id: "preview", status: form.status, amount: calc.base, tax: calc.gst, total: calc.total, gst_mode: form.gst_mode,
               client: form.client || "Client", invoice_number: form.invoice_number,
               currency: form.currency, issue_date: form.issue_date,
               due_date: form.due_date || null, notes: form.notes,
