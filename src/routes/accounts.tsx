@@ -13,7 +13,6 @@ const TABS = [
   { to: "/accounts/income", label: "Income", icon: HandCoins },
   { to: "/accounts/expenses", label: "Expenses", icon: Receipt },
   { to: "/accounts/personal", label: "Personal", icon: UserRound },
-  { to: "/accounts/tds", label: "TDS", icon: Receipt },
   { to: "/accounts/gst", label: "GST", icon: Receipt },
 
   { to: "/accounts/recurring", label: "Recurring", icon: Repeat },
