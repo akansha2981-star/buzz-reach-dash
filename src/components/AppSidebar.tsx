@@ -185,11 +185,6 @@ export function AppSidebar() {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/accounts/tds")}>
-                            <Link to="/accounts/tds"><Receipt className="h-4 w-4" /><span>TDS</span></Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-<SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild isActive={isActive("/accounts/gst")}>
                             <Link to="/accounts/gst"><Receipt className="h-4 w-4" /><span>GST</span></Link>
                           </SidebarMenuSubButton>

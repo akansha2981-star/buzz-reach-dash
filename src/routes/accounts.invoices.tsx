@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, Chev
 import { splitTdsSettlement, bankFromTds } from "@/lib/tds";
 import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
 import { InvoicePreviewDialog } from "@/components/accounts/InvoicePreviewDialog";
+import { TdsSection } from "@/components/accounts/TdsSection";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -343,6 +344,11 @@ function InvoicesPage() {
         onOpenChange={(o) => { if (!o) setPreviewFor(null); }}
         invoice={previewFor ? toPDFData(previewFor) : null}
       />
+
+      {/* ============== TDS SECTION ============== */}
+      <div className="border-t pt-6">
+        <TdsSection />
+      </div>
     </div>
   );
 
