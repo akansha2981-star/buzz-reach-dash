@@ -159,6 +159,8 @@ function InvoicesPage() {
       client_phone: inv.client_phone,
       items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
       currency: inv.currency,
+      base: Number(inv.amount), gst: Number(inv.tax), total: Number(inv.total),
+      gst_label: inv.gst_mode === "inclusive" ? "GST @ 18% (included)" : "GST @ 18%",
       notes: inv.notes || DEFAULT_NOTES,
       company: companyOverride,
       bank: b ? {

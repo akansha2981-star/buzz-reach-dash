@@ -57,6 +57,10 @@ export type InvoicePDFData = {
   notes?: string | null;
   bank?: InvoiceBank | null;
   company?: InvoiceCompanyOverride | null;
+  base?: number;
+  gst?: number;
+  total?: number;
+  gst_label?: string;
 };
 
 function numberToWordsIndian(num: number): string {
@@ -112,7 +116,10 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   const currency = inv.currency || "INR";
   const cur = currency === "INR" ? "Rs." : currency;
-  const subtotal = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const itemsSum = inv.items.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const subtotal = inv.base ?? itemsSum;
+  const gstAmt = inv.gst ?? 0;
+  const grand = inv.total ?? itemsSum;
 
   const co = {
     brand: inv.company?.brand || COMPANY.brand,
@@ -288,22 +295,22 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   y += 20;
   setText(9.5, C.ink, true);
-  doc.text("Tax", labelX, y);
+  doc.text(gstAmt > 0 ? (inv.gst_label || "GST @ 18%") : "Tax", labelX, y);
   setText(9.5, C.body, false);
-  doc.text(`${cur} 0.00`, valX, y, { align: "right" });
+  doc.text(`${cur} ${fmt(gstAmt)}`, valX, y, { align: "right" });
 
   y += 12;
   rule(y, labelX - 10, valX, C.hair, 0.8);
   y += 20;
   setText(11.5, C.teal, true);
   doc.text("Total Payable", labelX, y);
-  doc.text(`${cur} ${fmt(subtotal)}`, valX, y, { align: "right" });
+  doc.text(`${cur} ${fmt(grand)}`, valX, y, { align: "right" });
 
   // amount in words on the left of totals
   setText(8.5, C.mute, true);
   doc.text("AMOUNT IN WORDS", M, y - 40);
   setText(9.5, C.ink, true);
-  const wordLines = wrap(numberToWordsIndian(subtotal), contentW - 190);
+  const wordLines = wrap(numberToWordsIndian(grand), contentW - 190);
   doc.text(wordLines, M, y - 26, { lineHeightFactor: 1.35 });
 
   y = Math.max(y, y - 26 + wordLines.length * 12) + 18;
