@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, FileText, Download, Eye, IndianRupee, Check, ChevronsUpDown, UserPlus, Save, TrendingUp, Wallet, AlertCircle, CheckCircle2, Clock, Receipt, Sparkles } from "lucide-react";
+import { splitTdsSettlement, bankFromTds } from "@/lib/tds";
 import { InvoicePaymentsDialog } from "@/components/accounts/InvoicePaymentsDialog";
 import { InvoicePreviewDialog } from "@/components/accounts/InvoicePreviewDialog";
 
@@ -429,6 +430,9 @@ function InvoiceDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState<FormState>(emptyForm(existingInvoices));
   const isEdit = !!editing;
+  const [tdsInput, setTdsInput] = useState("");
+  const [bankInput, setBankInput] = useState("");
+  useEffect(() => { if (open) { setTdsInput(""); setBankInput(""); } }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -474,17 +478,43 @@ function InvoiceDialog({
         bank_account_id: form.bank_account_id,
         items: cleanItems, amount: g.base, tax: g.gst, total: g.total, gst_mode: form.gst_mode,
       };
+      const wantsTds = form.status === "paid_with_tds" && Number(tdsInput) > 0;
+      if (form.status === "paid_with_tds" && !wantsTds && !isEdit) throw new Error("Enter the TDS amount deducted by the client");
+      let saved;
       if (isEdit) {
         const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing!.id).select("*").single();
         if (error) throw error;
-        return data;
+        saved = data;
       } else {
         const { data: userRes } = await supabase.auth.getUser();
         const { data, error } = await supabase.from("accounts_invoices")
           .insert({ ...payload, created_by: userRes.user?.id }).select("*").single();
         if (error) throw error;
-        return data;
+        saved = data;
       }
+      if (wantsTds && saved) {
+        const [{ data: pays }, { data: tdsPrev }, { data: userRes }] = await Promise.all([
+          supabase.from("accounts_invoice_payments").select("amount").eq("invoice_id", saved.id),
+          supabase.from("accounts_tds").select("amount").eq("invoice_id", saved.id),
+          supabase.auth.getUser(),
+        ]);
+        const already = [...(pays ?? []), ...(tdsPrev ?? [])].reduce((s, r) => s + Number(r.amount), 0);
+        const due = Math.max(0, Number(saved.total) - already);
+        const sp = splitTdsSettlement(due, Number(bankInput), Number(tdsInput));
+        if (sp.overpaid) throw new Error("Invoice saved, but bank + TDS is more than the amount due");
+        const uid = userRes.user?.id ?? null;
+        const today = new Date().toISOString().slice(0, 10);
+        if (sp.bank > 0) {
+          const { error } = await supabase.from("accounts_invoice_payments").insert({ invoice_id: saved.id, amount: sp.bank, paid_on: today, method: form.payment_mode || null, note: `Received after TDS of ₹${sp.tds.toLocaleString("en-IN")}`, gst_applicable: form.gst_mode !== "none", created_by: uid });
+          if (error) throw error;
+        }
+        const { error: tErr } = await supabase.from("accounts_tds").insert({ tds_date: today, amount: sp.tds, company_name: saved.client, invoice_id: saved.id, invoice_number: saved.invoice_number, invoice_total: Number(saved.total), bank_amount: sp.bank, created_by: uid });
+        if (tErr) throw tErr;
+        if (!sp.fullyPaid) await supabase.from("accounts_invoices").update({ status: "partially_paid" }).eq("id", saved.id);
+        qc.invalidateQueries({ queryKey: ["accounts_tds"] });
+        qc.invalidateQueries({ queryKey: ["accounts_invoice_payments_sum"] });
+      }
+      return saved;
     },
     onSuccess: (data, _vars, _ctx) => {
       toast.success(isEdit ? "Invoice updated" : "Invoice created");
@@ -533,10 +563,19 @@ function InvoiceDialog({
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s] ?? s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
+            {form.status === "paid_with_tds" && (
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">Client deducted TDS. Enter TDS — the bank amount fills automatically (Total {calc.total.toLocaleString("en-IN")}{isEdit ? ", minus anything already paid" : ""}).</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div><Label>TDS deducted (₹) *</Label><Input type="number" inputMode="decimal" value={tdsInput} onChange={(e) => { setTdsInput(e.target.value); setBankInput(String(bankFromTds(calc.total, Number(e.target.value)))); }} placeholder="e.g. 1000" /></div>
+                  <div><Label>Received in bank (₹)</Label><Input type="number" inputMode="decimal" value={bankInput} onChange={(e) => setBankInput(e.target.value)} /></div>
+                </div>
+              </div>
+            )}
 
             {/* Receive payment into */}
             <div className="pt-2 border-t">
