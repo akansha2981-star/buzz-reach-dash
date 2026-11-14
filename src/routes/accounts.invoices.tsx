@@ -43,17 +43,19 @@ type BankAccountRow = {
   branch_address: string | null; upi_id: string | null; is_default: boolean;
 };
 
-const STATUSES = ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"];
+const STATUSES = ["draft", "sent", "partially_paid", "paid", "paid_with_tds", "overdue", "cancelled"];
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
   partially_paid: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  paid_with_tds: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
   paid: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   overdue: "bg-red-500/10 text-red-700 dark:text-red-300",
   cancelled: "bg-zinc-500/10 text-zinc-600",
 };
 const STATUS_LABELS: Record<string, string> = {
   partially_paid: "partially paid",
+  paid_with_tds: "paid with TDS",
 };
 
 const DEFAULT_NOTES =
@@ -91,6 +93,8 @@ function InvoicesPage() {
       const { data, error } = await supabase.from("accounts_invoice_payments").select("invoice_id, amount");
       if (error) throw error;
       const map: Record<string, number> = {};
+      const { data: tds } = await supabase.from("accounts_tds").select("invoice_id, amount").not("invoice_id", "is", null);
+      for (const t of tds ?? []) if (t.invoice_id) map[t.invoice_id] = (map[t.invoice_id] ?? 0) + Number(t.amount);
       for (const p of data ?? []) {
         const row = p as { invoice_id: string; amount: number };
         map[row.invoice_id] = (map[row.invoice_id] ?? 0) + Number(row.amount);
