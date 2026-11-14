@@ -23,3 +23,27 @@ export function invoiceGst(entered: number, mode: GstMode) {
   }
   return { base: e, gst: 0, total: e };
 }
+
+export type GstWalletInvoice = { id: string; client: string; invoice_number: string | null; issue_date: string; amount: number; tax: number; total: number; gst_mode: string; status: string };
+export type GstWalletPayment = { id: string; invoice_id?: string; amount: number; gst_applicable: boolean; paid_on?: string; received_on?: string; payer?: string | null; title?: string; reference?: string | null };
+export type GstWalletRow = { id: string; company: string; reference: string; date: string; mode: string; base: number; gst: number; total: number };
+
+/** GST invoices are counted once; linked payments must never count the same GST twice. */
+export function gstWalletRows(invoices: GstWalletInvoice[], payments: GstWalletPayment[], income: GstWalletPayment[]): GstWalletRow[] {
+  const byId = new Map(invoices.map(i => [i.id, i]));
+  const covered = new Set(invoices.filter(i => i.gst_mode !== "none").map(i => i.id));
+  const rows: GstWalletRow[] = invoices.filter(i => i.gst_mode !== "none" && i.status !== "cancelled").map(i => ({
+    id: `invoice:${i.id}`, company: i.client, reference: i.invoice_number ?? "—", date: i.issue_date,
+    mode: i.gst_mode, base: Number(i.amount), gst: Number(i.tax), total: Number(i.total),
+  }));
+  for (const p of payments) {
+    const invoice = p.invoice_id ? byId.get(p.invoice_id) : undefined;
+    if (!p.gst_applicable || (p.invoice_id && covered.has(p.invoice_id)) || invoice?.status === "cancelled") continue;
+    rows.push({ id: `payment:${p.id}`, company: invoice?.client ?? "Invoice payment", reference: invoice?.invoice_number ?? p.reference ?? "—", date: p.paid_on ?? "", mode: "inclusive", ...splitGst(p.amount, true) });
+  }
+  for (const p of income) {
+    if (!p.gst_applicable) continue;
+    rows.push({ id: `income:${p.id}`, company: p.payer || p.title || "Other income", reference: p.reference || "Other income", date: p.received_on ?? "", mode: "inclusive", ...splitGst(p.amount, true) });
+  }
+  return rows.sort((a, b) => b.date.localeCompare(a.date));
+}
