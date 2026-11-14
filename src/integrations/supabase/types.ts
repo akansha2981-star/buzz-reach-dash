@@ -3134,7 +3134,9 @@ export type Database = {
     Functions: {
       current_employee_id: { Args: never; Returns: string }
       has_accounts_access: { Args: { _uid: string }; Returns: boolean }
+      has_documents_access: { Args: { _uid: string }; Returns: boolean }
       has_lms_access: { Args: { _uid: string }; Returns: boolean }
+      has_outreach_access: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

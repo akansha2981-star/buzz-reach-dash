@@ -92,6 +92,13 @@
       "when": 1794585882337,
       "tag": "0012_tighten_reference_and_docs_read_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794677883664,
+      "tag": "0013_scope_outreach_policies",
+      "breakpoints": true
     }
   ]
 }
