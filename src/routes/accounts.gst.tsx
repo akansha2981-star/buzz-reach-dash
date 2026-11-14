@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Landmark } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, Landmark, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { GST_COLLECTION_CAP } from "@/lib/gst";
+import { GST_COLLECTION_CAP, gstWalletRows, splitGst } from "@/lib/gst";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/accounts/gst")({
   component: GstPage,
@@ -24,21 +28,59 @@ const money = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency",
 const MODE: Record<string, string> = { inclusive: "Includes GST", additional: "Additional GST" };
 
 function GstPage() {
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("wallet");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const q = useQuery({
     queryKey: ["accounts_gst_invoices"],
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("accounts_invoices")
-        .select("id, client, invoice_number, issue_date, amount, tax, total, gst_mode, status, currency")
-        .neq("gst_mode", "none").neq("status", "cancelled").order("issue_date", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const [invoices, payments, income] = await Promise.all([
+        supabase.from("accounts_invoices").select("id, client, invoice_number, issue_date, amount, tax, total, gst_mode, status, currency"),
+        supabase.from("accounts_invoice_payments").select("id, invoice_id, amount, gst_applicable, paid_on, reference"),
+        supabase.from("accounts_manual_income").select("id, title, payer, amount, gst_applicable, received_on, reference"),
+      ]);
+      for (const result of [invoices, payments, income]) if (result.error) throw result.error;
+      return { invoices: invoices.data ?? [], payments: payments.data ?? [], income: income.data ?? [] };
     },
   });
-  const rows = q.data ?? [];
-  const filtered = useMemo(() => rows.filter(r => `${r.client} ${r.invoice_number ?? ""}`.toLowerCase().includes(search.trim().toLowerCase())), [rows, search]);
-  const totalGst = rows.reduce((s, r) => s + Number(r.tax), 0);
-  const totalBase = rows.reduce((s, r) => s + Number(r.amount), 0);
+  const rows = useMemo(() => q.data ? gstWalletRows(q.data.invoices, q.data.payments, q.data.income) : [], [q.data]);
+  const candidates = useMemo(() => {
+    if (!q.data) return [];
+    const invoices = new Map(q.data.invoices.map(i => [i.id, i]));
+    return [
+      ...q.data.payments.flatMap(p => {
+        const i = invoices.get(p.invoice_id);
+        if (p.gst_applicable || i?.gst_mode !== "none" || i.status === "cancelled") return [];
+        return [{ key: `payment:${p.id}`, id: p.id, kind: "payment" as const, company: i.client, reference: i.invoice_number ?? p.reference ?? "—", date: p.paid_on, ...splitGst(Number(p.amount), true) }];
+      }),
+      ...q.data.income.filter(p => !p.gst_applicable).map(p => ({ key: `income:${p.id}`, id: p.id, kind: "income" as const, company: p.payer || p.title, reference: p.reference || "Other income", date: p.received_on, ...splitGst(Number(p.amount), true) })),
+    ].sort((a, b) => b.date.localeCompare(a.date));
+  }, [q.data]);
+  const matches = (company: string, reference: string) => `${company} ${reference}`.toLowerCase().includes(search.trim().toLowerCase());
+  const filtered = rows.filter(r => matches(r.company, r.reference));
+  const previous = candidates.filter(r => matches(r.company, r.reference));
+  const chosen = candidates.filter(r => selected.has(r.key));
+  const addPrevious = useMutation({
+    mutationFn: async () => {
+      for (const kind of ["payment", "income"] as const) {
+        const ids = chosen.filter(r => r.kind === kind).map(r => r.id);
+        for (let start = 0; start < ids.length; start += 200) {
+          const { data, error } = await supabase.from(kind === "payment" ? "accounts_invoice_payments" : "accounts_manual_income")
+            .update({ gst_applicable: true }).in("id", ids.slice(start, start + 200)).select("id");
+          if (error) throw error;
+          if (data.length !== ids.slice(start, start + 200).length) throw new Error("Some payments could not be updated. Please refresh and try again.");
+        }
+      }
+    },
+    onSuccess: () => { setSelected(new Set()); setTab("wallet"); toast.success("Previous GST bills added"); },
+    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => { void qc.invalidateQueries(); },
+  });
+  const totalGst = rows.reduce((s, r) => s + r.gst, 0);
+  const totalBase = rows.reduce((s, r) => s + r.base, 0);
   const totalAll = rows.reduce((s, r) => s + Number(r.total), 0);
   const pct = Math.min(100, (totalGst / GST_COLLECTION_CAP) * 100);
   const left = Math.max(0, GST_COLLECTION_CAP - totalGst);
@@ -61,12 +103,37 @@ function GstPage() {
         </div>
       </div>
 
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="h-auto flex-wrap">
+          <TabsTrigger value="wallet">GST wallet</TabsTrigger>
+          <TabsTrigger value="previous">Add previous GST bills</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input className="pl-8" placeholder="Search company or invoice #" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <div className="rounded-xl border bg-card overflow-x-auto">
+      {tab === "previous" && <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-muted-foreground">{chosen.length} selected · GST {money(chosen.reduce((s, r) => s + r.gst, 0))}</div>
+        <Button onClick={() => addPrevious.mutate()} disabled={!chosen.length || addPrevious.isPending || q.isFetching}>
+          {addPrevious.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Add selected GST bills
+        </Button>
+      </div>}
+      {tab === "previous" ? <div className="rounded-lg border overflow-x-auto"><table className="w-full text-sm">
+        <thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr>
+          <th className="p-3"><Checkbox aria-label="Select all visible previous payments" disabled={addPrevious.isPending || !previous.length} checked={previous.length > 0 && previous.every(r => selected.has(r.key))} onCheckedChange={value => setSelected(old => { const next = new Set(old); previous.forEach(r => value ? next.add(r.key) : next.delete(r.key)); return next; })} /></th>
+          <th className="p-3">Date</th><th className="p-3">Company / Payer</th><th className="p-3">Bill / Reference</th><th className="p-3 text-right">Payment (incl. GST)</th><th className="p-3 text-right">Service amount</th><th className="p-3 text-right">GST 18%</th>
+        </tr></thead><tbody>
+          {q.isLoading && <tr><td colSpan={7} className="p-6 text-center">Loading payments…</td></tr>}
+          {q.error && <tr><td colSpan={7} className="p-6 text-center text-destructive">Couldn’t load previous payments.</td></tr>}
+          {!q.isLoading && !q.error && !previous.length && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No previous payments available.</td></tr>}
+          {previous.map(r => <tr key={r.key} className="border-t">
+            <td className="p-3"><Checkbox aria-label={`Includes GST: ${r.company} ${r.reference}`} disabled={addPrevious.isPending} checked={selected.has(r.key)} onCheckedChange={value => setSelected(old => { const next = new Set(old); value ? next.add(r.key) : next.delete(r.key); return next; })} /></td>
+            <td className="p-3 whitespace-nowrap">{format(new Date(r.date), "dd MMM yyyy")}</td><td className="p-3 font-medium">{r.company}</td><td className="p-3">{r.reference}</td>
+            <td className="p-3 text-right whitespace-nowrap">{money(r.total)}</td><td className="p-3 text-right whitespace-nowrap">{money(r.base)}</td><td className="p-3 text-right whitespace-nowrap font-semibold">{money(r.gst)}</td>
+          </tr>)}
+        </tbody></table></div> : <div className="rounded-xl border bg-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
             <tr><th className="p-3">Date</th><th className="p-3">Company</th><th className="p-3">Invoice #</th><th className="p-3">Type</th><th className="p-3 text-right">Service amount</th><th className="p-3 text-right">GST</th><th className="p-3 text-right">Total</th></tr>
@@ -74,21 +141,21 @@ function GstPage() {
           <tbody>
             {q.isLoading && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
             {q.error && <tr><td colSpan={7} className="p-6 text-center text-destructive">Couldn't load GST records.</td></tr>}
-            {!q.isLoading && !filtered.length && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No GST invoices yet. Choose "Includes GST" or "Additional GST" when creating an invoice.</td></tr>}
+            {!q.isLoading && !q.error && !filtered.length && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No GST bills found.</td></tr>}
             {filtered.map(r => (
               <tr key={r.id} className="border-t">
-                <td className="p-3 whitespace-nowrap">{format(new Date(r.issue_date), "dd MMM yyyy")}</td>
-                <td className="p-3 font-medium">{r.client}</td>
-                <td className="p-3 whitespace-nowrap">{r.invoice_number ?? "—"}</td>
-                <td className="p-3 whitespace-nowrap">{MODE[r.gst_mode] ?? r.gst_mode}</td>
-                <td className="p-3 text-right whitespace-nowrap">{money(Number(r.amount))}</td>
-                <td className="p-3 text-right whitespace-nowrap font-semibold">{money(Number(r.tax))}</td>
+                <td className="p-3 whitespace-nowrap">{format(new Date(r.date), "dd MMM yyyy")}</td>
+                <td className="p-3 font-medium">{r.company}</td>
+                <td className="p-3 whitespace-nowrap">{r.reference}</td>
+                <td className="p-3 whitespace-nowrap">{MODE[r.mode] ?? r.mode}</td>
+                <td className="p-3 text-right whitespace-nowrap">{money(r.base)}</td>
+                <td className="p-3 text-right whitespace-nowrap font-semibold">{money(r.gst)}</td>
                 <td className="p-3 text-right whitespace-nowrap">{money(Number(r.total))}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
     </div>
   );
 }
