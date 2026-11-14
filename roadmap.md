@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] GST wallet: previous payment selection, automatic inclusion of GST-marked payments/income, no duplicate invoice GST, and focused tests.
+
 - [x] LMS advanced filters: combined tags/categories, source/year/dates, ascending/descending sorting, missing-field filters without deleting records; six filter tests passed and preview compiled.
 - [ ] Verify LMS filters against signed-in lead data on desktop/mobile — blocked: requesting user has no matching account available for automatic sign-in; preview opens login.
 
