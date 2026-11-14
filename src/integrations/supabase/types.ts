@@ -617,32 +617,52 @@ export type Database = {
       accounts_tds: {
         Row: {
           amount: number
+          bank_amount: number | null
           company_name: string
           created_at: string
           created_by: string | null
           id: string
+          invoice_id: string | null
+          invoice_number: string | null
+          invoice_total: number | null
           tds_date: string
           updated_at: string
         }
         Insert: {
           amount: number
+          bank_amount?: number | null
           company_name: string
           created_at?: string
           created_by?: string | null
           id?: string
+          invoice_id?: string | null
+          invoice_number?: string | null
+          invoice_total?: number | null
           tds_date: string
           updated_at?: string
         }
         Update: {
           amount?: number
+          bank_amount?: number | null
           company_name?: string
           created_at?: string
           created_by?: string | null
           id?: string
+          invoice_id?: string | null
+          invoice_number?: string | null
+          invoice_total?: number | null
           tds_date?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_tds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
