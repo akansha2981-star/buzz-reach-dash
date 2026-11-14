@@ -102,12 +102,12 @@ function SummaryPage() {
   const totalCollected = filteredPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
   const totalOutstanding = totalBilled - totalCollected;
   const totalInvoices = filteredInvoices.length;
-  const paidInvoices = filteredInvoices.filter((i: any) => i.status === "paid").length;
-  const pendingInvoices = filteredInvoices.filter((i: any) => i.status !== "paid" && i.status !== "cancelled").length;
+  const paidInvoices = filteredInvoices.filter((i: any) => (i.status === "paid" || i.status === "paid_with_tds")).length;
+  const pendingInvoices = filteredInvoices.filter((i: any) => i.status !== "paid" && i.status !== "paid_with_tds" && i.status !== "cancelled").length;
 
   const today = new Date();
   const delayedInvoices = filteredInvoices.filter((i: any) => {
-    if (!i.due_date || i.status === "paid" || i.status === "cancelled") return false;
+    if (!i.due_date || i.status === "paid" || i.status === "paid_with_tds" || i.status === "cancelled") return false;
     return isBefore(parseISO(i.due_date), today);
   });
   const delayedAmount = delayedInvoices.reduce((s: number, i: any) => {

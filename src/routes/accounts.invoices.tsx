@@ -191,7 +191,7 @@ function InvoicesPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const grandTotal = invoices.reduce((s, i) => s + Number(i.total), 0);
   const collectionRate = grandTotal > 0 ? Math.round((totalCollected / grandTotal) * 100) : 0;
-  const overdueList = invoices.filter(i => i.due_date && new Date(i.due_date) < now && (paidByInvoice[i.id] ?? 0) < Number(i.total) && i.status !== "cancelled" && i.status !== "paid");
+  const overdueList = invoices.filter(i => i.due_date && new Date(i.due_date) < now && (paidByInvoice[i.id] ?? 0) < Number(i.total) && i.status !== "cancelled" && i.status !== "paid" && i.status !== "paid_with_tds");
   const overdueAmt = overdueList.reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
   const monthInvoices = invoices.filter(i => new Date(i.issue_date) >= monthStart);
   const monthBilled = monthInvoices.reduce((s, i) => s + Number(i.total), 0);
@@ -256,7 +256,7 @@ function InvoicesPage() {
               {STATUSES.map((s) => statusCounts[s] ? (
                 <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-slate-200">
                   <span className={cn("h-1.5 w-1.5 rounded-full",
-                    s==="paid" && "bg-emerald-400",
+                    s==="paid" && "bg-emerald-400", s==="paid_with_tds" && "bg-sky-400",
                     s==="partially_paid" && "bg-amber-400",
                     s==="sent" && "bg-sky-400",
                     s==="draft" && "bg-slate-400",
