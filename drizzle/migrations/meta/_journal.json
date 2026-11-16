@@ -120,6 +120,13 @@
       "when": 1794839597621,
       "tag": "0016_scope_outreach_tasks_activities",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794839712658,
+      "tag": "0017_expense_gst_paid_and_bills",
+      "breakpoints": true
     }
   ]
 }
