@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Receipt } from "lucide-react";
+import { Plus, Pencil, Trash2, Receipt, Paperclip, FileText } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+const BUCKET = "accounts-docs";
+const GST_SCALE = 200000;
+
+async function openBill(path: string) {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
+  if (error) return toast.error(error.message);
+  window.open(data.signedUrl, "_blank");
+}
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +28,7 @@ export const Route = createFileRoute("/accounts/expenses")({ component: Expenses
 type Expense = {
   id: string; title: string; category: string | null; amount: number;
   currency: string; spent_on: string; vendor: string | null; payment_method: string | null; notes: string | null;
+  gst_paid: number; attachment_url: string | null;
 };
 
 const CATEGORIES = ["Office", "Software", "Travel", "Marketing", "Salaries", "Utilities", "Meals", "Other"];
@@ -50,8 +61,30 @@ function ExpensesPage() {
   const total = filtered.reduce((s, e) => s + Number(e.amount), 0);
   const thisMonth = expenses.filter(e => new Date(e.spent_on).getMonth() === new Date().getMonth() && new Date(e.spent_on).getFullYear() === new Date().getFullYear()).reduce((s, e) => s + Number(e.amount), 0);
 
+  const gstTotal = expenses.reduce((s, e) => s + Number(e.gst_paid || 0), 0);
+  const gstMonth = expenses.filter(e => new Date(e.spent_on).getMonth() === new Date().getMonth() && new Date(e.spent_on).getFullYear() === new Date().getFullYear()).reduce((s, e) => s + Number(e.gst_paid || 0), 0);
+  const gstPct = Math.min(100, (gstTotal / GST_SCALE) * 100);
+  const billCount = expenses.filter(e => e.attachment_url).length;
+
   return (
     <div className="space-y-4">
+      <Card><CardContent className="space-y-2 p-4">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <div className="text-xs text-muted-foreground">GST paid till date</div>
+            <div className="text-2xl font-semibold">₹{gstTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</div>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <div>This month: ₹{gstMonth.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</div>
+            <div>{billCount} GST bill{billCount === 1 ? "" : "s"} uploaded</div>
+          </div>
+        </div>
+        <Progress value={gstPct} className="h-3" />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{gstPct.toFixed(1)}% of ₹{GST_SCALE.toLocaleString("en-IN")}</span>
+          <span>₹{Math.max(0, GST_SCALE - gstTotal).toLocaleString("en-IN", { maximumFractionDigits: 2 })} left</span>
+        </div>
+      </CardContent></Card>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Total expenses" value={`₹${total.toLocaleString()}`} />
         <StatCard label="This month" value={`₹${thisMonth.toLocaleString()}`} tone="amber" />
@@ -90,9 +123,11 @@ function ExpensesPage() {
                       {format(new Date(exp.spent_on), "dd MMM yyyy")}
                       {exp.vendor && <> · {exp.vendor}</>}
                       {exp.payment_method && <> · {exp.payment_method}</>}
+                      {Number(exp.gst_paid) > 0 && <> · GST ₹{Number(exp.gst_paid).toLocaleString("en-IN")}</>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    {exp.attachment_url && <Button size="icon" variant="ghost" title="View GST bill" onClick={() => openBill(exp.attachment_url!)}><FileText className="h-4 w-4" /></Button>}
                     <div className="font-semibold">{exp.currency} {Number(exp.amount).toLocaleString()}</div>
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(exp); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete expense?")) del.mutate(exp.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -130,13 +165,21 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
 function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing: Expense | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Partial<Expense>>({});
+  const [file, setFile] = useState<File | null>(null);
   const reset = () => setForm(editing ?? { currency: "INR", spent_on: new Date().toISOString().slice(0, 10), amount: 0 });
-  useEffect(() => { if (open) reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
+  useEffect(() => { if (open) { reset(); setFile(null); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, editing]);
 
   const isEdit = !!editing;
   const save = useMutation({
     mutationFn: async () => {
       const payload: any = { ...form }; delete payload.id;
+      payload.gst_paid = Number(payload.gst_paid || 0);
+      if (file) {
+        const path = `expenses/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type || undefined });
+        if (upErr) throw upErr;
+        payload.attachment_url = path;
+      }
       if (isEdit) {
         const { error } = await supabase.from("accounts_expenses").update(payload).eq("id", editing!.id);
         if (error) throw error;
@@ -176,6 +219,16 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Vendor</Label><Input value={form.vendor ?? ""} onChange={(e) => setForm({ ...form, vendor: e.target.value })} /></div>
             <div><Label>Payment method</Label><Input value={form.payment_method ?? ""} onChange={(e) => setForm({ ...form, payment_method: e.target.value })} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label>GST paid (₹)</Label><Input type="number" min={0} value={form.gst_paid ?? 0} onChange={(e) => setForm({ ...form, gst_paid: Number(e.target.value) })} /></div>
+            <div><Label>GST bill / invoice (optional)</Label>
+              <label className="flex h-9 cursor-pointer items-center gap-2 truncate rounded-md border bg-background px-2 text-sm text-muted-foreground">
+                <Paperclip className="h-4 w-4 shrink-0" />
+                <span className="truncate">{file ? file.name : form.attachment_url ? "Replace bill" : "Upload file"}</span>
+                <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              </label>
+            </div>
           </div>
           <div><Label>Notes</Label><Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </div>
