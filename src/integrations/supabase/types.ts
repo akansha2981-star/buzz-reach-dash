@@ -169,6 +169,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          gst_paid: number
           id: string
           notes: string | null
           payment_method: string | null
@@ -184,6 +185,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          gst_paid?: number
           id?: string
           notes?: string | null
           payment_method?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          gst_paid?: number
           id?: string
           notes?: string | null
           payment_method?: string | null
