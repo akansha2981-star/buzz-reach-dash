@@ -17,7 +17,17 @@ import { NewCEORequestDialog } from "@/components/NewCEORequestDialog";
 import { GoogleCalendarStatusCard } from "@/components/GoogleCalendarStatusCard";
 import { Crown } from "lucide-react";
 
-export const Route = createFileRoute("/")({ component: () => <RequireAuth><AppShell title="Dashboard"><Dashboard /></AppShell></RequireAuth> });
+export const Route = createFileRoute("/")({
+  head: () => ({ meta: [
+    { title: "Dashboard · Work’s" },
+    { name: "description", content: "Work’s outreach dashboard for colleges, coaching institutes, meetings and tasks." },
+    { property: "og:title", content: "Dashboard · Work’s" },
+    { property: "og:description", content: "Daily outreach activity, institution pipelines and upcoming work." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+  component: () => <RequireAuth><AppShell title="Dashboard"><Dashboard /></AppShell></RequireAuth>,
+});
 
 type RangeKey = "7" | "30" | "90" | "all";
 type TypeKey = "all" | "college" | "coaching";

@@ -6,7 +6,7 @@ import {
   FileText, Link as LinkIcon, Upload, Plus, Trash2, ExternalLink, Download,
   FolderOpen, Search, Filter, GraduationCap, BookOpen, CheckCircle2, AlertTriangle, Circle, ChevronDown,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,7 +146,8 @@ function DocumentsPage() {
     if (typeFilter !== "all" && typeFilter !== group.type) return false;
     if (instituteFilter !== ANY && instituteFilter !== group.id) return false;
     if (attentionOnly && !group.needsAttention) return false;
-    if ((search.trim() || categoryFilter !== ANY) && !group.files.length && !group.links.length) return false;
+    if (categoryFilter !== ANY && !group.files.length && !group.links.length) return false;
+    if (search.trim() && !group.name.toLowerCase().includes(search.trim().toLowerCase()) && !group.files.length && !group.links.length) return false;
     return true;
   });
   const loading = institutesPending || docsPending || linksPending || stagesPending;
