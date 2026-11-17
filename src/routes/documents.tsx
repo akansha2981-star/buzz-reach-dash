@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   FileText, Link as LinkIcon, Upload, Plus, Trash2, ExternalLink, Download,
-  FolderOpen, Search, Filter,
+  FolderOpen, Search, Filter, GraduationCap, BookOpen, CheckCircle2, AlertTriangle, Circle, ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { REQUIRED_DOCUMENTS, documentCompleteness, isClosedStage } from "@/lib/document-completeness";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DOC_CATEGORIES, CATEGORY_COLORS, type DocCategory } from "@/lib/document-categories";
+import { DOC_CATEGORIES, type DocCategory } from "@/lib/document-categories";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 
@@ -46,6 +46,10 @@ function DocumentsPage() {
   const [typeFilter, setTypeFilter] = useState<"all" | "college" | "coaching" | "general">("all");
   const [instituteFilter, setInstituteFilter] = useState<string>(ANY);
   const [categoryFilter, setCategoryFilter] = useState<string>(ANY);
+  const [attentionOnly, setAttentionOnly] = useState(false);
+  const [adding, setAdding] = useState(false);
+  useRealtime("institutes", [["document-institutes"]]);
+  useRealtime("outreach_stages", [["document-stages"]]);
 
   // Form state
   const [name, setName] = useState("");
@@ -54,17 +58,26 @@ function DocumentsPage() {
   const [linkUrl, setLinkUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const { data: institutes = [] } = useQuery({
-    queryKey: ["all-institutes-min"],
+  const { data: institutes = [], isPending: institutesPending, error: institutesError } = useQuery({
+    queryKey: ["document-institutes"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("institutes").select("id, name, type").order("name");
+        .from("institutes").select("id, name, type, current_stage_id").order("name");
       if (error) throw error;
       return data ?? [];
     },
   });
 
-  const { data: docs = [] } = useQuery({
+  const { data: stages = [], isPending: stagesPending, error: stagesError } = useQuery({
+    queryKey: ["document-stages"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("outreach_stages").select("id, name, position").order("position");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: docs = [], isPending: docsPending, error: docsError } = useQuery({
     queryKey: ["docs-all"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -74,7 +87,7 @@ function DocumentsPage() {
     },
   });
 
-  const { data: links = [] } = useQuery({
+  const { data: links = [], isPending: linksPending, error: linksError } = useQuery({
     queryKey: ["links-all"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -112,25 +125,37 @@ function DocumentsPage() {
       if (categoryFilter !== ANY && (it.category ?? "Others") !== categoryFilter) return false;
       if (search.trim()) {
         const s = search.trim().toLowerCase();
-        const hay = `${it.name ?? ""} ${it.label ?? ""} ${it.url ?? ""}`.toLowerCase();
+        const hay = `${it.name ?? ""} ${it.label ?? ""} ${it.url ?? ""} ${it.institute_id ? instMap.get(it.institute_id)?.name ?? "" : "General"}`.toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
     });
   }
 
-  const filteredDocs = useMemo(() => applyFilters(docs as any), [docs, typeFilter, instituteFilter, categoryFilter, search, instMap]);
-  const filteredLinks = useMemo(() => applyFilters(links as any), [links, typeFilter, instituteFilter, categoryFilter, search, instMap]);
+  const filteredDocs = useMemo(() => applyFilters(docs), [docs, typeFilter, instituteFilter, categoryFilter, search, instMap]);
+  const filteredLinks = useMemo(() => applyFilters(links), [links, typeFilter, instituteFilter, categoryFilter, search, instMap]);
 
-  const countsByCategory = useMemo(() => {
-    const counts: Record<string, number> = {};
-    DOC_CATEGORIES.forEach((c) => (counts[c] = 0));
-    [...(docs as any[]), ...(links as any[])].forEach((it) => {
-      const c = it.category ?? "Others";
-      counts[c] = (counts[c] ?? 0) + 1;
-    });
-    return counts;
-  }, [docs, links]);
+  const groups = useMemo(() => institutes.map(institute => {
+    const allItems = [...docs, ...links].filter(item => item.institute_id === institute.id);
+    const status = documentCompleteness(allItems, isClosedStage(institute.current_stage_id, stages));
+    return { ...institute, ...status, allItems, files: filteredDocs.filter(item => item.institute_id === institute.id), links: filteredLinks.filter(item => item.institute_id === institute.id) };
+  }), [institutes, docs, links, stages, filteredDocs, filteredLinks]);
+  const attentionCount = groups.filter(group => group.needsAttention).length;
+  const visibleGroups = groups.filter(group => {
+    if (typeFilter === "general") return false;
+    if (typeFilter !== "all" && typeFilter !== group.type) return false;
+    if (instituteFilter !== ANY && instituteFilter !== group.id) return false;
+    if (attentionOnly && !group.needsAttention) return false;
+    if ((search.trim() || categoryFilter !== ANY) && !group.files.length && !group.links.length) return false;
+    return true;
+  });
+  const loading = institutesPending || docsPending || linksPending || stagesPending;
+  const loadError = institutesError || docsError || linksError || stagesError;
+
+  function addRequired(instituteId: string, category: DocCategory) {
+    setLinkedInstitute(instituteId); setCategory(category); setName(category); setAdding(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function resetForm() {
     setName(""); setLinkUrl(""); setCategory("Others"); setLinkedInstitute(NONE);
@@ -224,48 +249,30 @@ function DocumentsPage() {
 
   return (
     <div className="space-y-4 px-3 pb-6 pt-3 sm:px-4 md:px-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-xl font-semibold sm:text-2xl">Documents</h1>
-        <p className="text-xs text-muted-foreground sm:text-sm">
-          Central library for trackers, invoices, MOUs, pitch decks & more — link or upload, with optional college/coaching tag.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold">Documents</h1>
+          <p className="mt-1 text-sm text-muted-foreground">College & coaching records</p>
+        </div>
+        <Button onClick={() => setAdding(!adding)}><Plus className="mr-2 h-4 w-4" />Add document</Button>
       </div>
-
-      {/* Category quick chips */}
-      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
-        <button
-          onClick={() => setCategoryFilter(ANY)}
-          className={cn(
-            "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-            categoryFilter === ANY ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"
-          )}
-        >
-          All <span className="ml-1 opacity-70">{(docs.length + links.length) || 0}</span>
-        </button>
-        {DOC_CATEGORIES.map((c) => (
-          <button
-            key={c}
-            onClick={() => setCategoryFilter(c)}
-            className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-              categoryFilter === c
-                ? "bg-primary text-primary-foreground border-primary"
-                : cn(CATEGORY_COLORS[c], "hover:opacity-90")
-            )}
-          >
-            {c} <span className="ml-1 opacity-70">{countsByCategory[c] ?? 0}</span>
-          </button>
+      <div className="grid grid-cols-2 gap-4 border-y py-4 sm:grid-cols-4">
+        {[{ label: "Colleges", value: institutes.filter(i => i.type === "college").length, icon: GraduationCap }, { label: "Coaching institutes", value: institutes.filter(i => i.type === "coaching").length, icon: BookOpen }, { label: "Files & links", value: docs.length + links.length, icon: FolderOpen }, { label: "Closed · missing documents", value: attentionCount, icon: AlertTriangle }].map(stat => (
+          <div key={stat.label} className="min-w-0">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><stat.icon className="h-4 w-4 shrink-0" />{stat.label}</div>
+            <p className={cn("mt-2 text-2xl font-semibold tabular-nums", stat.icon === AlertTriangle && attentionCount > 0 && "text-destructive")}>{loading ? "—" : stat.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Add new */}
-      <Card>
-        <CardHeader className="pb-3">
+      {adding && <section className="border-b py-3">
+        <div className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Plus className="h-4 w-4 text-primary" /> Add a document or link
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        </div>
+        <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Name *</Label>
@@ -323,16 +330,15 @@ function DocumentsPage() {
               />
             </label>
           </div>
-          <p className="text-[11px] text-muted-foreground">Max 25 MB per file. Name is required for both links and uploads.</p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>}
 
       {/* Filters */}
-      <Card>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="space-y-3 py-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Search by name or URL…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="pl-8" placeholder="Search institutions or documents…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={typeFilter} onValueChange={(v: any) => { setTypeFilter(v); setInstituteFilter(ANY); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -363,82 +369,55 @@ function DocumentsPage() {
               {DOC_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
-        </CardContent>
-      </Card>
+        </div>
+        <Button size="sm" variant={attentionOnly ? "destructive" : "outline"} onClick={() => setAttentionOnly(!attentionOnly)} aria-pressed={attentionOnly}>
+          <AlertTriangle className="mr-2 h-4 w-4" />Closed with missing documents ({attentionCount})
+        </Button>
+      </section>
 
-      {/* Lists */}
-      <Tabs defaultValue="files" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-flex">
-          <TabsTrigger value="files">
-            <FileText className="mr-1 h-4 w-4" /> Files <Badge variant="secondary" className="ml-2">{filteredDocs.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="links">
-            <LinkIcon className="mr-1 h-4 w-4" /> Links <Badge variant="secondary" className="ml-2">{filteredLinks.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
+      {loadError ? <div role="alert" className="border border-destructive/30 p-4 text-destructive">Could not load documents. <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries()}>Retry</Button></div> : loading ? <p className="py-10 text-center text-muted-foreground">Loading institution records…</p> : <>
+        {(["college", "coaching"] as const).map(type => {
+          const list = visibleGroups.filter(group => group.type === type);
+          if (!list.length) return null;
+          const Icon = type === "college" ? GraduationCap : BookOpen;
+          return <section key={type} className="space-y-3">
+            <h2 className="flex items-center gap-2 pt-3 text-lg font-semibold"><Icon className="h-5 w-5 text-primary" />{type === "college" ? "Colleges" : "Coaching institutes"}<Badge variant="secondary">{list.length}</Badge></h2>
+            <div className="space-y-3">{list.map(group => <details key={group.id} className={cn("group rounded-lg border bg-card", group.needsAttention && "border-destructive/50 bg-destructive/5")}>
+              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+                <Icon className={cn("h-5 w-5 shrink-0", group.needsAttention ? "text-destructive" : "text-primary")} />
+                <div className="min-w-0 flex-1"><h3 className={cn("break-words text-sm font-semibold", group.needsAttention && "text-destructive")}>{group.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{group.allItems.length} documents · {4 - group.missing.length}/4 required{isClosedStage(group.current_stage_id, stages) ? " · Closed" : ""}</p>
+                </div>
+                {group.needsAttention && <Badge variant="outline" className="border-destructive/30 text-destructive"><AlertTriangle className="mr-1 h-3 w-3" />Incomplete</Badge>}
+                {group.complete && <CheckCircle2 className="h-5 w-5 text-success" />}
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">{REQUIRED_DOCUMENTS.map(category => {
+                  const missing = group.missing.includes(category);
+                  const StatusIcon = missing ? (group.needsAttention ? AlertTriangle : Circle) : CheckCircle2;
+                  return <span key={category} className={cn("flex items-center gap-1.5 text-xs", missing ? (group.needsAttention ? "text-destructive" : "text-muted-foreground") : "text-success")}><StatusIcon className="h-3.5 w-3.5 shrink-0" />{category}</span>;
+                })}</div>
+              </summary>
+              <div className="space-y-3 border-t p-4">
+                {group.missing.length > 0 && <div className="flex flex-wrap gap-2">{group.missing.map(category => <Button key={category} size="sm" variant="outline" className={cn(group.needsAttention && "border-destructive/30 text-destructive")} onClick={() => addRequired(group.id, category)}><Plus className="mr-1 h-3.5 w-3.5" />{category}</Button>)}</div>}
+                <ul className="divide-y">{group.files.map(doc => <li key={doc.id} className="flex items-center gap-2 py-3">
+                  <FileText className="h-4 w-4 shrink-0 text-primary" /><Button variant="ghost" className="h-auto min-w-0 flex-1 justify-start whitespace-normal px-1 text-left" onClick={() => openDoc(doc.file_path)}><span className="min-w-0 break-words">{doc.name ?? doc.label}<span className="mt-1 block text-xs font-normal text-muted-foreground">{doc.category} · {formatBytes(doc.size_bytes)} · {format(new Date(doc.created_at), "dd MMM yyyy")}</span></span></Button>
+                  <Button size="icon" variant="ghost" aria-label={`Open ${doc.name ?? doc.label}`} onClick={() => openDoc(doc.file_path)}><Download className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" aria-label={`Delete ${doc.name ?? doc.label}`} onClick={() => { if (window.confirm("Delete this document?")) delDoc.mutate(doc); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </li>)}{group.links.map(link => <li key={link.id} className="flex items-center gap-2 py-3"><LinkIcon className="h-4 w-4 shrink-0 text-primary" /><a className="min-w-0 flex-1 break-words text-sm hover:text-primary" href={link.url} target="_blank" rel="noopener noreferrer">{link.name ?? link.label}<span className="mt-1 block text-xs text-muted-foreground">{link.category}</span></a><ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" /><Button size="icon" variant="ghost" aria-label={`Delete ${link.name ?? link.label}`} onClick={() => { if (window.confirm("Delete this link?")) delLink.mutate(link.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button></li>)}</ul>
+                {!group.files.length && !group.links.length && <p className="text-sm text-muted-foreground">No documents in this group{categoryFilter !== ANY ? " for this category" : ""}.</p>}
+                <Button variant="outline" size="sm" onClick={() => addRequired(group.id, "Others")}><Plus className="mr-1 h-4 w-4" />Other document</Button>
+              </div>
+            </details>)}</div>
+          </section>;
+        })}
+        {!attentionOnly && (typeFilter === "all" || typeFilter === "general") && (instituteFilter === ANY || instituteFilter === NONE) && <section className="space-y-3 border-t pt-5">
+          <h2 className="flex items-center gap-2 text-lg font-semibold"><FolderOpen className="h-5 w-5 text-primary" />General documents</h2>
+          <ul className="divide-y">{filteredDocs.filter(doc => !doc.institute_id).map(doc => <li key={doc.id} className="flex items-center gap-2 py-3"><FileText className="h-4 w-4 shrink-0 text-primary" /><Button variant="ghost" className="h-auto min-w-0 flex-1 justify-start whitespace-normal text-left" onClick={() => openDoc(doc.file_path)}>{doc.name ?? doc.label}</Button><Badge variant="outline">{doc.category}</Badge><Button size="icon" variant="ghost" aria-label={`Delete ${doc.name ?? doc.label}`} onClick={() => { if (window.confirm("Delete this document?")) delDoc.mutate(doc); }}><Trash2 className="h-4 w-4 text-destructive" /></Button></li>)}{filteredLinks.filter(link => !link.institute_id).map(link => <li key={link.id} className="flex items-center gap-2 py-3"><LinkIcon className="h-4 w-4 shrink-0 text-primary" /><a className="min-w-0 flex-1 break-words text-sm" href={link.url} target="_blank" rel="noopener noreferrer">{link.name ?? link.label}</a><Button size="icon" variant="ghost" aria-label={`Delete ${link.name ?? link.label}`} onClick={() => { if (window.confirm("Delete this link?")) delLink.mutate(link.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button></li>)}</ul>
+          {!filteredDocs.some(doc => !doc.institute_id) && !filteredLinks.some(link => !link.institute_id) && <p className="text-sm text-muted-foreground">No general documents.</p>}
+        </section>}
+        {!visibleGroups.length && <EmptyState icon={FolderOpen} text="No institutions match your filters." />}
+      </>}
 
-        <TabsContent value="files" className="mt-3">
-          {filteredDocs.length === 0 ? (
-            <EmptyState icon={FolderOpen} text="No files match your filters." />
-          ) : (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {filteredDocs.map((d: any) => {
-                const inst = d.institute_id ? instMap.get(d.institute_id) : null;
-                return (
-                  <li key={d.id} className="group flex items-center gap-2 rounded-lg border bg-card p-3 shadow-sm">
-                    <FileText className="h-5 w-5 shrink-0 text-primary" />
-                    <button onClick={() => openDoc(d.file_path)} className="min-w-0 flex-1 text-left">
-                      <div className="truncate text-sm font-medium hover:text-primary">{d.name ?? d.label}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Badge variant="outline" className={cn("border", CATEGORY_COLORS[d.category ?? "Others"])}>{d.category ?? "Others"}</Badge>
-                        {inst && <span className="truncate">· {inst.name} ({inst.type})</span>}
-                        {!inst && <span>· General</span>}
-                        <span>· {formatBytes(d.size_bytes)}</span>
-                        <span>· {format(new Date(d.created_at), "MMM d")}</span>
-                      </div>
-                    </button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openDoc(d.file_path)} title="Download">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 opacity-60 hover:opacity-100" onClick={() => delDoc.mutate(d)} title="Delete">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </TabsContent>
-
-        <TabsContent value="links" className="mt-3">
-          {filteredLinks.length === 0 ? (
-            <EmptyState icon={LinkIcon} text="No links match your filters." />
-          ) : (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {filteredLinks.map((l: any) => {
-                const inst = l.institute_id ? instMap.get(l.institute_id) : null;
-                return (
-                  <li key={l.id} className="group flex items-center gap-2 rounded-lg border bg-card p-3 shadow-sm">
-                    <ExternalLink className="h-5 w-5 shrink-0 text-primary" />
-                    <a href={l.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium hover:text-primary">{l.name ?? l.label}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Badge variant="outline" className={cn("border", CATEGORY_COLORS[l.category ?? "Others"])}>{l.category ?? "Others"}</Badge>
-                        {inst && <span className="truncate">· {inst.name} ({inst.type})</span>}
-                        {!inst && <span>· General</span>}
-                        <span className="truncate">· {l.url}</span>
-                      </div>
-                    </a>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 opacity-60 hover:opacity-100" onClick={() => delLink.mutate(l.id)} title="Delete">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
@@ -453,6 +432,14 @@ function EmptyState({ icon: Icon, text }: { icon: any; text: string }) {
 }
 
 export const Route = createFileRoute("/documents")({
+  head: () => ({ meta: [
+    { title: "Documents · Work’s" },
+    { name: "description", content: "College and coaching documents, signed MOUs, proposals, welcome letters and payment invoices." },
+    { property: "og:title", content: "Institution Documents · Work’s" },
+    { property: "og:description", content: "Manage institution records and track missing required documents for closed deals." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: () => (
     <RequireAuth>
       <AppShell title="Documents">
