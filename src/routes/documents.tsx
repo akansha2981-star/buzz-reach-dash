@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { REQUIRED_DOCUMENTS, documentCompleteness, isClosedStage } from "@/lib/document-completeness";
+import { REQUIRED_DOCUMENTS, documentCompleteness, isClosedStage, hasInstitutionDocuments } from "@/lib/document-completeness";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -103,12 +103,6 @@ function DocumentsPage() {
     return m;
   }, [institutes]);
 
-  const filteredInstitutes = useMemo(() => {
-    if (typeFilter === "college") return institutes.filter((i: any) => i.type === "college");
-    if (typeFilter === "coaching") return institutes.filter((i: any) => i.type === "coaching");
-    return institutes;
-  }, [institutes, typeFilter]);
-
   function applyFilters<T extends { institute_id: string | null; category: string | null; label?: string; name?: string | null; url?: string }>(items: T[]) {
     return items.filter((it) => {
       if (typeFilter === "general" && it.institute_id) return false;
@@ -139,7 +133,8 @@ function DocumentsPage() {
     const allItems = [...docs, ...links].filter(item => item.institute_id === institute.id);
     const status = documentCompleteness(allItems, isClosedStage(institute.current_stage_id, stages));
     return { ...institute, ...status, allItems, files: filteredDocs.filter(item => item.institute_id === institute.id), links: filteredLinks.filter(item => item.institute_id === institute.id) };
-  }), [institutes, docs, links, stages, filteredDocs, filteredLinks]);
+  }).filter(group => hasInstitutionDocuments(group.allItems)), [institutes, docs, links, stages, filteredDocs, filteredLinks]);
+  const filteredInstitutes = groups.filter(group => typeFilter === "all" || typeFilter === group.type);
   const attentionCount = groups.filter(group => group.needsAttention).length;
   const visibleGroups = groups.filter(group => {
     if (typeFilter === "general") return false;
@@ -258,7 +253,7 @@ function DocumentsPage() {
         <Button onClick={() => setAdding(!adding)}><Plus className="mr-2 h-4 w-4" />Add document</Button>
       </div>
       <div className="grid grid-cols-2 gap-4 border-y py-4 sm:grid-cols-4">
-        {[{ label: "Colleges", value: institutes.filter(i => i.type === "college").length, icon: GraduationCap }, { label: "Coaching institutes", value: institutes.filter(i => i.type === "coaching").length, icon: BookOpen }, { label: "Files & links", value: docs.length + links.length, icon: FolderOpen }, { label: "Closed · missing documents", value: attentionCount, icon: AlertTriangle }].map(stat => (
+        {[{ label: "Colleges", value: groups.filter(i => i.type === "college").length, icon: GraduationCap }, { label: "Coaching institutes", value: groups.filter(i => i.type === "coaching").length, icon: BookOpen }, { label: "Files & links", value: docs.length + links.length, icon: FolderOpen }, { label: "Closed · missing documents", value: attentionCount, icon: AlertTriangle }].map(stat => (
           <div key={stat.label} className="min-w-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground"><stat.icon className="h-4 w-4 shrink-0" />{stat.label}</div>
             <p className={cn("mt-2 text-2xl font-semibold tabular-nums", stat.icon === AlertTriangle && attentionCount > 0 && "text-destructive")}>{loading ? "—" : stat.value}</p>
