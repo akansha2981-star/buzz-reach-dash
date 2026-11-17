@@ -1,4 +1,7 @@
 export const DOC_CATEGORIES = [
+  "Proposal",
+  "MOU Signed",
+  "Payment Invoices",
   "College Tracker",
   "Invoices",
   "Pitch Deck",
@@ -11,6 +14,9 @@ export const DOC_CATEGORIES = [
 export type DocCategory = (typeof DOC_CATEGORIES)[number];
 
 export const CATEGORY_COLORS: Record<string, string> = {
+  "Proposal": "bg-primary/10 text-primary border-primary/30",
+  "MOU Signed": "bg-success/10 text-success border-success/30",
+  "Payment Invoices": "bg-success/10 text-success border-success/30",
   "College Tracker": "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30",
   "Invoices": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
   "Pitch Deck": "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30",

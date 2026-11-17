@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Documents: institution-wise college/coaching groups, mandatory-document checklist and closed-institution warnings; nine tests passed, preview compiled.
+- [ ] Documents signed-in desktop/mobile verification — blocked: no account matches the requesting user's email; preview redirects to login.
+
 - [x] GST wallet: previous payment selection, automatic inclusion of GST-marked payments/income, no duplicate invoice GST; eight tests passed and preview compiled.
 - [ ] Verify GST wallet selection/persistence with real payments — blocked: no matching requesting-user account; preview redirects to sign-in.
 
