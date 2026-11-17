@@ -1,6 +1,10 @@
 export const REQUIRED_DOCUMENTS = ["Proposal", "MOU Signed", "Welcome Letter", "Payment Invoices"] as const;
 export type RequiredDocument = (typeof REQUIRED_DOCUMENTS)[number];
 
+export function hasInstitutionDocuments(items: readonly unknown[]) {
+  return items.length >= 1;
+}
+
 export function requiredDocument(category: string | null): RequiredDocument | undefined {
   const value = (category ?? "").trim().toLowerCase();
   if (value === "proposal") return "Proposal";

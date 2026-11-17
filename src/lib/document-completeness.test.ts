@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { documentCompleteness, isClosedStage } from "./document-completeness";
+import { documentCompleteness, isClosedStage, hasInstitutionDocuments } from "./document-completeness";
 
 describe("required institution documents", () => {
+  it("shows an institution only after at least one document is added", () => {
+    expect(hasInstitutionDocuments([])).toBe(false);
+    expect(hasInstitutionDocuments([{ category: "Proposal" }])).toBe(true);
+    expect(hasInstitutionDocuments([{ category: "Others", url: "https://example.org/proposal" }])).toBe(true);
+  });
   const complete = ["Proposal", "MOU Signed", "Welcome Letter", "Payment Invoices"].map(category => ({ category }));
   for (const category of ["Proposal", "MOU Signed", "Welcome Letter", "Payment Invoices"]) {
     it(`flags a closed institution missing ${category}`, () => {
