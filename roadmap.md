@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Documents: institution-wise college/coaching groups, mandatory-document checklist, closed-institution warnings, tests and desktop/mobile verification.
+
 - [x] GST wallet: previous payment selection, automatic inclusion of GST-marked payments/income, no duplicate invoice GST; eight tests passed and preview compiled.
 - [ ] Verify GST wallet selection/persistence with real payments — blocked: no matching requesting-user account; preview redirects to sign-in.
 
