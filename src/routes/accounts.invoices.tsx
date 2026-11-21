@@ -1,4 +1,4 @@
-import { invoiceGst, type GstMode } from "@/lib/gst";
+import { invoiceGst, type GstMode, type InvoiceType } from "@/lib/gst";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,17 @@ import { downloadInvoicePDF, type InvoiceItem, type InvoiceCompanyOverride } fro
 import { useCompanySettings, buildIdString } from "@/lib/company-settings";
 
 
-export const Route = createFileRoute("/accounts/invoices")({ component: InvoicesPage });
+export const Route = createFileRoute("/accounts/invoices")({
+  component: InvoicesPage,
+  head: () => ({ meta: [
+    { title: "Tax & Proforma Invoices | Works Accounts" },
+    { name: "description", content: "Create tax and proforma invoices, classify previous bills, and manage payments and TDS." },
+    { property: "og:title", content: "Tax & Proforma Invoices | Works Accounts" },
+    { property: "og:description", content: "Manage tax and proforma invoices with payments and TDS in Works Accounts." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+});
 
 type Invoice = {
   id: string; client: string; invoice_number: string | null;
@@ -36,6 +47,7 @@ type Invoice = {
   category: string | null; payment_mode: string | null;
   bank_account_id: string | null;
   gst_mode?: string | null;
+  invoice_type: InvoiceType | null;
   items: InvoiceItem[];
 };
 
@@ -78,6 +90,8 @@ function InvoicesPage() {
   const [editing, setEditing] = useState<Invoice | null>(null);
   const [paymentsFor, setPaymentsFor] = useState<Invoice | null>(null);
   const [previewFor, setPreviewFor] = useState<Invoice | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [typeFilter, setTypeFilter] = useState("all");
 
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -113,6 +127,23 @@ function InvoicesPage() {
     onSuccess: () => { toast.success("Invoice deleted"); qc.invalidateQueries({ queryKey: ["accounts_invoices"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const visibleInvoices = invoices.filter(i => typeFilter === "all" || (typeFilter === "unclassified" ? !i.invoice_type : i.invoice_type === typeFilter));
+  const selectedIds = invoices.filter(i => selected.has(i.id)).map(i => i.id);
+  const markType = useMutation({
+    mutationFn: async (type: InvoiceType) => {
+      if (!selectedIds.length) return;
+      const { data, error } = await supabase.from("accounts_invoices").update({ invoice_type: type }).in("id", selectedIds).select("id");
+      if (error) throw error;
+      if (data.length !== selectedIds.length) throw new Error("Some invoices could not be updated. Refresh and try again.");
+    },
+    onSuccess: () => { setSelected(new Set()); toast.success("Invoice types updated"); },
+    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => { void qc.invalidateQueries(); },
+  });
+  const confirmType = (type: InvoiceType) => {
+    if (confirm(`Mark ${selectedIds.length} selected invoice(s) as ${type === "tax" ? "Tax Invoice" : "Proforma Invoice"}? GST collection totals will update; amounts and payments stay unchanged.`)) markType.mutate(type);
+  };
 
   const totalCollected = invoices.reduce((s, i) => s + (paidByInvoice[i.id] ?? (i.status === "paid" ? Number(i.total) : 0)), 0);
   const totalOutstanding = invoices
@@ -155,6 +186,7 @@ function InvoicesPage() {
     const b = inv.bank_account_id ? bankById[inv.bank_account_id] : bankAccounts.find(x => x.is_default);
     return {
       invoice_number: inv.invoice_number || "DRAFT",
+      invoice_type: inv.invoice_type,
       issue_date: inv.issue_date,
       due_date: inv.due_date,
       payment_mode: inv.payment_mode,
@@ -274,26 +306,56 @@ function InvoicesPage() {
         </div>
       </div>
 
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger aria-label="Filter invoice type" className="w-full sm:w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All invoice types</SelectItem>
+              <SelectItem value="tax">Tax invoices</SelectItem>
+              <SelectItem value="proforma">Proforma invoices</SelectItem>
+              <SelectItem value="unclassified">Needs classification</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">{invoices.filter(i => !i.invoice_type).length} awaiting classification · {selectedIds.length} selected</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox aria-label="Select all visible invoices" disabled={markType.isPending || !visibleInvoices.length}
+              checked={visibleInvoices.length > 0 && visibleInvoices.every(i => selected.has(i.id)) ? true : visibleInvoices.some(i => selected.has(i.id)) ? "indeterminate" : false}
+              onCheckedChange={value => setSelected(old => { const next = new Set(old); visibleInvoices.forEach(i => value === true ? next.add(i.id) : next.delete(i.id)); return next; })} />
+            Select visible
+          </label>
+          <Button variant="outline" disabled={!selectedIds.length || markType.isPending} onClick={() => confirmType("tax")}><Receipt className="mr-2 h-4 w-4" />Mark as Tax Invoice</Button>
+          <Button variant="outline" disabled={!selectedIds.length || markType.isPending} onClick={() => confirmType("proforma")}><FileText className="mr-2 h-4 w-4" />Mark as Proforma</Button>
+          {selectedIds.length > 0 && <Button variant="ghost" disabled={markType.isPending} onClick={() => setSelected(new Set())}>Clear selection</Button>}
+        </div>
+        {invoices.some(i => !i.invoice_type) && <p className="text-sm text-muted-foreground">Older unclassified invoices are excluded from GST collection until marked as Tax Invoice.</p>}
+      </div>
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-          ) : invoices.length === 0 ? (
+          ) : visibleInvoices.length === 0 ? (
             <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
               <FileText className="h-8 w-8" />
-              <p className="text-sm">No invoices yet. Create your first one.</p>
+              <p className="text-sm">No invoices found.</p>
             </div>
           ) : (
             <div className="divide-y">
-              {invoices.map((inv) => {
+              {visibleInvoices.map((inv) => {
                 const paid = paidByInvoice[inv.id] ?? 0;
                 const due = Math.max(0, Number(inv.total) - paid);
                 return (
                   <div key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <Checkbox className="mt-1" aria-label={`Select invoice ${inv.invoice_number || inv.client}`} checked={selected.has(inv.id)} disabled={markType.isPending}
+                        onCheckedChange={value => setSelected(old => { const next = new Set(old); value === true ? next.add(inv.id) : next.delete(inv.id); return next; })} />
+                      <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium truncate">{inv.client}</span>
                         {inv.invoice_number && <span className="text-xs text-muted-foreground">#{inv.invoice_number}</span>}
+                        <Badge variant="outline">{inv.invoice_type === "tax" ? "Tax Invoice" : inv.invoice_type === "proforma" ? "Proforma" : "Needs classification"}</Badge>
                         <Badge className={STATUS_COLORS[inv.status] || ""}>{STATUS_LABELS[inv.status] ?? inv.status}</Badge>
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
@@ -307,6 +369,7 @@ function InvoicesPage() {
                           {due > 0 && <span className="text-amber-600"> · Due {inv.currency} {due.toLocaleString()}</span>}
                         </div>
                       )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
                       <div className="text-right mr-2">
@@ -411,6 +474,7 @@ type FormState = {
   notes: string;
   bank_account_id: string | null;
   gst_mode: GstMode;
+  invoice_type: InvoiceType | "";
   items: InvoiceItem[];
 };
 
@@ -422,6 +486,7 @@ const emptyForm = (existing: { invoice_number: string | null }[] = []): FormStat
   notes: DEFAULT_NOTES,
   bank_account_id: null,
   gst_mode: "none",
+  invoice_type: "",
   items: [{ name: "", description: "", amount: 0 }],
 });
 
@@ -453,6 +518,7 @@ function InvoiceDialog({
         notes: editing.notes || DEFAULT_NOTES,
         bank_account_id: editing.bank_account_id ?? null,
         gst_mode: (editing.gst_mode as GstMode) || "none",
+        invoice_type: editing.invoice_type ?? "",
         items: editing.items.length ? editing.items : [{ name: "", description: "", amount: 0 }],
       });
     } else {
@@ -472,6 +538,7 @@ function InvoiceDialog({
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!form.invoice_type) throw new Error("Choose Tax Invoice or Proforma Invoice");
       const cleanItems = form.items.filter((it) => it.name.trim() || Number(it.amount) > 0);
       const g = invoiceGst(cleanItems.reduce((s, it) => s + Number(it.amount || 0), 0), form.gst_mode);
       const payload = {
@@ -482,13 +549,13 @@ function InvoiceDialog({
         status: form.status, category: form.category || null,
         payment_mode: form.payment_mode || null, notes: form.notes || null,
         bank_account_id: form.bank_account_id,
-        items: cleanItems, amount: g.base, tax: g.gst, total: g.total, gst_mode: form.gst_mode,
+        items: cleanItems, amount: g.base, tax: g.gst, total: g.total, gst_mode: form.gst_mode, invoice_type: form.invoice_type,
       };
       const wantsTds = form.status === "paid_with_tds" && Number(tdsInput) > 0;
       if (form.status === "paid_with_tds" && !wantsTds && !isEdit) throw new Error("Enter the TDS amount deducted by the client");
       let saved;
-      if (isEdit) {
-        const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing!.id).select("*").single();
+      if (editing) {
+        const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing.id).select("*").single();
         if (error) throw error;
         saved = data;
       } else {
@@ -511,7 +578,7 @@ function InvoiceDialog({
         const uid = userRes.user?.id ?? null;
         const today = new Date().toISOString().slice(0, 10);
         if (sp.bank > 0) {
-          const { error } = await supabase.from("accounts_invoice_payments").insert({ invoice_id: saved.id, amount: sp.bank, paid_on: today, method: form.payment_mode || null, note: `Received after TDS of ₹${sp.tds.toLocaleString("en-IN")}`, gst_applicable: form.gst_mode !== "none", created_by: uid });
+          const { error } = await supabase.from("accounts_invoice_payments").insert({ invoice_id: saved.id, amount: sp.bank, paid_on: today, method: form.payment_mode || null, note: `Received after TDS of ₹${sp.tds.toLocaleString("en-IN")}`, gst_applicable: form.invoice_type === "tax" && form.gst_mode !== "none", created_by: uid });
           if (error) throw error;
         }
         const { error: tErr } = await supabase.from("accounts_tds").insert({ tds_date: today, amount: sp.tds, company_name: saved.client, invoice_id: saved.id, invoice_number: saved.invoice_number, invoice_total: Number(saved.total), bank_amount: sp.bank, created_by: uid });
@@ -524,7 +591,7 @@ function InvoiceDialog({
     },
     onSuccess: (data, _vars, _ctx) => {
       toast.success(isEdit ? "Invoice updated" : "Invoice created");
-      qc.invalidateQueries({ queryKey: ["accounts_invoices"] });
+      void qc.invalidateQueries();
       onOpenChange(false);
       // Auto-download PDF right after save
       if (data) {
@@ -537,13 +604,20 @@ function InvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-1.5rem)] max-w-3xl min-w-0 max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit invoice" : "New invoice"}</DialogTitle>
           <p className="text-xs text-muted-foreground">Company details are auto-included. Just enter client & items — PDF will download on save.</p>
         </DialogHeader>
 
         <div className="grid gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="invoice-type">Invoice type *</Label>
+            <Select value={form.invoice_type} onValueChange={(v: InvoiceType) => setForm({ ...form, invoice_type: v })}>
+              <SelectTrigger id="invoice-type"><SelectValue placeholder="Choose Tax Invoice or Proforma Invoice" /></SelectTrigger>
+              <SelectContent><SelectItem value="tax">Tax Invoice</SelectItem><SelectItem value="proforma">Proforma Invoice</SelectItem></SelectContent>
+            </Select>
+          </div>
           {/* Client */}
           <ClientPickerSection form={form} setForm={setForm} />
 
@@ -693,7 +767,7 @@ function InvoiceDialog({
           <Button
             variant="secondary"
             onClick={() => onDownload({
-              id: "preview", status: form.status, amount: calc.base, tax: calc.gst, total: calc.total, gst_mode: form.gst_mode,
+              id: "preview", status: form.status, amount: calc.base, tax: calc.gst, total: calc.total, gst_mode: form.gst_mode, invoice_type: form.invoice_type || null,
               client: form.client || "Client", invoice_number: form.invoice_number,
               currency: form.currency, issue_date: form.issue_date,
               due_date: form.due_date || null, notes: form.notes,
@@ -702,11 +776,11 @@ function InvoiceDialog({
               payment_mode: form.payment_mode || null, items: form.items,
               bank_account_id: form.bank_account_id,
             })}
-            disabled={!form.client}
+            disabled={!form.client || !form.invoice_type}
           >
             <Eye className="h-4 w-4 mr-1" />Preview PDF
           </Button>
-          <Button onClick={() => save.mutate()} disabled={!form.client || save.isPending}>
+          <Button onClick={() => save.mutate()} disabled={!form.client || !form.invoice_type || save.isPending}>
             <Download className="h-4 w-4 mr-1" />{save.isPending ? "Saving…" : "Save & Download PDF"}
           </Button>
         </DialogFooter>
@@ -790,7 +864,7 @@ function ClientPickerSection({
 
   return (
     <section className="rounded-lg border p-3 space-y-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Client details</h3>
         <div className="inline-flex rounded-md border p-0.5 text-xs">
           <button

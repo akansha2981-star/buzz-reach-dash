@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { splitGst } from "@/lib/gst";
+import { splitGst, isTaxInvoice } from "@/lib/gst";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,16 @@ import {
 } from "recharts";
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, isAfter, isBefore, differenceInDays } from "date-fns";
 
-export const Route = createFileRoute("/accounts/summary")({ component: SummaryPage });
+export const Route = createFileRoute("/accounts/summary")({ component: SummaryPage,
+  head: () => ({ meta: [
+    { title: "Financial Summary | Works Accounts" },
+    { name: "description", content: "Review income, expenses, tax-invoice GST, investments, and cash balances." },
+    { property: "og:title", content: "Financial Summary | Works Accounts" },
+    { property: "og:description", content: "Income, expenses, tax-invoice GST, and cash balances in Works Accounts." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+});
 
 const RANGES = [
   { key: "3m", label: "Last 3 months", months: 3 },
@@ -159,7 +168,8 @@ function SummaryPage() {
     [manualIncome, rangeStart, category]
   );
   const manualIncomeTotal = filteredManualIncome.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-  const gstSplit = gstOf([...filteredPayments, ...filteredManualIncome]);
+  const invoiceById = new Map(invoices.map(i => [i.id, i]));
+  const gstSplit = gstOf([...filteredPayments.map(p => ({ ...p, gst_applicable: p.gst_applicable && isTaxInvoice(invoiceById.get(p.invoice_id)) })), ...filteredManualIncome]);
   const netAfterGst = gstSplit.base - totalExpenses;
 
   // Personal (non-business) spend — excluded from business expenses, deducted from bank balance

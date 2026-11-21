@@ -61,6 +61,7 @@ export type InvoicePDFData = {
   gst?: number;
   total?: number;
   gst_label?: string;
+  invoice_type?: "tax" | "proforma" | null;
 };
 
 function numberToWordsIndian(num: number): string {
@@ -161,8 +162,8 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
 
   // ============================== TITLE ==============================
   let y = M + 30;
-  setText(30, C.teal, true);
-  doc.text("INVOICE", M, y);
+  setText(24, C.teal, true);
+  doc.text(inv.invoice_type === "tax" ? "TAX INVOICE" : inv.invoice_type === "proforma" ? "PROFORMA INVOICE" : "INVOICE", M, y);
 
   // brand logo (top-right)
   const logoSize = 62;

@@ -5,7 +5,7 @@ import { Search, Landmark, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { GST_COLLECTION_CAP, gstWalletRows, splitGst } from "@/lib/gst";
+import { GST_COLLECTION_CAP, gstWalletRows, splitGst, isTaxInvoice } from "@/lib/gst";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,7 +38,7 @@ function GstPage() {
     refetchInterval: 30000,
     queryFn: async () => {
       const [invoices, payments, income] = await Promise.all([
-        supabase.from("accounts_invoices").select("id, client, invoice_number, issue_date, amount, tax, total, gst_mode, status, currency"),
+        supabase.from("accounts_invoices").select("id, client, invoice_number, issue_date, amount, tax, total, gst_mode, status, currency, invoice_type"),
         supabase.from("accounts_invoice_payments").select("id, invoice_id, amount, gst_applicable, paid_on, reference"),
         supabase.from("accounts_manual_income").select("id, title, payer, amount, gst_applicable, received_on, reference"),
       ]);
@@ -53,7 +53,7 @@ function GstPage() {
     return [
       ...q.data.payments.flatMap(p => {
         const i = invoices.get(p.invoice_id);
-        if (p.gst_applicable || i?.gst_mode !== "none" || i.status === "cancelled") return [];
+        if (!i || !isTaxInvoice(i) || p.gst_applicable || i.gst_mode !== "none" || i.status === "cancelled") return [];
         return [{ key: `payment:${p.id}`, id: p.id, kind: "payment" as const, company: i.client, reference: i.invoice_number ?? p.reference ?? "—", date: p.paid_on, ...splitGst(Number(p.amount), true) }];
       }),
       ...q.data.income.filter(p => !p.gst_applicable).map(p => ({ key: `income:${p.id}`, id: p.id, kind: "income" as const, company: p.payer || p.title, reference: p.reference || "Other income", date: p.received_on, ...splitGst(Number(p.amount), true) })),
