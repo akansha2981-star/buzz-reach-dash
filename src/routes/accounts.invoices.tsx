@@ -610,7 +610,7 @@ function InvoiceDialog({
           <p className="text-xs text-muted-foreground">Company details are auto-included. Just enter client & items — PDF will download on save.</p>
         </DialogHeader>
 
-        <div className="grid gap-4">
+        <div className="grid min-w-0 gap-4 [&_*]:min-w-0">
           <div className="space-y-2">
             <Label htmlFor="invoice-type">Invoice type *</Label>
             <Select value={form.invoice_type} onValueChange={(v: InvoiceType) => setForm({ ...form, invoice_type: v })}>
