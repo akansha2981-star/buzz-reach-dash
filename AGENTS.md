@@ -1,5 +1,7 @@
 # Architecture
 
+- Invoice numbering uses a shared type-aware helper: retain the legacy tax prefix, allocate proformas in a separate PF series, and preserve saved numbers during reclassification so issued references remain stable.
+
 - Document completeness uses a shared category-based helper across institution groups; unsigned legacy MOUs never satisfy signed-MOU requirements, and existing invoice categories remain compatible.
 
 - Accounts TDS records use a dedicated Accounts-access-controlled store and reuse client names plus previously entered TDS company names for selection; TDS entries do not change cash balances or expenses without an explicit accounting requirement.

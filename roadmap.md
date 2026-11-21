@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Separate Tax/Proforma invoice numbering; preserve issued numbers. 18 tests passed; signed-in Proforma save and independent next-number checks verified on desktop/mobile; temporary invoice removed.
+
 - [x] Invoice types: required Tax/Proforma choice, dedicated PDF headings, bulk classification of previous invoices, GST exclusion; 15 GST/TDS tests passed.
 - [x] Verify invoice classification and GST totals in a signed-in session: created both types, verified PDF labels, bulk-marked both as tax then proforma, confirmed GST wallet counts 1 → 2 → 0; temporary invoices removed.
 

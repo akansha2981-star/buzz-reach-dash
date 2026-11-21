@@ -1,4 +1,5 @@
 import { invoiceGst, type GstMode, type InvoiceType } from "@/lib/gst";
+import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -445,20 +446,6 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
   );
 }
 
-const INVOICE_START_SEQ = 400;
-function nextInvoiceNumber(existing: { invoice_number: string | null }[] = []): string {
-  const year = new Date().getFullYear();
-  const prefix = `BSB-${year}-`;
-  let max = INVOICE_START_SEQ - 1;
-  for (const inv of existing) {
-    const n = inv.invoice_number;
-    if (!n || !n.startsWith(prefix)) continue;
-    const num = parseInt(n.slice(prefix.length), 10);
-    if (!isNaN(num) && num > max) max = num;
-  }
-  return `${prefix}${max + 1}`;
-}
-
 type FormState = {
   client: string;
   client_location: string;
@@ -478,9 +465,9 @@ type FormState = {
   items: InvoiceItem[];
 };
 
-const emptyForm = (existing: { invoice_number: string | null }[] = []): FormState => ({
+const emptyForm = (): FormState => ({
   client: "", client_location: "", client_email: "", client_phone: "",
-  invoice_number: nextInvoiceNumber(existing), currency: "INR",
+  invoice_number: "", currency: "INR",
   issue_date: new Date().toISOString().slice(0, 10), due_date: "",
   status: "draft", category: "", payment_mode: "Bank Transfer",
   notes: DEFAULT_NOTES,
@@ -499,7 +486,7 @@ function InvoiceDialog({
   bankAccounts: BankAccountRow[];
 }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<FormState>(emptyForm(existingInvoices));
+  const [form, setForm] = useState<FormState>(emptyForm());
   const isEdit = !!editing;
   const [tdsInput, setTdsInput] = useState("");
   const [bankInput, setBankInput] = useState("");
@@ -511,7 +498,7 @@ function InvoiceDialog({
       setForm({
         client: editing.client, client_location: editing.client_location || "",
         client_email: editing.client_email || "", client_phone: editing.client_phone || "",
-        invoice_number: editing.invoice_number || nextInvoiceNumber(existingInvoices),
+        invoice_number: editing.invoice_number || (editing.invoice_type ? nextInvoiceNumber(editing.invoice_type, existingInvoices) : ""),
         currency: editing.currency, issue_date: editing.issue_date,
         due_date: editing.due_date || "", status: editing.status,
         category: editing.category || "", payment_mode: editing.payment_mode || "Bank Transfer",
@@ -523,7 +510,7 @@ function InvoiceDialog({
       });
     } else {
       const def = bankAccounts.find((b) => b.is_default) ?? bankAccounts[0];
-      setForm({ ...emptyForm(existingInvoices), bank_account_id: def?.id ?? null });
+      setForm({ ...emptyForm(), bank_account_id: def?.id ?? null });
     }
   }, [open, editing, existingInvoices, bankAccounts]);
 
@@ -613,7 +600,9 @@ function InvoiceDialog({
         <div className="grid min-w-0 gap-4 [&_*]:min-w-0">
           <div className="space-y-2">
             <Label htmlFor="invoice-type">Invoice type *</Label>
-            <Select value={form.invoice_type} onValueChange={(v: InvoiceType) => setForm({ ...form, invoice_type: v })}>
+            <Select value={form.invoice_type} onValueChange={(v: InvoiceType) => setForm({ ...form, invoice_type: v,
+              invoice_number: editing?.invoice_number ? form.invoice_number : nextInvoiceNumber(v, existingInvoices),
+            })}>
               <SelectTrigger id="invoice-type"><SelectValue placeholder="Choose Tax Invoice or Proforma Invoice" /></SelectTrigger>
               <SelectContent><SelectItem value="tax">Tax Invoice</SelectItem><SelectItem value="proforma">Proforma Invoice</SelectItem></SelectContent>
             </Select>
