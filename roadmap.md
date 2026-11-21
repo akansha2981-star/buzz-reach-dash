@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Invoice types: required Tax/Proforma choice, dedicated PDF headings, bulk classification of previous invoices, GST exclusion and regression tests.
+- [ ] Verify invoice classification and GST totals in a signed-in session.
+
 - [x] Documents: institution-wise college/coaching groups, mandatory-document checklist and closed-institution warnings; nine tests passed, preview compiled.
 - [ ] Documents signed-in desktop/mobile verification — blocked: no account matches the requesting user's email; preview redirects to login.
 

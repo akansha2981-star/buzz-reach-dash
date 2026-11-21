@@ -127,6 +127,13 @@
       "when": 1794839712658,
       "tag": "0017_expense_gst_paid_and_bills",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795234987677,
+      "tag": "0018_invoice_document_type",
+      "breakpoints": true
     }
   ]
 }

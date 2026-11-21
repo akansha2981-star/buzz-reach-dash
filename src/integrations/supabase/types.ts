@@ -341,6 +341,7 @@ export type Database = {
           gst_mode: string
           id: string
           invoice_number: string | null
+          invoice_type: string | null
           issue_date: string
           items: Json
           notes: string | null
@@ -366,6 +367,7 @@ export type Database = {
           gst_mode?: string
           id?: string
           invoice_number?: string | null
+          invoice_type?: string | null
           issue_date?: string
           items?: Json
           notes?: string | null
@@ -391,6 +393,7 @@ export type Database = {
           gst_mode?: string
           id?: string
           invoice_number?: string | null
+          invoice_type?: string | null
           issue_date?: string
           items?: Json
           notes?: string | null
