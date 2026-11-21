@@ -1,5 +1,7 @@
 # Architecture
 
+- Accounts financial views share invoice-accounting eligibility for invoices and linked payment/TDS rows; Proformas remain document-only without deleting historical records, and legacy unclassified invoices retain non-GST accounting treatment.
+
 - Invoice numbering uses a shared type-aware helper: retain the legacy tax prefix, allocate proformas in a separate PF series, and preserve saved numbers during reclassification so issued references remain stable.
 
 - Document completeness uses a shared category-based helper across institution groups; unsigned legacy MOUs never satisfy signed-MOU requirements, and existing invoice categories remain compatible.

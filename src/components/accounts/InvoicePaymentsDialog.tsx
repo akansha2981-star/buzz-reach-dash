@@ -1,3 +1,4 @@
+import { isAccountingInvoice } from "@/lib/invoice-accounting";
 import { useState } from "react";
 import { GstBox } from "@/components/accounts/GstBox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,6 +26,7 @@ export type PaymentRow = {
 };
 
 type InvoiceLite = {
+  invoice_type?: string | null;
   id: string;
   client: string;
   invoice_number: string | null;
@@ -64,10 +66,11 @@ export function InvoicePaymentsDialog({
     queryKey: ["invoice_payments", invoice?.id],
     enabled: !!invoice?.id && open,
     queryFn: async () => {
+      if (!invoice) return [];
       const { data, error } = await supabase
         .from("accounts_invoice_payments")
         .select("*")
-        .eq("invoice_id", invoice!.id)
+        .eq("invoice_id", invoice.id)
         .order("paid_on", { ascending: false });
       if (error) throw error;
       return (data ?? []) as PaymentRow[];
@@ -78,7 +81,8 @@ export function InvoicePaymentsDialog({
     queryKey: ["invoice_tds", invoice?.id],
     enabled: !!invoice?.id && open,
     queryFn: async () => {
-      const { data, error } = await supabase.from("accounts_tds").select("*").eq("invoice_id", invoice!.id).order("tds_date", { ascending: false });
+      if (!invoice) return [];
+      const { data, error } = await supabase.from("accounts_tds").select("*").eq("invoice_id", invoice.id).order("tds_date", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -90,6 +94,7 @@ export function InvoicePaymentsDialog({
 
   const syncInvoiceStatus = async (nextPaid: number, nextTds = tdsPaid) => {
     if (!invoice) return;
+      if (!isAccountingInvoice(invoice)) throw new Error("Proformas are for document generation only. Use a tax invoice to record payments.");
     const nextStatus = computeStatus(Number(invoice.total), nextPaid, invoice.status, nextTds);
     if (nextStatus !== invoice.status) {
       await supabase.from("accounts_invoices").update({ status: nextStatus }).eq("id", invoice.id);
@@ -99,6 +104,7 @@ export function InvoicePaymentsDialog({
   const addPayment = useMutation({
     mutationFn: async () => {
       if (!invoice) return;
+      if (!isAccountingInvoice(invoice)) throw new Error("Proformas are for document generation only. Use a tax invoice to record payments.");
       const amt = Number(amount);
       if (!amt || amt <= 0) throw new Error("Enter a valid amount");
       const { data: userRes } = await supabase.auth.getUser();
@@ -134,6 +140,7 @@ export function InvoicePaymentsDialog({
   const payWithTds = useMutation({
     mutationFn: async () => {
       if (!invoice) return;
+      if (!isAccountingInvoice(invoice)) throw new Error("Proformas are for document generation only. Use a tax invoice to record payments.");
       if (split.tds <= 0) throw new Error("Enter the TDS amount deducted by the client");
       if (split.overpaid) throw new Error("Bank + TDS is more than the amount due");
       const { data: userRes } = await supabase.auth.getUser();
@@ -189,6 +196,7 @@ export function InvoicePaymentsDialog({
   const markFullyPaid = useMutation({
     mutationFn: async () => {
       if (!invoice || due <= 0) return;
+      if (!isAccountingInvoice(invoice)) throw new Error("Proformas cannot receive payments.");
       const { data: userRes } = await supabase.auth.getUser();
       const { error } = await supabase.from("accounts_invoice_payments").insert({
         invoice_id: invoice.id,
@@ -209,7 +217,7 @@ export function InvoicePaymentsDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (!invoice) return null;
+  if (!invoice || !isAccountingInvoice(invoice)) return null;
   const cur = invoice.currency || "INR";
 
   return (

@@ -1,3 +1,4 @@
+import { isAccountingInvoice, invoiceDocumentStatus } from "@/lib/invoice-accounting";
 import { invoiceGst, type GstMode, type InvoiceType } from "@/lib/gst";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -146,8 +147,9 @@ function InvoicesPage() {
     if (confirm(`Mark ${selectedIds.length} selected invoice(s) as ${type === "tax" ? "Tax Invoice" : "Proforma Invoice"}? GST collection totals will update; amounts and payments stay unchanged.`)) markType.mutate(type);
   };
 
-  const totalCollected = invoices.reduce((s, i) => s + (paidByInvoice[i.id] ?? (i.status === "paid" ? Number(i.total) : 0)), 0);
-  const totalOutstanding = invoices
+  const accountingInvoices = invoices.filter(isAccountingInvoice);
+  const totalCollected = accountingInvoices.reduce((s, i) => s + (paidByInvoice[i.id] ?? (i.status === "paid" ? Number(i.total) : 0)), 0);
+  const totalOutstanding = accountingInvoices
     .filter(i => i.status !== "cancelled")
     .reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
 
@@ -224,13 +226,13 @@ function InvoicesPage() {
   // ==== Analytics ====
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const grandTotal = invoices.reduce((s, i) => s + Number(i.total), 0);
+  const grandTotal = accountingInvoices.reduce((s, i) => s + Number(i.total), 0);
   const collectionRate = grandTotal > 0 ? Math.round((totalCollected / grandTotal) * 100) : 0;
-  const overdueList = invoices.filter(i => i.due_date && new Date(i.due_date) < now && (paidByInvoice[i.id] ?? 0) < Number(i.total) && i.status !== "cancelled" && i.status !== "paid" && i.status !== "paid_with_tds");
+  const overdueList = accountingInvoices.filter(i => i.due_date && new Date(i.due_date) < now && (paidByInvoice[i.id] ?? 0) < Number(i.total) && i.status !== "cancelled" && i.status !== "paid" && i.status !== "paid_with_tds");
   const overdueAmt = overdueList.reduce((s, i) => s + Math.max(0, Number(i.total) - (paidByInvoice[i.id] ?? 0)), 0);
-  const monthInvoices = invoices.filter(i => new Date(i.issue_date) >= monthStart);
+  const monthInvoices = accountingInvoices.filter(i => new Date(i.issue_date) >= monthStart);
   const monthBilled = monthInvoices.reduce((s, i) => s + Number(i.total), 0);
-  const statusCounts = invoices.reduce<Record<string, number>>((m, i) => { m[i.status] = (m[i.status] ?? 0) + 1; return m; }, {});
+  const statusCounts = accountingInvoices.reduce<Record<string, number>>((m, i) => { m[i.status] = (m[i.status] ?? 0) + 1; return m; }, {});
 
   return (
     <div className="space-y-6">
@@ -261,7 +263,7 @@ function InvoicesPage() {
 
           {/* KPI row */}
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <HeroStat icon={<Receipt className="h-4 w-4" />} label="Total billed" value={`₹${grandTotal.toLocaleString("en-IN")}`} sub={`${invoices.length} invoice${invoices.length===1?"":"s"}`} />
+            <HeroStat icon={<Receipt className="h-4 w-4" />} label="Total billed" value={`₹${grandTotal.toLocaleString("en-IN")}`} sub={`${accountingInvoices.length} invoice${accountingInvoices.length===1?"":"s"}`} />
             <HeroStat icon={<CheckCircle2 className="h-4 w-4" />} label="Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} sub={`${collectionRate}% collection rate`} accent="emerald" />
             <HeroStat icon={<Clock className="h-4 w-4" />} label="Outstanding" value={`₹${totalOutstanding.toLocaleString("en-IN")}`} sub={overdueAmt>0?`₹${overdueAmt.toLocaleString("en-IN")} overdue`:"On track"} accent="amber" />
             <HeroStat icon={<TrendingUp className="h-4 w-4" />} label="This month" value={`₹${monthBilled.toLocaleString("en-IN")}`} sub={`${monthInvoices.length} new invoice${monthInvoices.length===1?"":"s"}`} accent="sky" />
@@ -345,7 +347,7 @@ function InvoicesPage() {
           ) : (
             <div className="divide-y">
               {visibleInvoices.map((inv) => {
-                const paid = paidByInvoice[inv.id] ?? 0;
+                const paid = isAccountingInvoice(inv) ? paidByInvoice[inv.id] ?? 0 : 0;
                 const due = Math.max(0, Number(inv.total) - paid);
                 return (
                   <div key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -376,9 +378,9 @@ function InvoicesPage() {
                       <div className="text-right mr-2">
                         <div className="font-semibold">{inv.currency} {Number(inv.total).toLocaleString()}</div>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
+                      {isAccountingInvoice(inv) && <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
                         <IndianRupee className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Payments</span>
-                      </Button>
+                      </Button>}
                       <Button size="sm" variant="outline" onClick={() => setPreviewFor(inv)} title="View PDF">
                         <Eye className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">View</span>
                       </Button>
@@ -533,13 +535,13 @@ function InvoiceDialog({
         client_email: form.client_email || null, client_phone: form.client_phone || null,
         invoice_number: form.invoice_number || null, currency: form.currency,
         issue_date: form.issue_date, due_date: form.due_date || null,
-        status: form.status, category: form.category || null,
+        status: invoiceDocumentStatus(form.invoice_type, form.status), category: form.category || null,
         payment_mode: form.payment_mode || null, notes: form.notes || null,
         bank_account_id: form.bank_account_id,
         items: cleanItems, amount: g.base, tax: g.gst, total: g.total, gst_mode: form.gst_mode, invoice_type: form.invoice_type,
       };
-      const wantsTds = form.status === "paid_with_tds" && Number(tdsInput) > 0;
-      if (form.status === "paid_with_tds" && !wantsTds && !isEdit) throw new Error("Enter the TDS amount deducted by the client");
+      const wantsTds = form.invoice_type !== "proforma" && form.status === "paid_with_tds" && Number(tdsInput) > 0;
+      if (form.invoice_type !== "proforma" && form.status === "paid_with_tds" && !wantsTds && !isEdit) throw new Error("Enter the TDS amount deducted by the client");
       let saved;
       if (editing) {
         const { data, error } = await supabase.from("accounts_invoices").update(payload).eq("id", editing.id).select("*").single();
@@ -601,6 +603,7 @@ function InvoiceDialog({
           <div className="space-y-2">
             <Label htmlFor="invoice-type">Invoice type *</Label>
             <Select value={form.invoice_type} onValueChange={(v: InvoiceType) => setForm({ ...form, invoice_type: v,
+              status: invoiceDocumentStatus(v, form.status),
               invoice_number: editing?.invoice_number ? form.invoice_number : nextInvoiceNumber(v, existingInvoices),
             })}>
               <SelectTrigger id="invoice-type"><SelectValue placeholder="Choose Tax Invoice or Proforma Invoice" /></SelectTrigger>
@@ -630,13 +633,13 @@ function InvoiceDialog({
               <div><Label>Due date</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
               <div>
                 <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                <Select value={invoiceDocumentStatus(form.invoice_type, form.status)} onValueChange={(v) => setForm({ ...form, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s] ?? s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{STATUSES.filter(s => form.invoice_type !== "proforma" || !["paid", "partially_paid", "paid_with_tds", "overdue"].includes(s)).map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s] ?? s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
-            {form.status === "paid_with_tds" && (
+            {form.invoice_type !== "proforma" && form.status === "paid_with_tds" && (
               <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
                 <p className="text-xs text-muted-foreground">Client deducted TDS. Enter TDS — the bank amount fills automatically (Total {calc.total.toLocaleString("en-IN")}{isEdit ? ", minus anything already paid" : ""}).</p>
                 <div className="grid gap-2 sm:grid-cols-2">

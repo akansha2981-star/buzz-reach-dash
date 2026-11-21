@@ -1,3 +1,4 @@
+import { isAccountingInvoice, accountingLinkedRows } from "@/lib/invoice-accounting";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { splitGst, isTaxInvoice } from "@/lib/gst";
@@ -51,11 +52,11 @@ function SummaryPage() {
     return startOfMonth(subMonths(new Date(), r.months - 1));
   }, [range]);
 
-  const { data: invoices = [] } = useQuery({
+  const { data: invoiceDocuments = [] } = useQuery({
     queryKey: ["sum_invoices"],
     queryFn: async () => (await supabase.from("accounts_invoices").select("*")).data ?? [],
   });
-  const { data: payments = [] } = useQuery({
+  const { data: storedPayments = [] } = useQuery({
     queryKey: ["sum_invoice_payments"],
     queryFn: async () => (await supabase.from("accounts_invoice_payments").select("*")).data ?? [],
   });
@@ -84,6 +85,9 @@ function SummaryPage() {
     queryFn: async () => (await supabase.from("accounts_personal_expenses").select("*")).data ?? [],
   });
 
+
+  const invoices = invoiceDocuments.filter(isAccountingInvoice);
+  const payments = accountingLinkedRows(storedPayments, invoiceDocuments);
 
   const inRange = (d: string | null) => (d ? isAfter(parseISO(d), rangeStart) || parseISO(d).getTime() === rangeStart.getTime() : false);
 

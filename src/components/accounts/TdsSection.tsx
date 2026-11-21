@@ -1,3 +1,4 @@
+import { accountingLinkedRows } from "@/lib/invoice-accounting";
 import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,15 @@ export function TdsSection() {
       return data ?? [];
     },
   });
-  const rows = records.data ?? [];
+  const invoiceDocuments = useQuery({
+    queryKey: ["accounts_tds_invoice_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts_invoices").select("id,invoice_type");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const rows = accountingLinkedRows(records.data ?? [], invoiceDocuments.data ?? []);
   const companies = [...new Set([...(clients.data ?? []).map(c => c.name), ...rows.map(r => r.company_name)])].sort((a, b) => a.localeCompare(b));
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");

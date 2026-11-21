@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Exclude Proformas and linked settlements from Accounts totals and ledger; prevent new Proforma payments/TDS. 22 tests passed; signed-in Proforma save/PDF, unchanged totals and hidden payment controls verified; temporary test invoices removed.
+
 - [x] Separate Tax/Proforma invoice numbering; preserve issued numbers. 18 tests passed; signed-in Proforma save and independent next-number checks verified on desktop/mobile; temporary invoice removed.
 
 - [x] Invoice types: required Tax/Proforma choice, dedicated PDF headings, bulk classification of previous invoices, GST exclusion; 15 GST/TDS tests passed.

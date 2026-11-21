@@ -1,3 +1,4 @@
+import { accountingLinkedRows } from "@/lib/invoice-accounting";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -70,7 +71,7 @@ function LedgerPage() {
   };
 
   const q1 = useQuery({ queryKey: ["led_inv_pay"], queryFn: async () => (await supabase.from("accounts_invoice_payments").select("*")).data ?? [] });
-  const q2 = useQuery({ queryKey: ["led_inv"], queryFn: async () => (await supabase.from("accounts_invoices").select("id,client,invoice_number,category")).data ?? [] });
+  const q2 = useQuery({ queryKey: ["led_inv"], queryFn: async () => (await supabase.from("accounts_invoices").select("id,client,invoice_number,category,invoice_type")).data ?? [] });
   const q3 = useQuery({ queryKey: ["led_income"], queryFn: async () => (await supabase.from("accounts_manual_income").select("*")).data ?? [] });
   const q4 = useQuery({ queryKey: ["led_exp"], queryFn: async () => (await supabase.from("accounts_expenses").select("*")).data ?? [] });
   const q5 = useQuery({ queryKey: ["led_rec_pay"], queryFn: async () => (await supabase.from("accounts_recurring_expense_payments").select("*")).data ?? [] });
@@ -85,7 +86,7 @@ function LedgerPage() {
     const recMap = new Map((q6.data ?? []).map((r: any) => [r.id, r]));
     const out: Entry[] = [];
 
-    (q1.data ?? []).forEach((p: any) => {
+    accountingLinkedRows(q1.data ?? [], q2.data ?? []).forEach((p: any) => {
       const inv: any = invMap.get(p.invoice_id);
       out.push({
         id: "ip_" + p.id, date: p.paid_on, direction: "credit", source: "Invoice payment",
