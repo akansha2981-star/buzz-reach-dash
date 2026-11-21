@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Include saved client GSTIN in the Billed To section of existing and future Tax/Proforma PDFs; 13 regression tests passed, signed-in downloads verified on two existing Tax invoices and one Proforma, with no runtime errors.
+
 - [x] Exclude Proformas and linked settlements from Accounts totals and ledger; prevent new Proforma payments/TDS. 22 tests passed; signed-in Proforma save/PDF, unchanged totals and hidden payment controls verified; temporary test invoices removed.
 
 - [x] Separate Tax/Proforma invoice numbering; preserve issued numbers. 18 tests passed; signed-in Proforma save and independent next-number checks verified on desktop/mobile; temporary invoice removed.

@@ -52,6 +52,7 @@ export type InvoicePDFData = {
   client_location?: string | null;
   client_email?: string | null;
   client_phone?: string | null;
+  client_gstin?: string | null;
   items: InvoiceItem[];
   currency?: string;
   notes?: string | null;
@@ -229,6 +230,7 @@ export function buildInvoicePDF(inv: InvoicePDFData): jsPDF {
   if (inv.client_location) billLines.push(...wrap(inv.client_location, colW));
   if (inv.client_email) billLines.push(`Email: ${inv.client_email}`);
   if (inv.client_phone) billLines.push(`Phone: ${inv.client_phone}`);
+  if (inv.client_gstin?.trim()) billLines.push(...wrap(`GSTIN: ${inv.client_gstin.trim()}`, colW));
   billLines.forEach((l) => { doc.text(l, M, by); by += 12.5; });
 
   let cy = heading("Company Identifiers", rx, y);

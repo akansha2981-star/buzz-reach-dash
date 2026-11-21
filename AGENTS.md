@@ -1,5 +1,7 @@
 # Architecture
 
+- Invoice PDFs resolve client GSTIN from the shared client directory for both existing and new documents; downloads refresh client details, and ambiguous legacy name matches must not guess a GSTIN.
+
 - Accounts financial views share invoice-accounting eligibility for invoices and linked payment/TDS rows; Proformas remain document-only without deleting historical records, and legacy unclassified invoices retain non-GST accounting treatment.
 
 - Invoice numbering uses a shared type-aware helper: retain the legacy tax prefix, allocate proformas in a separate PF series, and preserve saved numbers during reclassification so issued references remain stable.

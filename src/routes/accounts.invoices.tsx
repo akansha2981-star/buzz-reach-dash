@@ -1,6 +1,7 @@
 import { isAccountingInvoice, invoiceDocumentStatus } from "@/lib/invoice-accounting";
 import { invoiceGst, type GstMode, type InvoiceType } from "@/lib/gst";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
+import { invoiceClientGstin } from "@/lib/invoice-client";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -86,6 +87,16 @@ function toItems(v: unknown): InvoiceItem[] {
   }));
 }
 
+const invoiceClientsQuery = {
+  queryKey: ["accounts_clients"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("accounts_clients")
+      .select("id,name,location,email,phone,category,gstin").order("name", { ascending: true });
+    if (error) throw error;
+    return data ?? [];
+  },
+};
+
 function InvoicesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -94,6 +105,7 @@ function InvoicesPage() {
   const [previewFor, setPreviewFor] = useState<Invoice | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [typeFilter, setTypeFilter] = useState("all");
+  const { data: clients = [], isPending: clientsPending, isError: clientsError } = useQuery(invoiceClientsQuery);
 
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -185,7 +197,7 @@ function InvoicesPage() {
     };
   }, [company]);
 
-  const toPDFData = (inv: Invoice) => {
+  const toPDFData = (inv: Invoice, directory = clients) => {
     const b = inv.bank_account_id ? bankById[inv.bank_account_id] : bankAccounts.find(x => x.is_default);
     return {
       invoice_number: inv.invoice_number || "DRAFT",
@@ -198,6 +210,7 @@ function InvoicesPage() {
       client_location: inv.client_location,
       client_email: inv.client_email,
       client_phone: inv.client_phone,
+      client_gstin: invoiceClientGstin(inv, directory),
       items: inv.items.length ? inv.items : [{ name: "Service", description: "", amount: Number(inv.amount) }],
       currency: inv.currency,
       base: Number(inv.amount), gst: Number(inv.tax), total: Number(inv.total),
@@ -217,8 +230,13 @@ function InvoicesPage() {
   };
 
 
-  const handleDownload = (inv: Invoice) => {
-    downloadInvoicePDF(toPDFData(inv));
+  const handleDownload = async (inv: Invoice) => {
+    try {
+      const directory = await qc.fetchQuery({ ...invoiceClientsQuery, staleTime: 0 });
+      downloadInvoicePDF(toPDFData(inv, directory));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not load client details. Please try again.");
+    }
   };
 
 
@@ -381,7 +399,7 @@ function InvoicesPage() {
                       {isAccountingInvoice(inv) && <Button size="sm" variant="outline" onClick={() => setPaymentsFor(inv)} title="Payments">
                         <IndianRupee className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Payments</span>
                       </Button>}
-                      <Button size="sm" variant="outline" onClick={() => setPreviewFor(inv)} title="View PDF">
+                      <Button size="sm" variant="outline" disabled={clientsPending || clientsError} onClick={() => setPreviewFor(inv)} title="View PDF">
                         <Eye className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">View</span>
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleDownload(inv)}>
