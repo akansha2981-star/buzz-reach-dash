@@ -1,3 +1,4 @@
+import { isClosedStage } from "@/lib/document-completeness";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -110,11 +111,11 @@ function Dashboard() {
   }, [data, typeFilter, stageFilter, cutoff]);
 
   const stages = data?.stages ?? [];
-  const closedStage = stages.find((s: any) => /^(closed|deal closed|closed won|completed)$/i.test(String(s.name).trim())) ?? stages[stages.length - 1];
+  const isClosed = (id: string | null) => isClosedStage(id, stages as any);
   const collegeCount = filt.insts.filter((i: any) => i.type === "college").length;
   const coachingCount = filt.insts.filter((i: any) => i.type === "coaching").length;
-  const completed = filt.insts.filter((i: any) => i.current_stage_id === closedStage?.id).length;
-  const ongoing = filt.insts.filter((i: any) => i.current_stage_id && i.current_stage_id !== closedStage?.id).length;
+  const completed = filt.insts.filter((i: any) => isClosed(i.current_stage_id)).length;
+  const ongoing = filt.insts.filter((i: any) => i.current_stage_id && !isClosed(i.current_stage_id)).length;
   const noStage = filt.insts.filter((i: any) => !i.current_stage_id).length;
   const conversion = filt.insts.length ? Math.round((completed / filt.insts.length) * 100) : 0;
 
