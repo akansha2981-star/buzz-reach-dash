@@ -20,6 +20,7 @@ import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { CreateInstituteDialog } from "@/components/CreateInstituteDialog";
 import { BulkAddInstituteDialog, BulkDeleteInstituteDialog, BulkResetInstituteDialog } from "@/components/BulkInstituteActions";
+import { AddStageDialog } from "@/components/AddStageDialog";
 import { MeetingDialog } from "@/routes/meetings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -527,6 +528,7 @@ export function InstituteListPage({
               <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <AddStageDialog />
               <BulkAddInstituteDialog type={type} />
               <BulkResetInstituteDialog type={type} />
               <BulkDeleteInstituteDialog type={type} />

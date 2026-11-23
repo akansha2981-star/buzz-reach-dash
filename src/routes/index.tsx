@@ -60,7 +60,7 @@ function Dashboard() {
     queryFn: async () => {
       const since90 = new Date(Date.now() - 90 * 86400000).toISOString();
       const [insts, stages, activities, meetings, tasks] = await Promise.all([
-        supabase.from("institutes").select("id, name, type, current_stage_id, created_at, next_meeting_at"),
+        supabase.from("institutes").select("id, name, type, current_stage_id, created_at, updated_at, next_meeting_at"),
         supabase.from("outreach_stages").select("*").order("position"),
         supabase.from("outreach_activities")
           .select("id, institute_id, created_at, institutes(name, type)")
@@ -97,7 +97,7 @@ function Dashboard() {
       if (typeFilter !== "all" && i.type !== typeFilter) return false;
       if (stageFilter === "none" && i.current_stage_id) return false;
       if (stageFilter !== "all" && stageFilter !== "none" && i.current_stage_id !== stageFilter) return false;
-      if (cutoff && new Date(i.created_at) < cutoff) return false;
+      if (cutoff && new Date(i.updated_at ?? i.created_at) < cutoff) return false;
       return true;
     });
     const instIds = new Set(insts.map((i: any) => i.id));
@@ -110,7 +110,7 @@ function Dashboard() {
   }, [data, typeFilter, stageFilter, cutoff]);
 
   const stages = data?.stages ?? [];
-  const closedStage = stages[stages.length - 1];
+  const closedStage = stages.find((s: any) => /^(closed|deal closed|closed won|completed)$/i.test(String(s.name).trim())) ?? stages[stages.length - 1];
   const collegeCount = filt.insts.filter((i: any) => i.type === "college").length;
   const coachingCount = filt.insts.filter((i: any) => i.type === "coaching").length;
   const completed = filt.insts.filter((i: any) => i.current_stage_id === closedStage?.id).length;
