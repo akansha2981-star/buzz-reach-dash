@@ -39,7 +39,22 @@ export const Route = createFileRoute("/api/admin/export")({
         const db = supabaseAdmin as any;
         let body: unknown;
         try {
-          if (part === "tables") {
+          if (part === "list") {
+            body = TABLES;
+          } else if (part === "table") {
+            const sp = new URL(request.url).searchParams;
+            const t = sp.get("table") ?? "";
+            if (!(TABLES as readonly string[]).includes(t)) return Response.json({ error: "Unknown table" }, { status: 400 });
+            const offset = Math.max(0, Number(sp.get("offset")) || 0);
+            const rows: unknown[] = [];
+            for (let from = offset; from < offset + 5000; from += PAGE) {
+              const { data, error } = await db.from(t).select("*").order("id", { ascending: true }).range(from, from + PAGE - 1);
+              if (error) throw new Error(`${t}: ${error.message}`);
+              rows.push(...(data ?? []));
+              if (!data || data.length < PAGE) break;
+            }
+            body = rows;
+          } else if (part === "tables") {
             const out: Record<string, unknown[]> = {};
             for (const t of TABLES) {
               const rows: unknown[] = [];
