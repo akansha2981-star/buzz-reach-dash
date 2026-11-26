@@ -23,18 +23,27 @@ export function AdminExportButtons() {
     try {
       let blob: Blob;
       if (part === "tables") {
-        const tables: string[] = await (await get("part=list")).json();
-        const out: Record<string, unknown[]> = {};
-        for (const [i, t] of tables.entries()) {
-          const rows: unknown[] = [];
-          for (let offset = 0; ; offset += 5000) {
-            setProgress(`${i + 1}/${tables.length} ${t} (${rows.length})`);
-            const page: unknown[] = await (await get(`part=table&table=${t}&offset=${offset}`)).json();
-            rows.push(...page);
-            if (page.length < 5000) break;
-          }
-          out[t] = rows;
+        const counts: Record<string, number | null> = await (await get("part=schema")).json();
+        const jobs: { t: string; offset: number }[] = [];
+        for (const [t, c] of Object.entries(counts)) {
+          for (let offset = 0; offset < Math.max(c ?? 0, 1); offset += 5000) jobs.push({ t, offset });
         }
+        const chunks = new Map<string, unknown[]>();
+        let done = 0, next = 0;
+        const worker = async () => {
+          while (next < jobs.length) {
+            const job = jobs[next++];
+            const page: unknown[] = await (await get(`part=table&table=${job.t}&offset=${job.offset}`)).json();
+            chunks.set(`${job.t}:${job.offset}`, page);
+            setProgress(`${Math.round((++done / jobs.length) * 100)}%`);
+          }
+        };
+        setProgress("0%");
+        await Promise.all(Array.from({ length: 6 }, worker));
+        const out: Record<string, unknown[]> = {};
+        for (const { t, offset } of jobs) (out[t] ??= []).push(...(chunks.get(`${t}:${offset}`) ?? []));
+        const missing = Object.entries(counts).filter(([t, c]) => c != null && (out[t]?.length ?? 0) < c);
+        if (missing.length) throw new Error(`Incomplete export: ${missing.map(([t]) => t).join(", ")}`);
         blob = new Blob([JSON.stringify(out)], { type: "application/json" });
       } else {
         blob = await (await get(`part=${part}`)).blob();
@@ -45,6 +54,7 @@ export function AdminExportButtons() {
       a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch (e) {
+      console.error("[export]", e);
       toast.error(e instanceof Error ? e.message : "Export failed");
     } finally { setBusy(null); setProgress(""); }
   };

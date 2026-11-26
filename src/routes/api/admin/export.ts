@@ -19,8 +19,10 @@ const TABLES = [
   "tasks","user_permissions","user_roles",
 ] as const satisfies readonly TableName[];
 
-const BUCKETS = ["institute-docs", "hr-docs"];
+const BUCKETS = ["institute-docs", "hr-docs", "accounts-docs"];
 const PAGE = 1000;
+// Primary key used for stable ordering; every table uses "id" except these.
+const ORDER_KEY: Partial<Record<string, string>> = { user_permissions: "user_id" };
 
 export const Route = createFileRoute("/api/admin/export")({
   server: {
@@ -46,20 +48,19 @@ export const Route = createFileRoute("/api/admin/export")({
             const t = sp.get("table") ?? "";
             if (!(TABLES as readonly string[]).includes(t)) return Response.json({ error: "Unknown table" }, { status: 400 });
             const offset = Math.max(0, Number(sp.get("offset")) || 0);
-            const rows: unknown[] = [];
-            for (let from = offset; from < offset + 5000; from += PAGE) {
-              const { data, error } = await db.from(t).select("*").order("id", { ascending: true }).range(from, from + PAGE - 1);
+            const pages = await Promise.all([0, 1, 2, 3, 4].map(async (i) => {
+              const from = offset + i * PAGE;
+              const { data, error } = await db.from(t).select("*").order(ORDER_KEY[t] ?? "id", { ascending: true }).range(from, from + PAGE - 1);
               if (error) throw new Error(`${t}: ${error.message}`);
-              rows.push(...(data ?? []));
-              if (!data || data.length < PAGE) break;
-            }
-            body = rows;
+              return data ?? [];
+            }));
+            body = pages.flat();
           } else if (part === "tables") {
             const out: Record<string, unknown[]> = {};
             for (const t of TABLES) {
               const rows: unknown[] = [];
               for (let from = 0; ; from += PAGE) {
-                const { data, error } = await db.from(t).select("*").order("id", { ascending: true }).range(from, from + PAGE - 1);
+                const { data, error } = await db.from(t).select("*").order(ORDER_KEY[t] ?? "id", { ascending: true }).range(from, from + PAGE - 1);
                 if (error) throw new Error(`${t}: ${error.message}`);
                 rows.push(...(data ?? []));
                 if (!data || data.length < PAGE) break;
