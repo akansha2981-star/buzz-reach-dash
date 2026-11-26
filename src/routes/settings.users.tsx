@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from "@/lib/auth";
 import { listUsers, createUser, updateUser, deleteUser } from "@/lib/admin-users.functions";
 import { toast } from "sonner";
+import { AdminExportButtons } from "@/components/AdminExportButtons";
 
 export const Route = createFileRoute("/settings/users")({
   component: () => (
@@ -80,6 +81,8 @@ function UsersPage() {
         </div>
         <CreateUserDialog />
       </div>
+
+      <AdminExportButtons />
 
       <Card>
         <CardHeader>

@@ -59,6 +59,7 @@ import { Route as SalesIndexRouteImport } from './routes/sales.index'
 import { Route as SettingsLogsRouteImport } from './routes/settings.logs'
 import { Route as SettingsStagesRouteImport } from './routes/settings.stages'
 import { Route as SettingsUsersRouteImport } from './routes/settings.users'
+import { Route as ApiAdminExportRouteImport } from './routes/api/admin/export'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as HrmsAdminAnalyticsRouteImport } from './routes/hrms.admin.analytics'
@@ -318,6 +319,11 @@ const SettingsUsersRoute = SettingsUsersRouteImport.update({
   path: '/settings/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminExportRoute = ApiAdminExportRouteImport.update({
+  id: '/api/admin/export',
+  path: '/api/admin/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   id: '/api/public/bootstrap-admin',
   path: '/api/public/bootstrap-admin',
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/api/admin/export': typeof ApiAdminExportRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -467,6 +474,7 @@ export interface FileRoutesByTo {
   '/hrms': typeof HrmsIndexRoute
   '/me': typeof MeIndexRoute
   '/sales': typeof SalesIndexRoute
+  '/api/admin/export': typeof ApiAdminExportRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -528,6 +536,7 @@ export interface FileRoutesById {
   '/hrms/': typeof HrmsIndexRoute
   '/me/': typeof MeIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/api/admin/export': typeof ApiAdminExportRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/hrms/admin/analytics': typeof HrmsAdminAnalyticsRoute
@@ -590,6 +599,7 @@ export interface FileRouteTypes {
     | '/hrms/'
     | '/me/'
     | '/sales/'
+    | '/api/admin/export'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/hrms'
     | '/me'
     | '/sales'
+    | '/api/admin/export'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '/hrms/'
     | '/me/'
     | '/sales/'
+    | '/api/admin/export'
     | '/api/public/bootstrap-admin'
     | '/api/public/razorpay-webhook'
     | '/hrms/admin/analytics'
@@ -743,6 +755,7 @@ export interface RootRouteChildren {
   SettingsStagesRoute: typeof SettingsStagesRoute
   SettingsUsersRoute: typeof SettingsUsersRoute
   HrmsIndexRoute: typeof HrmsIndexRoute
+  ApiAdminExportRoute: typeof ApiAdminExportRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   HrmsAdminAnalyticsRoute: typeof HrmsAdminAnalyticsRoute
@@ -1103,6 +1116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/export': {
+      id: '/api/admin/export'
+      path: '/api/admin/export'
+      fullPath: '/api/admin/export'
+      preLoaderRoute: typeof ApiAdminExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bootstrap-admin': {
       id: '/api/public/bootstrap-admin'
       path: '/api/public/bootstrap-admin'
@@ -1296,6 +1316,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsStagesRoute: SettingsStagesRoute,
   SettingsUsersRoute: SettingsUsersRoute,
   HrmsIndexRoute: HrmsIndexRoute,
+  ApiAdminExportRoute: ApiAdminExportRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   HrmsAdminAnalyticsRoute: HrmsAdminAnalyticsRoute,
